@@ -1,81 +1,14 @@
-"use client"
+"use client";
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Check, Sparkles, Zap, Crown, Loader2 } from "lucide-react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { useAuth } from "@/lib/auth-context"
-import { subscriptionApi } from "@/lib/api"
-import { useToast } from "@/components/ui/custom-toast"
-
-const tiers = [
-  {
-    id: "free",
-    name: "Human",
-    icon: Sparkles,
-    price: "Free",
-    period: "forever",
-    description: "Begin your journey into the bio-digital frontier",
-    features: [
-      "Basic neural interface",
-      "5GB cloud sync storage",
-      "Standard cognitive enhancement",
-      "Community forum access",
-      "Email support",
-    ],
-    cta: "Start Free",
-    popular: false,
-    gradient: "from-slate-500/20 to-slate-600/20",
-    iconBg: "bg-slate-500/10",
-    iconColor: "text-slate-400",
-  },
-  {
-    id: "pro",
-    name: "Cyborg",
-    icon: Zap,
-    price: "$49",
-    period: "/month",
-    description: "Enhanced capabilities for the ambitious integrator",
-    features: [
-      "Advanced neural processing",
-      "100GB cloud sync storage",
-      "Priority cognitive enhancement",
-      "Real-time biometric tracking",
-      "API access & integrations",
-      "24/7 priority support",
-      "Custom neural patterns",
-    ],
-    cta: "Upgrade Now",
-    popular: true,
-    gradient: "from-teal-500/20 to-emerald-500/20",
-    iconBg: "bg-teal-500/10",
-    iconColor: "text-teal-400",
-  },
-  {
-    id: "enterprise",
-    name: "Transcendence",
-    icon: Crown,
-    price: "$199",
-    period: "/month",
-    description: "Unlimited potential for those who seek more",
-    features: [
-      "Quantum neural bridge access",
-      "Unlimited cloud storage",
-      "Maximum cognitive enhancement",
-      "Direct thought-to-action",
-      "Dedicated success manager",
-      "Custom hardware integration",
-      "Beta feature access",
-      "White-glove onboarding",
-    ],
-    cta: "Contact Sales",
-    popular: false,
-    gradient: "from-violet-500/20 to-purple-500/20",
-    iconBg: "bg-violet-500/10",
-    iconColor: "text-violet-400",
-  },
-]
+import { useState } from "react";
+import { motion } from "framer-motion";
+import { Check, Sparkles, Zap, Crown, Loader2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { useAuth } from "@/lib/auth-context";
+import { TIERS, getPlanById } from "@/lib/plans";
+import type { Plan } from "@/lib/plans";
+import { useToast } from "@/components/ui/custom-toast";
 
 function PricingCard({
   tier,
@@ -83,12 +16,12 @@ function PricingCard({
   onSubscribe,
   isSubscribing,
 }: {
-  tier: (typeof tiers)[0]
-  index: number
-  onSubscribe: (planId: string) => void
-  isSubscribing: string | null
+  tier: Plan;
+  index: number;
+  onSubscribe: (planId: string) => void;
+  isSubscribing: string | null;
 }) {
-  const isLoading = isSubscribing === tier.id
+  const isLoading = isSubscribing === tier.id;
 
   return (
     <motion.div
@@ -100,47 +33,65 @@ function PricingCard({
     >
       {/* Popular badge */}
       {tier.popular && (
-        <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-          <div className="px-4 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full text-xs font-semibold text-slate-950">
+        <div className='absolute -top-4 left-1/2 -translate-x-1/2 z-10'>
+          <div className='px-4 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full text-xs font-semibold text-slate-950'>
             Most Popular
           </div>
         </div>
       )}
 
       <div
-        className={`h-full glass rounded-2xl p-8 relative overflow-hidden transition-all duration-500 ${tier.popular ? "ring-2 ring-teal-500/50 glow-teal" : "hover:ring-1 hover:ring-slate-700"}`}
+        className={`h-full glass rounded-2xl p-8 relative overflow-hidden transition-all duration-500 ${
+          tier.popular
+            ? "ring-2 ring-teal-500/50 glow-teal"
+            : "hover:ring-1 hover:ring-slate-700"
+        }`}
       >
         {/* Background gradient */}
         <div
           className={`absolute inset-0 bg-gradient-to-br ${tier.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
         />
 
-        <div className="relative z-10">
+        <div className='relative z-10'>
           {/* Header */}
-          <div className="flex items-center gap-3 mb-6">
+          <div className='flex items-center gap-3 mb-6'>
             <div className={`p-2.5 rounded-xl ${tier.iconBg}`}>
-              <tier.icon className={`w-5 h-5 ${tier.iconColor}`} />
+              {tier.icon ? (
+                <tier.icon className={`w-5 h-5 ${tier.iconColor}`} />
+              ) : (
+                <Sparkles
+                  className={`w-5 h-5 ${tier.iconColor || "text-slate-400"}`}
+                />
+              )}
             </div>
-            <h3 className="text-xl font-semibold text-slate-100">{tier.name}</h3>
+            <h3 className='text-xl font-semibold text-slate-100'>
+              {tier.name}
+            </h3>
           </div>
 
           {/* Price */}
-          <div className="mb-4">
-            <span className="text-4xl md:text-5xl font-bold text-slate-100">{tier.price}</span>
-            <span className="text-slate-500 ml-1">{tier.period}</span>
+          <div className='mb-4'>
+            <span className='text-4xl md:text-5xl font-bold text-slate-100'>
+              {tier.price}
+            </span>
+            <span className='text-slate-500 ml-1'>{tier.period}</span>
           </div>
 
-          <p className="text-slate-400 mb-8 text-sm">{tier.description}</p>
+          <p className='text-slate-400 mb-8 text-sm'>{tier.description}</p>
 
           {/* CTA - Connected to subscription handler */}
           <Button
             onClick={() => onSubscribe(tier.id)}
             disabled={isLoading}
-            className={`w-full mb-8 ${tier.popular ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 hover:from-teal-400 hover:to-emerald-400" : "bg-slate-800 text-slate-200 hover:bg-slate-700"}`}
+            className={`w-full mb-8 ${
+              tier.popular
+                ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 hover:from-teal-400 hover:to-emerald-400"
+                : "bg-slate-800 text-slate-200 hover:bg-slate-700"
+            }`}
           >
             {isLoading ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Loader2 className='w-4 h-4 mr-2 animate-spin' />
                 Processing...
               </>
             ) : (
@@ -149,107 +100,131 @@ function PricingCard({
           </Button>
 
           {/* Features */}
-          <div className="space-y-4">
+          <div className='space-y-4'>
             {tier.features.map((feature) => (
-              <div key={feature} className="flex items-start gap-3">
-                <div className={`mt-0.5 p-1 rounded-full ${tier.popular ? "bg-teal-500/20" : "bg-slate-700/50"}`}>
-                  <Check className={`w-3 h-3 ${tier.popular ? "text-teal-400" : "text-slate-400"}`} />
+              <div key={feature} className='flex items-start gap-3'>
+                <div
+                  className={`mt-0.5 p-1 rounded-full ${
+                    tier.popular ? "bg-teal-500/20" : "bg-slate-700/50"
+                  }`}
+                >
+                  <Check
+                    className={`w-3 h-3 ${
+                      tier.popular ? "text-teal-400" : "text-slate-400"
+                    }`}
+                  />
                 </div>
-                <span className="text-sm text-slate-300">{feature}</span>
+                <span className='text-sm text-slate-300'>{feature}</span>
               </div>
             ))}
           </div>
         </div>
       </div>
     </motion.div>
-  )
+  );
 }
 
 export function PricingSection() {
-  const router = useRouter()
-  const { isAuthenticated } = useAuth()
-  const { addToast } = useToast()
-  const [isSubscribing, setIsSubscribing] = useState<string | null>(null)
+  const router = useRouter();
+  const { isAuthenticated } = useAuth();
+  const { addToast } = useToast();
+  const [isSubscribing, setIsSubscribing] = useState<string | null>(null);
 
   const handleSubscribe = async (planId: string) => {
     // Free tier - just redirect to dashboard or auth
     if (planId === "free") {
       if (isAuthenticated) {
-        router.push("/dashboard")
+        router.push("/dashboard");
       } else {
-        router.push("/auth")
+        router.push("/auth");
       }
-      return
+      return;
     }
 
     // Paid tiers - check auth first
     if (!isAuthenticated) {
-      addToast("warning", "Authentication Required", "Please sign in to purchase a subscription")
-      router.push("/auth")
-      return
+      addToast(
+        "warning",
+        "Authentication Required",
+        "Please sign in to purchase a subscription"
+      );
+      router.push("/auth");
+      return;
     }
 
     // Enterprise tier - contact sales
     if (planId === "enterprise") {
-      const contactSection = document.getElementById("contact")
+      const contactSection = document.getElementById("contact");
       if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" })
-        addToast("info", "Contact Sales", "Fill out the form below to discuss enterprise options")
+        contactSection.scrollIntoView({ behavior: "smooth" });
+        addToast(
+          "info",
+          "Contact Sales",
+          "Fill out the form below to discuss enterprise options"
+        );
       }
-      return
+      return;
     }
 
-    // Pro tier - process subscription
-    setIsSubscribing(planId)
+    // Paid tier - redirect to checkout page
+    setIsSubscribing(planId);
     try {
-      const result = await subscriptionApi.subscribe(planId, "card")
-
-      if (result.success) {
-        addToast("success", "Subscription Activated", "Welcome to Cyborg tier! Redirecting to dashboard...")
-        setTimeout(() => router.push("/dashboard"), 1500)
-      } else {
-        addToast("error", "Subscription Failed", result.message || "Unable to process subscription")
-      }
-    } catch {
-      addToast("error", "Connection Error", "Unable to connect to payment server")
+      const plan = getPlanById(planId);
+      const slug = plan?.slug || planId;
+      addToast(
+        "info",
+        "Redirecting",
+        "Taking you to the secure checkout page..."
+      );
+      router.push(`/checkout/${slug}`);
     } finally {
-      setIsSubscribing(null)
+      setIsSubscribing(null);
     }
-  }
+  };
 
   return (
-    <section id="pricing" className="relative py-32 overflow-hidden">
-      <div className="absolute inset-0 mesh-gradient opacity-20" />
+    <section id='pricing' className='relative py-32 overflow-hidden'>
+      <div className='absolute inset-0 mesh-gradient opacity-20' />
 
-      <div className="relative max-w-7xl mx-auto px-6">
+      <div className='relative max-w-7xl mx-auto px-6'>
         {/* Section header */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8 }}
           viewport={{ once: true }}
-          className="text-center mb-16"
+          className='text-center mb-16'
         >
-          <span className="text-sm font-medium text-teal-400 tracking-wider uppercase mb-4 block">Investment</span>
-          <h2 className="text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6">
-            Choose Your <span className="text-gradient">Evolution</span>
+          <span className='text-sm font-medium text-teal-400 tracking-wider uppercase mb-4 block'>
+            Investment
+          </span>
+          <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
+            Choose Your <span className='text-gradient'>Evolution</span>
           </h2>
-          <p className="text-lg text-slate-400 max-w-2xl mx-auto">
-            Select the tier that matches your ambition. All plans include our core bio-digital integration platform.
+          <p className='text-lg text-slate-400 max-w-2xl mx-auto'>
+            Select the tier that matches your ambition. All plans include our
+            core bio-digital integration platform.
           </p>
         </motion.div>
 
         {/* Pricing grid */}
-        <div className="grid lg:grid-cols-3 gap-6 lg:gap-8 items-start">
-          {tiers.map((tier, index) => (
-            <PricingCard
-              key={tier.name}
-              tier={tier}
-              index={index}
-              onSubscribe={handleSubscribe}
-              isSubscribing={isSubscribing}
-            />
-          ))}
+        <div className='grid lg:grid-cols-3 gap-6 lg:gap-8 items-start'>
+          {(() => {
+            const iconMap: Record<string, any> = {
+              free: Sparkles,
+              pro: Zap,
+              enterprise: Crown,
+            };
+            return TIERS.map((tier, index) => (
+              <PricingCard
+                key={tier.name}
+                tier={{ ...tier, icon: iconMap[tier.id] }}
+                index={index}
+                onSubscribe={handleSubscribe}
+                isSubscribing={isSubscribing}
+              />
+            ));
+          })()}
         </div>
 
         {/* Trust badges */}
@@ -258,16 +233,21 @@ export function PricingSection() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-8 mt-16 pt-16 border-t border-slate-800/50"
+          className='flex flex-wrap justify-center gap-8 mt-16 pt-16 border-t border-slate-800/50'
         >
-          {["256-bit Encryption", "99.9% Uptime", "GDPR Compliant", "24/7 Support"].map((badge) => (
-            <div key={badge} className="flex items-center gap-2 text-slate-500">
-              <Check className="w-4 h-4 text-teal-500" />
-              <span className="text-sm">{badge}</span>
+          {[
+            "256-bit Encryption",
+            "99.9% Uptime",
+            "GDPR Compliant",
+            "24/7 Support",
+          ].map((badge) => (
+            <div key={badge} className='flex items-center gap-2 text-slate-500'>
+              <Check className='w-4 h-4 text-teal-500' />
+              <span className='text-sm'>{badge}</span>
             </div>
           ))}
         </motion.div>
       </div>
     </section>
-  )
+  );
 }

@@ -177,13 +177,23 @@ export const subscriptionApi = {
     }>("/subscriptions/plans");
   },
 
+  // Create a subscription - backend expected payload: { plan_slug, payment_method }
+  async createSubscription(plan_slug: string, payment_method?: any) {
+    return apiRequest<{
+      subscriptionId?: string;
+      status?: string;
+      url?: string;
+    }>("/subscriptions", {
+      method: "POST",
+      body: JSON.stringify({ plan_slug, payment_method }),
+    });
+  },
+
+  // Backwards-compatible wrapper for older callers
   async subscribe(planId: string, paymentMethod: string) {
-    return apiRequest<{ subscriptionId: string; status: string }>(
-      "/subscriptions/subscribe",
-      {
-        method: "POST",
-        body: JSON.stringify({ planId, paymentMethod }),
-      }
+    return this.createSubscription(
+      planId,
+      paymentMethod === "card" ? { method: "card" } : undefined
     );
   },
 
