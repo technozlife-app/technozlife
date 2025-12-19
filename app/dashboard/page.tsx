@@ -162,7 +162,7 @@ export default function DashboardPage() {
                 ].map((action) => (
                   <button
                     key={action.label}
-                    className={`p-4 rounded-xl bg-gradient-to-br ${action.color} border border-white/5 hover:border-white/10 transition-colors text-left group`}
+                    className={`p-4 rounded-xl bg-linear-to-br ${action.color} border border-white/5 hover:border-white/10 transition-colors text-left group`}
                   >
                     <action.icon className='w-5 h-5 text-slate-300 mb-2 group-hover:text-white transition-colors' />
                     <span className='text-sm text-slate-300 group-hover:text-white transition-colors'>

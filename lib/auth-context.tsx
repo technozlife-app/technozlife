@@ -173,9 +173,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return { success: false, message: result.message };
   };
 
-  const register = async (email: string, password: string, name: string) => {
+  const register = async (
+    email: string,
+    password: string,
+    name: string,
+    recaptchaToken?: string
+  ) => {
     setIsAuthenticating(true);
-    const result = await authApi.register(email, password, name);
+    const result = await authApi.register(
+      email,
+      password,
+      name,
+      recaptchaToken
+    );
     setIsAuthenticating(false);
     if (result.success && result.data) {
       saveTokens(result.data.tokens);

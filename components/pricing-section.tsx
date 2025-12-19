@@ -34,7 +34,7 @@ function PricingCard({
       {/* Popular badge */}
       {tier.popular && (
         <div className='absolute -top-4 left-1/2 -translate-x-1/2 z-10'>
-          <div className='px-4 py-1.5 bg-gradient-to-r from-teal-500 to-emerald-500 rounded-full text-xs font-semibold text-slate-950'>
+          <div className='px-4 py-1.5 bg-linear-to-r from-teal-500 to-emerald-500 rounded-full text-xs font-semibold text-slate-950'>
             Most Popular
           </div>
         </div>
@@ -49,7 +49,7 @@ function PricingCard({
       >
         {/* Background gradient */}
         <div
-          className={`absolute inset-0 bg-gradient-to-br ${tier.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
+          className={`absolute inset-0 bg-linear-to-br ${tier.gradient} opacity-0 group-hover:opacity-100 transition-opacity duration-500`}
         />
 
         <div className='relative z-10'>
@@ -85,7 +85,7 @@ function PricingCard({
             disabled={isLoading}
             className={`w-full mb-8 ${
               tier.popular
-                ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950 hover:from-teal-400 hover:to-emerald-400"
+                ? "bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 hover:from-teal-400 hover:to-emerald-400"
                 : "bg-slate-800 text-slate-200 hover:bg-slate-700"
             }`}
           >

@@ -75,13 +75,20 @@ async function apiRequest<T>(
 
 // Auth API
 export const authApi = {
-  async register(email: string, password: string, name: string) {
+  async register(
+    email: string,
+    password: string,
+    name: string,
+    recaptchaToken?: string
+  ) {
     const hashedPassword = await hashPassword(password);
+    const body: any = { email, password: hashedPassword, name };
+    if (recaptchaToken) body.recaptcha_token = recaptchaToken;
     return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
       "/auth/register",
       {
         method: "POST",
-        body: JSON.stringify({ email, password: hashedPassword, name }),
+        body: JSON.stringify(body),
       }
     );
   },
@@ -161,10 +168,18 @@ export const contactApi = {
     email: string;
     subject: string;
     message: string;
+    recaptchaToken?: string;
   }) {
+    const body: any = {
+      name: data.name,
+      email: data.email,
+      subject: data.subject,
+      message: data.message,
+    };
+    if (data.recaptchaToken) body.recaptcha_token = data.recaptchaToken;
     return apiRequest("/mail/contact", {
       method: "POST",
-      body: JSON.stringify(data),
+      body: JSON.stringify(body),
     });
   },
 };
