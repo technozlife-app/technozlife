@@ -119,7 +119,27 @@ export default function BillingPage() {
               description={plan.description}
               active={plan.slug === currentPlan || plan.id === currentPlan}
               onSelect={async (planId) => {
+                // determine if plan is free
+                const isFree =
+                  typeof plan.price === "string"
+                    ? /free/i.test(plan.price)
+                    : Number(plan.price) === 0;
                 try {
+                  if (!isFree) {
+                    // Redirect paid plans to checkout flow
+                    // Use slug first, fallback to id
+                    const slug = plan.slug || plan.id;
+                    addToast(
+                      "info",
+                      "Taking you to checkout",
+                      "Proceeding to secure checkout..."
+                    );
+                    // router is not available here directly; use window.location to navigate to checkout route
+                    window.location.href = `/checkout/${slug}`;
+                    return;
+                  }
+
+                  // Free plan - create subscription directly
                   const res = await subscriptionApi.createSubscription(planId);
                   if (res.success && res.data) {
                     if (res.data.url) {
@@ -129,11 +149,20 @@ export default function BillingPage() {
                     addToast("success", "Subscribed", "Subscription created");
                     setCurrentPlan(planId);
                   } else {
-                    addToast(
-                      "error",
-                      "Subscription Failed",
-                      res.message || "Unable to create subscription"
-                    );
+                    // show friendly validation messages if provided
+                    let message =
+                      res.message || "Unable to create subscription";
+                    if ((res as any).errors) {
+                      const errs = (res as any).errors;
+                      const messages: string[] = [];
+                      for (const k of Object.keys(errs)) {
+                        if (Array.isArray(errs[k]))
+                          messages.push(`${k}: ${errs[k].join(", ")}`);
+                        else messages.push(`${k}: ${String(errs[k])}`);
+                      }
+                      if (messages.length) message = messages.join("; ");
+                    }
+                    addToast("error", "Subscription Failed", message);
                   }
                 } catch (e) {
                   addToast(

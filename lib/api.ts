@@ -430,9 +430,33 @@ export const contactApi = {
 // Subscription API
 export const subscriptionApi = {
   async getPlans() {
-    return apiRequest<{
-      plans: Array<{ id: string; name: string; price: number }>;
-    }>("/subscriptions/plans");
+    // Use documented endpoint `/subscription-plans` (API.md)
+    try {
+      const res = await apiRequest<{
+        plans: Array<{ id: string; name: string; price: number }>;
+      }>("/subscription-plans");
+      // If backend returns plans, use them
+      if (
+        res.success &&
+        res.data &&
+        Array.isArray((res.data as any).plans) &&
+        (res.data as any).plans.length > 0
+      )
+        return res;
+    } catch (e) {
+      // ignore and fallback
+    }
+
+    // Fallback to local static plans when backend has no plans or endpoint disabled
+    try {
+      const { getAllPlans } = await import("./plans");
+      return {
+        success: true,
+        data: { plans: getAllPlans() },
+      } as ApiResponse<any>;
+    } catch (e) {
+      return { success: false, message: "Unable to load plans" };
+    }
   },
 
   // Create a subscription - backend expected payload: { plan_slug, payment_method }
@@ -456,18 +480,28 @@ export const subscriptionApi = {
   },
 
   async cancelSubscription() {
-    return apiRequest("/subscriptions/cancel", { method: "POST" });
+    // Use documented endpoint to revert/clear current plan
+    return apiRequest("/payments/revert-plan", { method: "POST" });
   },
 
   async getPaymentHistory() {
-    return apiRequest<{
-      payments: Array<{
-        id: string;
-        amount: number;
-        date: string;
-        status: string;
-      }>;
-    }>("/subscriptions/history");
+    // Use payments endpoint per API.md
+    try {
+      const res = await apiRequest<{
+        payments: Array<{
+          id: string;
+          amount: number;
+          date: string;
+          status: string;
+        }>;
+      }>("/payments");
+      if (res.success && res.data) return res;
+    } catch (e) {
+      // ignore
+    }
+
+    // Fallback to empty list when payments not available
+    return { success: true, data: { payments: [] } } as ApiResponse<any>;
   },
 };
 

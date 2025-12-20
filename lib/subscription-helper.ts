@@ -31,6 +31,12 @@ export async function ensureUserHasPlan(user?: UserProfile | null) {
       const local = getAllPlans();
       if (!local || local.length === 0) return null;
       const chosen = local[0];
+      // Only auto-subscribe if chosen plan is free
+      const isFree =
+        typeof chosen.price === "string"
+          ? /free/i.test(chosen.price)
+          : Number(chosen.price) === 0;
+      if (!isFree) return null;
       const subscribeRes = await subscriptionApi.createSubscription(
         chosen.slug
       );
@@ -38,7 +44,13 @@ export async function ensureUserHasPlan(user?: UserProfile | null) {
       return null;
     }
 
-    const chosen = plans[0];
+    // prefer a free plan if available
+    let chosen = plans.find((p) => {
+      if (typeof p.price === "string") return /free/i.test(p.price);
+      return Number(p.price) === 0;
+    });
+
+    // otherwise do not auto-subscribe to paid plans
     if (!chosen) return null;
 
     // create subscription using server-slug (plan_slug)
