@@ -50,12 +50,12 @@ export function GetStartedButton() {
             className='relative flex items-center gap-3 px-4 py-2 bg-slate-900/80 rounded-full border border-white/10 text-slate-200'
           >
             <img
-              src={user.avatar || "/avatar-placeholder.png"}
-              alt={user.name}
+              src={user.avatar || "/avatar-placeholder.svg"}
+              alt={user.name || user.email || "User"}
               className='w-6 h-6 rounded-full'
             />
             <span className='hidden sm:inline font-medium'>
-              {user.name.split(" ")[0]}
+              {(user.name || user.email || "User").split(" ")[0]}
             </span>
             <ChevronDown className='w-4 h-4 text-slate-400' />
           </button>

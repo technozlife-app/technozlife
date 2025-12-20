@@ -138,9 +138,9 @@ export function AboutSection() {
                   >
                     <div className='w-12 h-12 rounded-full bg-linear-to-br from-teal-500/20 to-violet-500/20 flex items-center justify-center'>
                       <span className='text-sm font-medium text-slate-300'>
-                        {member.name
+                        {(member.name || "")
                           .split(" ")
-                          .map((n) => n[0])
+                          .map((n) => n[0] || "")
                           .join("")}
                       </span>
                     </div>
