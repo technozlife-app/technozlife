@@ -1,6 +1,6 @@
 {
-  "name": "my-v0-project",
-  "version": "0.1.0",
+  "name": "technozlife",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "build": "next build",
@@ -54,6 +54,7 @@
     "react-day-picker": "9.8.0",
     "react-dom": "19.2.0",
     "react-hook-form": "^7.60.0",
+    "react-icons": "^5.5.0",
     "react-markdown": "10.1.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",

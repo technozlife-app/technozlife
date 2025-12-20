@@ -27,6 +27,7 @@ export function ContactSection() {
     message: "",
   });
   const { addToast } = useToast();
+  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -282,41 +283,57 @@ export function ContactSection() {
                     />
                   </div>
 
-                  <Button
-                    type='submit'
-                    disabled={isLoading}
-                    className='w-full bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold hover:from-teal-400 hover:to-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed'
-                  >
-                    {isLoading ? (
-                      <span className='flex items-center gap-2'>
-                        <svg
-                          className='animate-spin h-4 w-4'
-                          viewBox='0 0 24 24'
-                        >
-                          <circle
-                            className='opacity-25'
-                            cx='12'
-                            cy='12'
-                            r='10'
-                            stroke='currentColor'
-                            strokeWidth='4'
-                            fill='none'
-                          />
-                          <path
-                            className='opacity-75'
-                            fill='currentColor'
-                            d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
-                          />
-                        </svg>
-                        Sending...
-                      </span>
+                  <div className='space-y-2'>
+                    <Button
+                      type='submit'
+                      disabled={isLoading}
+                      className='w-full bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold hover:from-teal-400 hover:to-emerald-400 disabled:opacity-50 disabled:cursor-not-allowed'
+                    >
+                      {isLoading ? (
+                        <span className='flex items-center gap-2'>
+                          <svg
+                            className='animate-spin h-4 w-4'
+                            viewBox='0 0 24 24'
+                          >
+                            <circle
+                              className='opacity-25'
+                              cx='12'
+                              cy='12'
+                              r='10'
+                              stroke='currentColor'
+                              strokeWidth='4'
+                              fill='none'
+                            />
+                            <path
+                              className='opacity-75'
+                              fill='currentColor'
+                              d='M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z'
+                            />
+                          </svg>
+                          Sending...
+                        </span>
+                      ) : (
+                        <span className='flex items-center gap-2'>
+                          <Send className='w-4 h-4' />
+                          Send Message
+                        </span>
+                      )}
+                    </Button>
+
+                    {/* reCAPTCHA status */}
+                    {!RECAPTCHA_SITE_KEY ? (
+                      <p className='text-sm text-amber-400 mt-2'>
+                        reCAPTCHA not configured — Contact form will not be
+                        protected. Please set{" "}
+                        <code>NEXT_PUBLIC_RECAPTCHA_SITE_KEY</code> in your
+                        environment.
+                      </p>
                     ) : (
-                      <span className='flex items-center gap-2'>
-                        <Send className='w-4 h-4' />
-                        Send Message
-                      </span>
+                      <p className='text-sm text-slate-500 mt-2'>
+                        This form is protected by reCAPTCHA.
+                      </p>
                     )}
-                  </Button>
+                  </div>
                 </form>
               )}
             </div>

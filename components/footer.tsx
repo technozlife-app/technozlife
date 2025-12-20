@@ -1,7 +1,13 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Github, Twitter, Linkedin, Youtube } from "lucide-react";
+import {
+  FaX as Twitter,
+  FaFacebook as Facebook,
+  FaLinkedin as Linkedin,
+  FaYoutube as Youtube,
+} from "react-icons/fa6";
+
 import Link from "next/link";
 
 const footerLinks = {
@@ -15,6 +21,11 @@ const footerLinks = {
   Resources: [
     { label: "Blog", href: "/blog" },
     { label: "Documentation", href: "#" },
+    { label: "F6S", href: "https://www.f6s.com/technozlife" },
+    {
+      label: "Crunchbase",
+      href: "https://www.crunchbase.com/organization/technozlife",
+    },
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy" },
@@ -24,9 +35,9 @@ const footerLinks = {
 
 const socialLinks = [
   { icon: Twitter, href: "#", label: "Twitter" },
-  { icon: Github, href: "#", label: "GitHub" },
   { icon: Linkedin, href: "#", label: "LinkedIn" },
   { icon: Youtube, href: "#", label: "YouTube" },
+  { icon: Facebook, href: "#", label: "Facebook" },
 ];
 
 export function Footer() {

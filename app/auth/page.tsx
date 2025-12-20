@@ -24,6 +24,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
+import { API_BASE } from "@/lib/api";
 
 // Google Icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -186,15 +187,8 @@ export default function AuthPage() {
       return;
     }
 
-    // Real Google OAuth flow
-    const redirectUri = `${window.location.origin}/auth/callback/google`;
-    const scope = "email profile";
-    const googleAuthUrl = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${GOOGLE_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&response_type=code&scope=${encodeURIComponent(
-      scope
-    )}&access_type=offline&prompt=consent`;
-    window.location.href = googleAuthUrl;
+    // Let backend initiate the OAuth redirect (server handles redirect_uri and callbacks)
+    window.location.href = `${API_BASE}/auth/google/redirect`;
   };
 
   const handleGithubAuth = async () => {
@@ -231,13 +225,8 @@ export default function AuthPage() {
       return;
     }
 
-    // Real GitHub OAuth flow
-    const redirectUri = `${window.location.origin}/auth/callback/github`;
-    const scope = "user:email";
-    const githubAuthUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${encodeURIComponent(
-      redirectUri
-    )}&scope=${encodeURIComponent(scope)}`;
-    window.location.href = githubAuthUrl;
+    // Let backend initiate the OAuth redirect (server handles redirect_uri and callbacks)
+    window.location.href = `${API_BASE}/auth/github/redirect`;
   };
 
   return (
