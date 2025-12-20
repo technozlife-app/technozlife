@@ -101,14 +101,7 @@ export function FloatingNav() {
                   className='w-5 h-5 rounded-full'
                 />
               </Link>
-            ) : (
-              <Link
-                href='/auth'
-                className='p-3 rounded-full text-slate-400 hover:text-teal-400 transition-colors'
-              >
-                Sign in
-              </Link>
-            )}
+            ) : null}
           </div>
         </div>
 
