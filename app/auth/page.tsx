@@ -154,79 +154,21 @@ export default function AuthPage() {
   };
 
   const handleGoogleAuth = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      addToast(
-        "warning",
-        "Google Auth",
-        "Google authentication is being configured"
-      );
-      // Simulate OAuth flow for demo
-      const mockToken = "google_mock_token_" + Date.now();
-      setIsLoading(true);
-      try {
-        const result = await googleLogin(mockToken);
-        if (result.success) {
-          addToast(
-            "success",
-            "Google Sign In",
-            "Successfully authenticated with Google"
-          );
-          setTimeout(() => router.push("/dashboard"), 1500);
-        } else {
-          addToast(
-            "error",
-            "Google Auth Failed",
-            result.message || "Unable to authenticate with Google"
-          );
-        }
-      } catch {
-        addToast("error", "Connection Error", "Unable to connect to server");
-      } finally {
-        setIsLoading(false);
-      }
-      return;
+    // Start OAuth via backend redirect endpoint as documented in API.md
+    try {
+      window.location.href = "/auth/google/redirect";
+    } catch (e) {
+      addToast("error", "Google Auth", "Unable to start Google OAuth");
     }
-
-    // Let backend initiate the OAuth redirect (server handles redirect_uri and callbacks)
-    window.location.href = `${API_BASE}/auth/google/redirect`;
   };
 
   const handleGithubAuth = async () => {
-    if (!GITHUB_CLIENT_ID) {
-      addToast(
-        "warning",
-        "GitHub Auth",
-        "GitHub authentication is being configured"
-      );
-      // Simulate OAuth flow for demo
-      const mockCode = "github_mock_code_" + Date.now();
-      setIsLoading(true);
-      try {
-        const result = await githubLogin(mockCode);
-        if (result.success) {
-          addToast(
-            "success",
-            "GitHub Sign In",
-            "Successfully authenticated with GitHub"
-          );
-          setTimeout(() => router.push("/dashboard"), 1500);
-        } else {
-          addToast(
-            "error",
-            "GitHub Auth Failed",
-            result.message || "Unable to authenticate with GitHub"
-          );
-        }
-      } catch {
-        addToast("error", "Connection Error", "Unable to connect to server");
-      } finally {
-        setIsLoading(false);
-      }
-      return;
+    // Start OAuth via backend redirect endpoint as documented in API.md
+    try {
+      window.location.href = "/auth/github/redirect";
+    } catch (e) {
+      addToast("error", "GitHub Auth", "Unable to start GitHub OAuth");
     }
-
-    // Let backend initiate the OAuth redirect (server handles redirect_uri and callbacks)
-    window.location.href = `${API_BASE}/auth/github/redirect`;
   };
 
   return (
