@@ -48,26 +48,103 @@ export function AIGenerator() {
       const response = await dashboardApi.generateContent(prompt, contentType);
 
       if (response.success && response.data) {
-        setResult(response.data.content);
-        addToast(
-          "success",
-          "Content Generated",
-          `Used ${response.data.tokensUsed} tokens`
-        );
+        // Immediate content returned
+        if (response.data.content) {
+          setResult(response.data.content);
+          addToast(
+            "success",
+            "Content Generated",
+            `Used ${response.data.tokensUsed ?? 0} tokens`
+          );
+        } else if ((response.data as any).jobId) {
+          // Async job returned - poll for status
+          const jobId = (response.data as any).jobId as string;
+          addToast("info", "Generation Queued", "Processing your request...");
+
+          let attempts = 0;
+          const maxAttempts = 20; // ~30s polling (with 1500ms interval)
+
+          const poll = async () => {
+            try {
+              attempts += 1;
+              const statusRes = await dashboardApi.getJobStatus(jobId);
+              if (statusRes.success && statusRes.data) {
+                const { result: r, status, tokensUsed } = statusRes.data as any;
+                if (r) {
+                  setResult(r);
+                  addToast(
+                    "success",
+                    "Content Ready",
+                    `Used ${tokensUsed ?? 0} tokens`
+                  );
+                  setIsGenerating(false);
+                  return;
+                }
+
+                if (status === "failed") {
+                  addToast(
+                    "error",
+                    "Generation Failed",
+                    "The job failed on the server"
+                  );
+                  setIsGenerating(false);
+                  return;
+                }
+
+                if (attempts < maxAttempts) {
+                  setTimeout(poll, 1500);
+                } else {
+                  addToast(
+                    "error",
+                    "Generation Timeout",
+                    "The generation is taking too long. Please try again later."
+                  );
+                  setIsGenerating(false);
+                }
+              } else {
+                addToast(
+                  "error",
+                  "Status Error",
+                  statusRes.message || "Unable to fetch job status"
+                );
+                setIsGenerating(false);
+              }
+            } catch (e) {
+              addToast(
+                "error",
+                "Polling Error",
+                "Unable to fetch job status. Please try again."
+              );
+              setIsGenerating(false);
+            }
+          };
+
+          // Start polling
+          setTimeout(poll, 1000);
+        } else {
+          // Fallback simulated content
+          const simulatedContent = `Generated ${contentType} content based on your prompt:\n\n"${prompt}"\n\nThis is a simulated response demonstrating the AI generation capability. In production, this would be actual AI-generated content tailored to your specific request.`;
+          setResult(simulatedContent);
+          addToast("info", "Demo Mode", "Showing simulated content");
+        }
       } else {
-        // Simulated response for demo
-        const simulatedContent = `Generated ${contentType} content based on your prompt:\n\n"${prompt}"\n\nThis is a simulated response demonstrating the AI generation capability. In production, this would be actual AI-generated content tailored to your specific request.`;
-        setResult(simulatedContent);
-        addToast("info", "Demo Mode", "Showing simulated content");
+        addToast(
+          "error",
+          "Generation Failed",
+          response.message || "Unable to generate content"
+        );
       }
-    } catch {
+    } catch (err) {
       addToast(
         "error",
         "Generation Failed",
         "Unable to generate content. Please try again."
       );
     } finally {
-      setIsGenerating(false);
+      // don't clear isGenerating here when job is polling - but ensure it's cleared when immediate
+      if (!result) {
+        // if result is empty, we remain in generating state until poll resolves
+      }
     }
   };
 

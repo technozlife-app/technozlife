@@ -34,7 +34,7 @@ export default function BlogPage() {
 
       {/* Hero Section */}
       <section className='relative pt-32 pb-16 px-6'>
-        <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-teal-500/10 rounded-full blur-3xl' />
+        <div className='absolute top-0 left-1/2 -translate-x-1/2 w-250 h-150 bg-teal-500/10 rounded-full blur-3xl' />
 
         <div className='relative max-w-7xl mx-auto'>
           <motion.div
@@ -222,7 +222,7 @@ export default function BlogPage() {
                             alt={post.title}
                             className='w-full h-40 md:h-full object-cover group-hover:scale-105 transition-transform duration-500'
                           />
-                          <div className='absolute inset-0 bg-gradient-to-t from-slate-950/50 to-transparent' />
+                          <div className='absolute inset-0 bg-linear-to-t from-slate-950/50 to-transparent' />
                         </div>
                       </div>
 

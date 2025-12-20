@@ -9,68 +9,85 @@ import { AIGenerator } from "@/components/dashboard/ai-generator";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { useAuth } from "@/lib/auth-context";
 
-// Simulated stats for demo
-const mockStats = {
-  totalGenerations: 1247,
-  tokensUsed: 89432,
-  savedTemplates: 23,
-  activeProjects: 5,
-};
+import { dashboardApi } from "@/lib/api";
+import { useToast } from "@/hooks/use-toast";
 
-const mockActivities = [
-  {
-    id: "1",
-    type: "generation",
-    description: "Generated blog post about AI trends",
-    timestamp: "2 minutes ago",
-  },
-  {
-    id: "2",
-    type: "document",
-    description: "Saved email template 'Welcome Series'",
-    timestamp: "15 minutes ago",
-  },
-  {
-    id: "3",
-    type: "generation",
-    description: "Created social media content batch",
-    timestamp: "1 hour ago",
-  },
-  {
-    id: "4",
-    type: "settings",
-    description: "Updated notification preferences",
-    timestamp: "3 hours ago",
-  },
-  {
-    id: "5",
-    type: "payment",
-    description: "Monthly subscription renewed",
-    timestamp: "Yesterday",
-  },
-];
+interface StatsShape {
+  totalGenerations: number;
+  tokensUsed: number;
+  savedTemplates: number;
+  activeProjects: number;
+}
 
-const mockUsageData = [
-  { label: "API Calls", value: 847, max: 1000 },
-  { label: "Tokens Used", value: 89432, max: 100000 },
-  { label: "Storage", value: 2.4, max: 5 },
+const initialUsageData = [
+  { label: "API Calls", value: 0, max: 1000 },
+  { label: "Tokens Used", value: 0, max: 100000 },
+  { label: "Storage", value: 0, max: 5 },
 ];
 
 import RequireAuth from "@/components/auth/RequireAuth";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const [stats, setStats] = useState(mockStats);
-  const [activities, setActivities] = useState(mockActivities);
-  const [usageData, setUsageData] = useState(mockUsageData);
+  const { addToast } = useToast();
+  const [stats, setStats] = useState<StatsShape | null>(null);
+  const [activities, setActivities] = useState<Array<any>>([]);
+  const [usageData, setUsageData] = useState(initialUsageData);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Simulate fetching data
   useEffect(() => {
-    // In production, fetch real data from API
-    setStats(mockStats);
-    setActivities(mockActivities);
-    setUsageData(mockUsageData);
-  }, []);
+    let mounted = true;
+    async function load() {
+      setIsLoading(true);
+      try {
+        const statsRes = await dashboardApi.getStats();
+        const activityRes = await dashboardApi.getActivity();
+
+        if (!mounted) return;
+
+        if (statsRes.success && statsRes.data) {
+          setStats(statsRes.data as StatsShape);
+          // update usageData from stats if possible
+          setUsageData((prev) =>
+            prev.map((u) => {
+              if (u.label === "Tokens Used")
+                return { ...u, value: statsRes.data.tokensUsed };
+              return u;
+            })
+          );
+        } else {
+          addToast({
+            title: "Failed to load stats",
+            description: statsRes.message,
+          });
+        }
+
+        if (activityRes.success && activityRes.data) {
+          // activityRes.data should contain activities array
+          // Support both { activities: [...] } and direct array
+          const activitiesList =
+            (activityRes.data as any).activities || activityRes.data;
+          setActivities(activitiesList || []);
+        } else {
+          addToast({
+            title: "Failed to load activity",
+            description: activityRes.message,
+          });
+        }
+      } catch (err) {
+        addToast({
+          title: "Connection Error",
+          description: "Unable to load dashboard data",
+        });
+      } finally {
+        if (mounted) setIsLoading(false);
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [addToast]);
 
   return (
     <RequireAuth>
@@ -93,7 +110,7 @@ export default function DashboardPage() {
         <div className='grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4 mb-6 md:mb-8'>
           <StatsCard
             title='Generations'
-            value={stats.totalGenerations.toLocaleString()}
+            value={stats ? stats.totalGenerations.toLocaleString() : "—"}
             change='+12% from last week'
             changeType='positive'
             icon={Sparkles}
@@ -101,15 +118,19 @@ export default function DashboardPage() {
           />
           <StatsCard
             title='Tokens Used'
-            value={`${(stats.tokensUsed / 1000).toFixed(1)}K`}
-            change='89% of limit'
+            value={stats ? `${(stats.tokensUsed / 1000).toFixed(1)}K` : "—"}
+            change={
+              stats
+                ? `${Math.round((stats.tokensUsed / 100000) * 100)}% of limit`
+                : ""
+            }
             changeType='neutral'
             icon={Zap}
             index={1}
           />
           <StatsCard
             title='Templates'
-            value={stats.savedTemplates}
+            value={stats ? stats.savedTemplates : "—"}
             change='+3 this month'
             changeType='positive'
             icon={FileText}
@@ -117,7 +138,7 @@ export default function DashboardPage() {
           />
           <StatsCard
             title='Projects'
-            value={stats.activeProjects}
+            value={stats ? stats.activeProjects : "—"}
             change='2 in progress'
             changeType='neutral'
             icon={FolderOpen}

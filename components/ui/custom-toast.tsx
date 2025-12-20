@@ -77,7 +77,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     <ToastContext.Provider value={{ toasts, addToast, removeToast }}>
       {children}
       {/* Toast Container */}
-      <div className='fixed bottom-6 right-6 z-[100] flex flex-col gap-3 pointer-events-none'>
+      <div className='fixed bottom-6 right-6 z-100 flex flex-col gap-3 pointer-events-none'>
         <AnimatePresence mode='popLayout'>
           {toasts.map((toast) => {
             const config = toastConfig[toast.type];
@@ -90,11 +90,11 @@ export function ToastProvider({ children }: { children: ReactNode }) {
                 initial={{ opacity: 0, y: 20, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, x: 100, scale: 0.9 }}
-                className={`pointer-events-auto relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 pr-12 min-w-[320px] max-w-[400px] shadow-2xl ${config.glow}`}
+                className={`pointer-events-auto relative bg-slate-900/95 backdrop-blur-xl border border-white/10 rounded-2xl p-4 pr-12 min-w-[320px] max-w-100 shadow-2xl ${config.glow}`}
               >
                 {/* Gradient accent bar */}
                 <div
-                  className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-gradient-to-b ${config.gradient}`}
+                  className={`absolute left-0 top-0 bottom-0 w-1 rounded-l-2xl bg-linear-to-b ${config.gradient}`}
                 />
 
                 <div className='flex items-start gap-3'>

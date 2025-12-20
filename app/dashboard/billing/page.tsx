@@ -14,52 +14,46 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { subscriptionApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
+import { PlanCard } from "@/components/dashboard/plan-card";
 
-const plans = [
-  { id: "free", name: "Human", icon: Sparkles, price: "$0" },
-  { id: "pro", name: "Cyborg", icon: Zap, price: "$49" },
-  { id: "enterprise", name: "Transcendence", icon: Crown, price: "$199" },
-];
-
-const mockPayments = [
-  {
-    id: "1",
-    date: "Dec 15, 2024",
-    amount: "$49.00",
-    status: "Paid",
-    description: "Cyborg Plan - Monthly",
-  },
-  {
-    id: "2",
-    date: "Nov 15, 2024",
-    amount: "$49.00",
-    status: "Paid",
-    description: "Cyborg Plan - Monthly",
-  },
-  {
-    id: "3",
-    date: "Oct 15, 2024",
-    amount: "$49.00",
-    status: "Paid",
-    description: "Cyborg Plan - Monthly",
-  },
-];
+const plansInitial = [] as Array<any>;
+const mockPayments = [] as Array<any>;
 
 export default function BillingPage() {
   const { user } = useAuth();
   const { addToast } = useToast();
-  const [payments, setPayments] = useState(mockPayments);
-  const [currentPlan] = useState(user?.plan || "pro");
+  const [payments, setPayments] = useState<any[]>(mockPayments);
+  const [plans, setPlans] = useState<any[]>(plansInitial);
+  const [currentPlan, setCurrentPlan] = useState(user?.plan || "pro");
 
   useEffect(() => {
-    // Fetch payment history
-    subscriptionApi.getPaymentHistory().then((result) => {
-      if (result.success && result.data) {
-        // Use real data if available
-      }
-    });
-  }, []);
+    let mounted = true;
+    async function load() {
+      try {
+        const [plansRes, paymentsRes] = await Promise.all([
+          subscriptionApi.getPlans(),
+          subscriptionApi.getPaymentHistory(),
+        ]);
 
+        if (mounted) {
+          if (plansRes.success && plansRes.data)
+            setPlans(plansRes.data.plans || []);
+          if (paymentsRes.success && paymentsRes.data)
+            setPayments(paymentsRes.data.payments || []);
+        }
+      } catch (e) {
+        addToast(
+          "error",
+          "Failed to load billing data",
+          "Please try again later"
+        );
+      }
+    }
+    load();
+    return () => {
+      mounted = false;
+    };
+  }, [addToast]);
   const handleCancelSubscription = async () => {
     const result = await subscriptionApi.cancelSubscription();
     if (result.success) {
@@ -98,49 +92,41 @@ export default function BillingPage() {
         <h2 className='text-lg font-semibold text-white mb-4'>Current Plan</h2>
 
         <div className='flex flex-col md:flex-row gap-3'>
-          {plans.map((plan) => {
-            const isActive = plan.id === currentPlan;
-            return (
-              <div
-                key={plan.id}
-                className={`flex-1 p-4 rounded-xl border transition-all ${
-                  isActive
-                    ? "bg-linear-to-br from-teal-500/20 to-emerald-500/20 border-teal-500/50"
-                    : "bg-slate-800/30 border-slate-700/50"
-                }`}
-              >
-                <div className='flex items-center gap-3 mb-2'>
-                  <plan.icon
-                    className={`w-5 h-5 ${
-                      isActive ? "text-teal-400" : "text-slate-500"
-                    }`}
-                  />
-                  <span
-                    className={`font-medium ${
-                      isActive ? "text-white" : "text-slate-400"
-                    }`}
-                  >
-                    {plan.name}
-                  </span>
-                  {isActive && (
-                    <span className='ml-auto px-2 py-0.5 text-xs bg-teal-500/20 text-teal-400 rounded-full'>
-                      Current
-                    </span>
-                  )}
-                </div>
-                <p
-                  className={`text-2xl font-bold ${
-                    isActive ? "text-white" : "text-slate-500"
-                  }`}
-                >
-                  {plan.price}
-                  <span className='text-sm font-normal text-slate-500'>
-                    /mo
-                  </span>
-                </p>
-              </div>
-            );
-          })}
+          {plans.map((plan) => (
+            <PlanCard
+              key={plan.id}
+              id={plan.slug || plan.id}
+              name={plan.name}
+              price={plan.price}
+              description={plan.description}
+              active={plan.slug === currentPlan || plan.id === currentPlan}
+              onSelect={async (planId) => {
+                try {
+                  const res = await subscriptionApi.createSubscription(planId);
+                  if (res.success && res.data) {
+                    if (res.data.url) {
+                      window.location.href = res.data.url;
+                      return;
+                    }
+                    addToast("success", "Subscribed", "Subscription created");
+                    setCurrentPlan(planId);
+                  } else {
+                    addToast(
+                      "error",
+                      "Subscription Failed",
+                      res.message || "Unable to create subscription"
+                    );
+                  }
+                } catch (e) {
+                  addToast(
+                    "error",
+                    "Subscription Failed",
+                    "Unable to create subscription"
+                  );
+                }
+              }}
+            />
+          ))}
         </div>
 
         <div className='flex flex-col sm:flex-row gap-3 mt-6'>

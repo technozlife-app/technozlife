@@ -24,7 +24,8 @@ interface AuthContextType {
   register: (
     email: string,
     password: string,
-    name: string
+    name: string,
+    recaptchaToken?: string
   ) => Promise<{ success: boolean; message?: string }>;
   googleLogin: (
     token: string

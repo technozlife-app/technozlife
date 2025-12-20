@@ -244,8 +244,8 @@ export default function AuthPage() {
     <div className='min-h-screen bg-slate-950 relative overflow-hidden'>
       {/* Background Effects */}
       <div className='absolute inset-0'>
-        <div className='absolute top-0 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-gradient-radial from-teal-500/10 via-transparent to-transparent' />
-        <div className='absolute bottom-0 right-0 w-[600px] h-[600px] bg-gradient-radial from-violet-500/10 via-transparent to-transparent' />
+        <div className='absolute top-0 left-1/2 -translate-x-1/2 w-200 h-200 bg-gradient-radial from-teal-500/10 via-transparent to-transparent' />
+        <div className='absolute bottom-0 right-0 w-150 h-150 bg-gradient-radial from-violet-500/10 via-transparent to-transparent' />
         <div
           className='absolute inset-0 opacity-[0.02]'
           style={{

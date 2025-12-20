@@ -152,7 +152,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
               <img
                 src={post.coverImage || "/placeholder.svg"}
                 alt={post.title}
-                className='relative w-full h-64 md:h-96 lg:h-[500px] object-cover rounded-3xl'
+                className='relative w-full h-64 md:h-96 lg:h-125 object-cover rounded-3xl'
               />
             </div>
           </div>
@@ -260,7 +260,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                             alt={relatedPost.title}
                             className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-500'
                           />
-                          <div className='absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/50 to-transparent' />
+                          <div className='absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/50 to-transparent' />
                         </div>
 
                         <div className='p-6'>

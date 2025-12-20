@@ -260,9 +260,32 @@ export const dashboardApi = {
   },
 
   async generateContent(prompt: string, type: string) {
-    return apiRequest<{ content: string; tokensUsed: number }>("/ai/generate", {
+    return apiRequest<{
+      content?: string;
+      tokensUsed?: number;
+      jobId?: string;
+    }>("/ai/generate", {
       method: "POST",
       body: JSON.stringify({ prompt, type }),
     });
+  },
+
+  async getJobs() {
+    return apiRequest<{
+      jobs: Array<{
+        id: string;
+        status: string;
+        prompt?: string;
+        result?: string;
+        tokensUsed?: number;
+        createdAt?: string;
+      }>;
+    }>("/ai/jobs");
+  },
+
+  async getJobStatus(jobId: string) {
+    return apiRequest<{ status: string; result?: string; tokensUsed?: number }>(
+      `/ai/jobs/${jobId}/status`
+    );
   },
 };

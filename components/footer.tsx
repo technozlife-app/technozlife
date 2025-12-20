@@ -33,8 +33,8 @@ export function Footer() {
   return (
     <footer className='relative pt-24 pb-12 overflow-hidden'>
       {/* Background fade */}
-      <div className='absolute inset-0 bg-gradient-to-t from-slate-950 via-slate-950/95 to-transparent' />
-      <div className='absolute bottom-0 left-1/2 -translate-x-1/2 w-[800px] h-[400px] bg-teal-500/5 rounded-full blur-3xl' />
+      <div className='absolute inset-0 bg-linear-to-t from-slate-950 via-slate-950/95 to-transparent' />
+      <div className='absolute bottom-0 left-1/2 -translate-x-1/2 w-200 h-100 bg-teal-500/5 rounded-full blur-3xl' />
 
       <div className='relative max-w-7xl mx-auto px-6'>
         {/* Main footer content */}
@@ -50,8 +50,8 @@ export function Footer() {
             {/* Logo */}
             <Link href='/' className='flex items-center gap-3 mb-6 group'>
               <div className='relative w-10 h-10'>
-                <div className='absolute inset-0 bg-linear-to-br from-teal-500 to-emerald-500 rounded-xl rotate-45 group-hover:rotate-[55deg] transition-transform duration-300' />
-                <div className='absolute inset-1 bg-slate-950 rounded-lg rotate-45 group-hover:rotate-[55deg] transition-transform duration-300' />
+                <div className='absolute inset-0 bg-linear-to-br from-teal-500 to-emerald-500 rounded-xl rotate-45 group-hover:rotate-55 transition-transform duration-300' />
+                <div className='absolute inset-1 bg-slate-950 rounded-lg rotate-45 group-hover:rotate-55 transition-transform duration-300' />
                 <span className='absolute inset-0 flex items-center justify-center text-teal-400 font-bold text-lg'>
                   T
                 </span>
