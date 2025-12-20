@@ -24,7 +24,15 @@ export default function BillingPage() {
   const { addToast } = useToast();
   const [payments, setPayments] = useState<any[]>(mockPayments);
   const [plans, setPlans] = useState<any[]>(plansInitial);
-  const [currentPlan, setCurrentPlan] = useState(user?.plan || "pro");
+  const [currentPlan, setCurrentPlan] = useState<string | null>(
+    (user as any)?.plan || (user as any)?.current_plan || null
+  );
+
+  useEffect(() => {
+    // keep currentPlan in sync with user changes
+    const up = (user as any)?.plan || (user as any)?.current_plan || null;
+    if (up) setCurrentPlan(up);
+  }, [user]);
 
   useEffect(() => {
     let mounted = true;
@@ -36,8 +44,18 @@ export default function BillingPage() {
         ]);
 
         if (mounted) {
-          if (plansRes.success && plansRes.data)
+          if (
+            plansRes.success &&
+            plansRes.data &&
+            (plansRes.data.plans || []).length > 0
+          ) {
             setPlans(plansRes.data.plans || []);
+          } else {
+            // fallback to local static plans
+            const { getAllPlans } = await import("@/lib/plans");
+            setPlans(getAllPlans());
+          }
+
           if (paymentsRes.success && paymentsRes.data)
             setPayments(paymentsRes.data.payments || []);
         }

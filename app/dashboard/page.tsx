@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth-context";
 
 import { dashboardApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
+import { getPlanBySlug } from "@/lib/plans";
 
 interface StatsShape {
   totalGenerations: number;
@@ -104,6 +105,17 @@ export default function DashboardPage() {
           <p className='text-slate-400'>
             Here's what's happening with your bio-digital interface
           </p>
+          <div className='mt-3 flex items-center gap-3'>
+            <span className='text-sm text-slate-400'>Plan:</span>
+            <span className='px-3 py-1 rounded-full bg-slate-800 text-sm font-medium text-white'>
+              {(() => {
+                const planSlug =
+                  (user as any)?.plan || (user as any)?.current_plan || null;
+                const plan = planSlug ? getPlanBySlug(planSlug) : null;
+                return plan ? plan.name : planSlug ? planSlug : "No plan";
+              })()}
+            </span>
+          </div>
         </motion.div>
 
         {/* Stats Grid - Responsive */}

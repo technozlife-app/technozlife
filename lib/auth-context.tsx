@@ -196,6 +196,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile.success && profile.data) setUser(profile.data);
       }
       scheduleProactiveRefresh();
+      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      try {
+        const { ensureUserHasPlan } = await import("./subscription-helper");
+        const assigned = await ensureUserHasPlan(result.data.user || null);
+        if (assigned) {
+          const profile = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data);
+        }
+      } catch (e) {
+        // ignore helper errors
+      }
+
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
@@ -229,6 +241,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile.success && profile.data) setUser(profile.data);
       }
       scheduleProactiveRefresh();
+
+      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      try {
+        const { ensureUserHasPlan } = await import("./subscription-helper");
+        const assigned = await ensureUserHasPlan(result.data.user || null);
+        if (assigned) {
+          const profile = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data);
+        }
+      } catch (e) {
+        // ignore helper errors
+      }
+
       toast({ title: "Account created", description: "Welcome!" });
       return { success: true };
     }
@@ -252,6 +277,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile.success && profile.data) setUser(profile.data);
       }
       scheduleProactiveRefresh();
+
+      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      try {
+        const { ensureUserHasPlan } = await import("./subscription-helper");
+        const assigned = await ensureUserHasPlan(result.data.user || null);
+        if (assigned) {
+          const profile = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data);
+        }
+      } catch (e) {
+        // ignore helper errors
+      }
+
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
@@ -275,6 +313,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (profile.success && profile.data) setUser(profile.data);
       }
       scheduleProactiveRefresh();
+
+      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      try {
+        const { ensureUserHasPlan } = await import("./subscription-helper");
+        const assigned = await ensureUserHasPlan(result.data.user || null);
+        if (assigned) {
+          const profile = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data);
+        }
+      } catch (e) {
+        // ignore helper errors
+      }
+
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
