@@ -150,6 +150,18 @@ export default function AuthPage() {
     }
   };
 
+  // OAuth redirect handlers (browser flow)
+  const handleGoogleAuth = () => {
+    setIsLoading(true);
+    // Redirect the browser to backend OAuth endpoint which will return a token in the callback
+    window.location.href = API_BASE + "/auth/google/redirect";
+  };
+
+  const handleGithubAuth = () => {
+    setIsLoading(true);
+    window.location.href = API_BASE + "/auth/github/redirect";
+  };
+
   return (
     <div className='min-h-screen bg-slate-950 relative overflow-hidden'>
       {/* Background Effects */}
