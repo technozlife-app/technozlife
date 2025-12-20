@@ -36,13 +36,6 @@ interface JobItem {
   createdAt?: string;
 }
 
-const typeIcons: Record<string, typeof FileText> = {
-  email: Mail,
-  blog: FileText,
-  social: MessageSquare,
-  code: Code,
-};
-
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [copiedId, setCopiedId] = useState<string | null>(null);

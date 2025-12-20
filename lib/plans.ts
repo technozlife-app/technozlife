@@ -92,3 +92,6 @@ export function getPlanById(id: string): Plan | undefined {
 export function getPlanBySlug(slug: string): Plan | undefined {
   return TIERS.find((p) => p.slug === slug);
 }
+export function getAllPlans(): Plan[] {
+  return TIERS;
+}

@@ -1,6 +1,11 @@
 import RequireAuth from "@/components/auth/RequireAuth";
-import { getPlanBySlug } from "@/lib/plans";
+import { getPlanBySlug, getAllPlans } from "@/lib/plans";
 import CheckoutClient from "../CheckoutClient";
+
+// Static parameters
+export const generateStaticParams = () => {
+  return getAllPlans().map((plan: { slug: string }) => ({ plan: plan.slug }));
+};
 
 export default function CheckoutPage({ params }: { params: { plan: string } }) {
   const plan = getPlanBySlug(params.plan);
