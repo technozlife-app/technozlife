@@ -221,9 +221,23 @@ export const authApi = {
   /**
    * Exchange Google credential/code for tokens (API flow)
    * POST /auth/google/token
+   * Accepts either an ID token (JWT) or an authorization code. When a string is
+   * passed we heuristically detect JWTs (3 dot-separated parts) and set the
+   * appropriate field so the backend receives `{ token }` or `{ code }`.
    */
   async googleAuth(payload: { token?: string; code?: string } | string) {
-    const body = typeof payload === "string" ? { token: payload } : payload;
+    let body: { token?: string; code?: string };
+    if (typeof payload === "string") {
+      // Heuristic: JWT tokens from Google contain two dots
+      if (payload.split(".").length === 3) {
+        body = { token: payload };
+      } else {
+        body = { code: payload };
+      }
+    } else {
+      body = payload;
+    }
+
     return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
       "/auth/google/token",
       {
@@ -366,7 +380,8 @@ export const authApi = {
   },
 
   async getProfile() {
-    return apiRequest<UserProfile>("/user/profile");
+    // API exposes the authenticated user at /user
+    return apiRequest<UserProfile>("/user");
   },
 
   async verifyEmail(token: string) {
@@ -381,7 +396,8 @@ export const authApi = {
   },
 
   async updateProfile(data: Partial<UserProfile>) {
-    return apiRequest<UserProfile>("/user/profile", {
+    // Update authenticated user - endpoint is /user
+    return apiRequest<UserProfile>("/user", {
       method: "PUT",
       body: JSON.stringify(data),
     });

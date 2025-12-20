@@ -41,11 +41,38 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 function saveTokens(tokens: AuthTokens) {
   localStorage.setItem("accessToken", tokens.accessToken);
-  localStorage.setItem("refreshToken", tokens.refreshToken);
+  if (tokens.refreshToken)
+    localStorage.setItem("refreshToken", tokens.refreshToken);
   localStorage.setItem(
     "tokenExpiry",
-    String(Date.now() + tokens.expiresIn * 1000)
+    String(Date.now() + (tokens.expiresIn || 3600) * 1000)
   );
+}
+
+function setTokensFromResponse(data: any) {
+  // Accept either { tokens: { accessToken, refreshToken, expiresIn } } or { token: string }
+  if (!data) return;
+  if (data.tokens) {
+    saveTokens(data.tokens as AuthTokens);
+    return;
+  }
+
+  if (typeof data.token === "string") {
+    // Backend returned a single token (Sanctum-like). Store it as accessToken and set a default expiry (1h)
+    localStorage.setItem("accessToken", data.token);
+    localStorage.removeItem("refreshToken");
+    localStorage.setItem("tokenExpiry", String(Date.now() + 3600 * 1000));
+    return;
+  }
+
+  // Some endpoints may return token fields in different names
+  if (data.accessToken) {
+    saveTokens({
+      accessToken: data.accessToken,
+      refreshToken: (data.refreshToken as string) || "",
+      expiresIn: Number(data.expiresIn) || 3600,
+    });
+  }
 }
 
 function clearTokens() {
@@ -161,8 +188,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await authApi.login(email, password);
     setIsAuthenticating(false);
     if (result.success && result.data) {
-      saveTokens(result.data.tokens);
-      setUser(result.data.user);
+      setTokensFromResponse(result.data);
+      if (result.data.user) {
+        setUser(result.data.user);
+      } else {
+        const profile = await authApi.getProfile();
+        if (profile.success && profile.data) setUser(profile.data);
+      }
       scheduleProactiveRefresh();
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
@@ -189,8 +221,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     setIsAuthenticating(false);
     if (result.success && result.data) {
-      saveTokens(result.data.tokens);
-      setUser(result.data.user);
+      setTokensFromResponse(result.data);
+      if (result.data.user) {
+        setUser(result.data.user);
+      } else {
+        const profile = await authApi.getProfile();
+        if (profile.success && profile.data) setUser(profile.data);
+      }
       scheduleProactiveRefresh();
       toast({ title: "Account created", description: "Welcome!" });
       return { success: true };
@@ -207,8 +244,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await authApi.googleAuth(token);
     setIsAuthenticating(false);
     if (result.success && result.data) {
-      saveTokens(result.data.tokens);
-      setUser(result.data.user);
+      setTokensFromResponse(result.data);
+      if (result.data.user) {
+        setUser(result.data.user);
+      } else {
+        const profile = await authApi.getProfile();
+        if (profile.success && profile.data) setUser(profile.data);
+      }
       scheduleProactiveRefresh();
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
@@ -225,8 +267,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const result = await authApi.githubAuth(code);
     setIsAuthenticating(false);
     if (result.success && result.data) {
-      saveTokens(result.data.tokens);
-      setUser(result.data.user);
+      setTokensFromResponse(result.data);
+      if (result.data.user) {
+        setUser(result.data.user);
+      } else {
+        const profile = await authApi.getProfile();
+        if (profile.success && profile.data) setUser(profile.data);
+      }
       scheduleProactiveRefresh();
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };

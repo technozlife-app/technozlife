@@ -11,22 +11,45 @@ export default function AuthCompletePage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Read both query string and hash fragment to support different redirects
     const params = new URLSearchParams(window.location.search);
-    const token = params.get("token") || params.get("access_token");
-    const code = params.get("code");
-    const provider = params.get("provider") || params.get("p");
+    const hashParams = new URLSearchParams(
+      window.location.hash.replace(/^#/, "")
+    );
+
+    const token =
+      params.get("token") ||
+      params.get("access_token") ||
+      hashParams.get("token") ||
+      hashParams.get("access_token");
+    const code = params.get("code") || hashParams.get("code");
+    const provider =
+      params.get("provider") ||
+      params.get("p") ||
+      hashParams.get("provider") ||
+      hashParams.get("p");
+    const refresh =
+      params.get("refresh_token") || hashParams.get("refresh_token");
 
     async function handleToken(tokenValue: string) {
       localStorage.setItem("accessToken", tokenValue);
-      const refresh = params.get("refresh_token");
       if (refresh) localStorage.setItem("refreshToken", refresh);
 
-      // Clean URL
+      // Clean URL (remove query params and hash tokens)
       const url = new URL(window.location.href);
       url.searchParams.delete("token");
       url.searchParams.delete("access_token");
       url.searchParams.delete("refresh_token");
-      window.history.replaceState({}, document.title, url.pathname);
+      // strip token-like hash params
+      const newHash = window.location.hash.replace(
+        /([#&]?token=[^&]*)|([#&]?access_token=[^&]*)|([#&]?refresh_token=[^&]*)/g,
+        ""
+      );
+      window.history.replaceState(
+        {},
+        document.title,
+        url.pathname + (newHash || "")
+      );
 
       try {
         await refreshUser();
