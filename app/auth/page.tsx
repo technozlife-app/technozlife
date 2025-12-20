@@ -50,9 +50,6 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
-const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || "";
-const GITHUB_CLIENT_ID = process.env.NEXT_PUBLIC_GITHUB_CLIENT_ID || "";
-
 export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -66,7 +63,7 @@ export default function AuthPage() {
   });
 
   const router = useRouter();
-  const { login, register, googleLogin, githubLogin } = useAuth();
+  const { login, register } = useAuth();
   const { addToast } = useToast();
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -150,24 +147,6 @@ export default function AuthPage() {
       );
     } finally {
       setIsLoading(false);
-    }
-  };
-
-  const handleGoogleAuth = async () => {
-    // Start OAuth via backend redirect endpoint as documented in API.md
-    try {
-      window.location.href = "/auth/google/redirect";
-    } catch (e) {
-      addToast("error", "Google Auth", "Unable to start Google OAuth");
-    }
-  };
-
-  const handleGithubAuth = async () => {
-    // Start OAuth via backend redirect endpoint as documented in API.md
-    try {
-      window.location.href = "/auth/github/redirect";
-    } catch (e) {
-      addToast("error", "GitHub Auth", "Unable to start GitHub OAuth");
     }
   };
 
@@ -378,7 +357,7 @@ export default function AuthPage() {
                         </Label>
                         {mode === "login" && (
                           <Link
-                            href='#'
+                            href='/auth/forgot'
                             className='text-sm text-teal-400 hover:text-teal-300 transition-colors'
                           >
                             Forgot password?
