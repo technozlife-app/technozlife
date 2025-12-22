@@ -3,24 +3,27 @@ export const API_BASE =
 
 export interface ApiResponse<T = unknown> {
   success: boolean;
-  message?: string;
+  message: string;
   data?: T;
+  code: number;
+  timestamp: string;
 }
 
 export interface UserProfile {
-  id: string;
+  id: number;
   username?: string;
   first_name?: string;
   last_name?: string;
   email: string;
   avatar?: string;
   current_plan?: string;
+  email_verified_at?: string;
+  created_at: string;
+  updated_at: string;
   // Backwards-compatible fields some callers may still use
   name?: string;
   plan?: string;
   createdAt?: string;
-  created_at?: string;
-  updated_at?: string;
 }
 
 export interface AuthTokens {
@@ -64,18 +67,24 @@ async function apiRequest<T>(
       return {
         success: false,
         message: data.message || "An error occurred",
+        code: response.status,
+        timestamp: new Date().toISOString(),
       };
     }
 
     return {
       success: true,
-      data,
       message: data.message,
+      data: data.data,
+      code: data.code,
+      timestamp: data.timestamp,
     };
   } catch (error) {
     return {
       success: false,
       message: error instanceof Error ? error.message : "Network error",
+      code: 0,
+      timestamp: new Date().toISOString(),
     };
   }
 }
@@ -101,13 +110,10 @@ export const authApi = {
     if (name) body.first_name = name;
     if (recaptchaToken) body.recaptcha_token = recaptchaToken;
 
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
-      "/auth/register",
-      {
-        method: "POST",
-        body: JSON.stringify(body),
-      }
-    );
+    return apiRequest<{ user: UserProfile; token: string }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
   },
 
   /**
@@ -137,13 +143,10 @@ export const authApi = {
       );
     if (data.recaptchaToken) body.recaptcha_token = data.recaptchaToken;
 
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
-      "/auth/register",
-      {
-        method: "POST",
-        body: JSON.stringify(body),
-      }
-    );
+    return apiRequest<{ user: UserProfile; token: string }>("/auth/register", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
   },
 
   /**
@@ -151,13 +154,10 @@ export const authApi = {
    */
   async login(email: string, password: string) {
     const hashedPassword = await hashPassword(password);
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
-      "/auth/login",
-      {
-        method: "POST",
-        body: JSON.stringify({ email, password_hash: hashedPassword }),
-      }
-    );
+    return apiRequest<{ user: UserProfile; token: string }>("/auth/login", {
+      method: "POST",
+      body: JSON.stringify({ email, password_hash: hashedPassword }),
+    });
   },
 
   /**
@@ -192,7 +192,7 @@ export const authApi = {
         newPasswordConfirmation
       );
 
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
+    return apiRequest<{ user: UserProfile; token: string }>(
       "/auth/password/reset",
       {
         method: "POST",
@@ -245,7 +245,7 @@ export const authApi = {
       body = payload;
     }
 
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
+    return apiRequest<{ user: UserProfile; token: string }>(
       "/auth/google/token",
       {
         method: "POST",
@@ -260,7 +260,7 @@ export const authApi = {
    */
   async githubAuth(payload: { access_token?: string; code?: string } | string) {
     const body = typeof payload === "string" ? { code: payload } : payload;
-    return apiRequest<{ user: UserProfile; tokens: AuthTokens }>(
+    return apiRequest<{ user: UserProfile; token: string }>(
       "/auth/github/token",
       {
         method: "POST",
@@ -392,7 +392,7 @@ export const authApi = {
 
   async getProfile() {
     // API exposes the authenticated user at /user
-    return apiRequest<UserProfile>("/user");
+    return apiRequest<{ user: UserProfile }>("/user");
   },
 
   async verifyEmail(token: string) {

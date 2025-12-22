@@ -9,9 +9,38 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { authApi, type UserProfile, type AuthTokens } from "./api";
+import { authApi, type UserProfile } from "./api";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+
+// Response interfaces to match API.md structures
+interface AuthSuccessResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: UserProfile;
+    token: string;
+  };
+  code: number;
+  timestamp: string;
+}
+
+interface ProfileResponse {
+  success: boolean;
+  message: string;
+  data?: {
+    user: UserProfile;
+  };
+  code: number;
+  timestamp: string;
+}
+
+interface LogoutResponse {
+  success: boolean;
+  message: string;
+  code: number;
+  timestamp: string;
+}
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -22,10 +51,11 @@ interface AuthContextType {
     password: string
   ) => Promise<{ success: boolean; message?: string }>;
   register: (
+    username: string,
+    firstName: string,
+    lastName: string,
     email: string,
-    password: string,
-    name: string,
-    recaptchaToken?: string
+    password: string
   ) => Promise<{ success: boolean; message?: string }>;
   googleLogin: (
     token: string
@@ -39,40 +69,11 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function saveTokens(tokens: AuthTokens) {
-  localStorage.setItem("accessToken", tokens.accessToken);
-  if (tokens.refreshToken)
-    localStorage.setItem("refreshToken", tokens.refreshToken);
-  localStorage.setItem(
-    "tokenExpiry",
-    String(Date.now() + (tokens.expiresIn || 3600) * 1000)
-  );
-}
-
 function setTokensFromResponse(data: any) {
-  // Accept either { tokens: { accessToken, refreshToken, expiresIn } } or { token: string }
-  if (!data) return;
-  if (data.tokens) {
-    saveTokens(data.tokens as AuthTokens);
-    return;
-  }
-
-  if (typeof data.token === "string") {
-    // Backend returned a single token (Sanctum-like). Store it as accessToken and set a default expiry (1h)
-    localStorage.setItem("accessToken", data.token);
-    localStorage.removeItem("refreshToken");
-    localStorage.setItem("tokenExpiry", String(Date.now() + 3600 * 1000));
-    return;
-  }
-
-  // Some endpoints may return token fields in different names
-  if (data.accessToken) {
-    saveTokens({
-      accessToken: data.accessToken,
-      refreshToken: (data.refreshToken as string) || "",
-      expiresIn: Number(data.expiresIn) || 3600,
-    });
-  }
+  if (!data || typeof data.token !== "string") return;
+  localStorage.setItem("accessToken", data.token);
+  localStorage.removeItem("refreshToken");
+  localStorage.setItem("tokenExpiry", String(Date.now() + 3600 * 1000));
 }
 
 function clearTokens() {
@@ -146,14 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result = await authApi.getProfile();
+    const result: ProfileResponse = await authApi.getProfile();
     if (result.success && result.data) {
-      // Normalize response shapes: backend may return user directly or { user: {...} }
-      let profile: any = result.data;
-      if (profile.user) profile = profile.user;
-      if (profile.data && profile.data.user) profile = profile.data.user;
-
-      setUser(profile);
+      setUser(result.data.user);
       scheduleProactiveRefresh();
     } else {
       clearTokens();
@@ -174,24 +170,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     setIsAuthenticating(true);
-    const result = await authApi.login(email, password);
+    const result: AuthSuccessResponse = await authApi.login(email, password);
     setIsAuthenticating(false);
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
-      if (result.data.user) {
-        setUser(result.data.user);
-      } else {
-        const profile = await authApi.getProfile();
-        if (profile.success && profile.data) setUser(profile.data);
-      }
+      setUser(result.data.user);
       scheduleProactiveRefresh();
       // ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user || null);
+        const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile = await authApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data);
+          const profile: ProfileResponse = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
         // ignore helper errors
@@ -208,36 +199,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const register = async (
+    username: string,
+    firstName: string,
+    lastName: string,
     email: string,
-    password: string,
-    name: string,
-    recaptchaToken?: string
+    password: string
   ) => {
     setIsAuthenticating(true);
-    const result = await authApi.register(
+    const result: AuthSuccessResponse = await authApi.registerFull({
+      username,
+      first_name: firstName,
+      last_name: lastName,
       email,
       password,
-      name,
-      recaptchaToken
-    );
+    });
     setIsAuthenticating(false);
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
-      if (result.data.user) {
-        setUser(result.data.user);
-      } else {
-        const profile = await authApi.getProfile();
-        if (profile.success && profile.data) setUser(profile.data);
-      }
+      setUser(result.data.user);
       scheduleProactiveRefresh();
 
       // ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user || null);
+        const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile = await authApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data);
+          const profile: ProfileResponse = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
         // ignore helper errors
@@ -255,25 +243,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const googleLogin = async (token: string) => {
     setIsAuthenticating(true);
-    const result = await authApi.googleAuth(token);
+    const result: AuthSuccessResponse = await authApi.googleAuth(token);
     setIsAuthenticating(false);
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
-      if (result.data.user) {
-        setUser(result.data.user);
-      } else {
-        const profile = await authApi.getProfile();
-        if (profile.success && profile.data) setUser(profile.data);
-      }
+      setUser(result.data.user);
       scheduleProactiveRefresh();
 
       // ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user || null);
+        const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile = await authApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data);
+          const profile: ProfileResponse = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
         // ignore helper errors
@@ -291,25 +274,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const githubLogin = async (code: string) => {
     setIsAuthenticating(true);
-    const result = await authApi.githubAuth(code);
+    const result: AuthSuccessResponse = await authApi.githubAuth(code);
     setIsAuthenticating(false);
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
-      if (result.data.user) {
-        setUser(result.data.user);
-      } else {
-        const profile = await authApi.getProfile();
-        if (profile.success && profile.data) setUser(profile.data);
-      }
+      setUser(result.data.user);
       scheduleProactiveRefresh();
 
       // ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user || null);
+        const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile = await authApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data);
+          const profile: ProfileResponse = await authApi.getProfile();
+          if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
         // ignore helper errors
@@ -327,7 +305,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      await authApi.logout();
+      const result: LogoutResponse = await authApi.logout();
+      // No need to check result.data as per API.md
     } catch (e) {
       // ignore server errors
     }
