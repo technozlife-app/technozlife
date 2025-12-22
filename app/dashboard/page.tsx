@@ -31,7 +31,7 @@ import ProfileCard from "@/components/dashboard/profile-card";
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const { addToast } = useToast();
+  const { toast } = useToast();
   const [stats, setStats] = useState<StatsShape | null>(null);
   const [activities, setActivities] = useState<Array<any>>([]);
   const [usageData, setUsageData] = useState(initialUsageData);
@@ -58,7 +58,7 @@ export default function DashboardPage() {
             })
           );
         } else {
-          addToast({
+          toast({
             title: "Failed to load stats",
             description: statsRes.message,
           });
@@ -71,13 +71,13 @@ export default function DashboardPage() {
             (activityRes.data as any).activities || activityRes.data;
           setActivities(activitiesList || []);
         } else {
-          addToast({
+          toast({
             title: "Failed to load activity",
             description: activityRes.message,
           });
         }
       } catch (err) {
-        addToast({
+        toast({
           title: "Connection Error",
           description: "Unable to load dashboard data",
         });
@@ -89,7 +89,7 @@ export default function DashboardPage() {
     return () => {
       mounted = false;
     };
-  }, [addToast]);
+  }, [toast]);
 
   return (
     <RequireAuth>
@@ -100,19 +100,18 @@ export default function DashboardPage() {
           animate={{ opacity: 1, y: 0 }}
           className='mb-6 md:mb-8'
         >
+          {/* Safe display name extraction to avoid calling toString on undefined */}
           <h1 className='text-2xl md:text-3xl font-bold text-white mb-2'>
             Welcome back
-            {user
-              ? `, ${
-                  (
-                    (user as any).first_name ||
-                    (user as any).username ||
-                    user.email
-                  )
-                    .toString()
-                    .split(" ")[0]
-                }`
-              : ""}
+            {(() => {
+              const nameSource = user
+                ? (user as any).first_name ??
+                  (user as any).username ??
+                  (user as any).email ??
+                  ""
+                : "";
+              return nameSource ? `, ${String(nameSource).split(" ")[0]}` : "";
+            })()}
           </h1>
           <p className='text-slate-400'>
             Here's what's happening with your bio-digital interface
