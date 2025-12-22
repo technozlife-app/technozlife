@@ -27,6 +27,7 @@ const initialUsageData = [
 ];
 
 import RequireAuth from "@/components/auth/RequireAuth";
+import ProfileCard from "@/components/dashboard/profile-card";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -169,6 +170,16 @@ export default function DashboardPage() {
           {/* Right column */}
           <div className='space-y-4 md:space-y-6'>
             <ActivityFeed activities={activities} />
+
+            {/* Profile card */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+              className='mb-4'
+            >
+              <ProfileCard />
+            </motion.div>
 
             {/* Quick actions */}
             <motion.div

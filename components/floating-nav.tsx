@@ -96,8 +96,8 @@ export function FloatingNav() {
                 className='p-3 rounded-full text-slate-400 hover:text-teal-400 transition-colors'
               >
                 <img
-                  src={user.avatar || "/avatar-placeholder.png"}
-                  alt={user.name}
+                  src={user.avatar || "/avatar-placeholder.svg"}
+                  alt={user.name || user.email || "User"}
                   className='w-5 h-5 rounded-full'
                 />
               </Link>
