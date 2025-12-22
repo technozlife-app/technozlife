@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { useToast } from "@/components/ui/custom-toast";
+import { aiApi } from "@/lib/api";
 
 const contentTypes = [
   { value: "email", label: "Email" },
@@ -22,30 +23,6 @@ const contentTypes = [
   { value: "summary", label: "Summary" },
 ];
 
-// Simulated AI responses for different content types
-const simulatedResponses = {
-  email: [
-    "Subject: Welcome to Our Platform!\n\nDear [Name],\n\nWe're thrilled to have you join our community. Our platform offers cutting-edge AI tools to help you create amazing content.\n\nBest regards,\nThe Team",
-    "Subject: Product Update Notification\n\nHello valued customer,\n\nWe're excited to announce new features that will enhance your experience. Check out the latest updates in your dashboard.\n\nThank you for choosing us!",
-  ],
-  blog: [
-    "# The Future of AI Content Generation\n\nArtificial Intelligence is revolutionizing how we create and consume content. From automated writing assistants to intelligent content suggestions, AI tools are becoming indispensable for modern creators.\n\n## Key Benefits\n\n- **Speed**: Generate content in seconds\n- **Quality**: AI-assisted writing with human-like quality\n- **Versatility**: Multiple content types supported\n\nThe possibilities are endless as AI continues to evolve.",
-    "# Mastering Digital Marketing in 2025\n\nDigital marketing has evolved significantly, with AI playing a crucial role in modern strategies. Understanding these changes is key to staying competitive.\n\n## Current Trends\n\n1. **Personalization**: AI-driven content tailored to individual preferences\n2. **Automation**: Streamlined marketing workflows\n3. **Analytics**: Deep insights into campaign performance\n\nStay ahead of the curve with intelligent marketing solutions.",
-  ],
-  social: [
-    "🚀 Just discovered an amazing AI tool that generates high-quality content in seconds! Whether you need blog posts, emails, or social media content, this platform has you covered. The future of content creation is here! #AI #ContentCreation #Tech",
-    "💡 Pro tip: Use AI to enhance your content strategy! From generating ideas to polishing final drafts, AI tools can save you hours of work. What's your favorite AI writing tool? #DigitalMarketing #AI #Productivity",
-  ],
-  code: [
-    "```javascript\nfunction generateContent(prompt, type) {\n  // AI-powered content generation\n  const templates = {\n    email: 'Professional email template',\n    blog: 'SEO-optimized article',\n    social: 'Engaging social media post'\n  };\n  \n  return templates[type] || 'Generated content';\n}\n```",
-    '```python\ndef ai_content_generator(prompt: str, content_type: str) -> str:\n    """\n    Generate AI-powered content based on prompt and type.\n    \n    Args:\n        prompt: User input prompt\n        content_type: Type of content to generate\n    \n    Returns:\n        Generated content string\n    """\n    # AI processing logic would go here\n    return f"Generated {content_type} content for: {prompt}"\n```',
-  ],
-  summary: [
-    "**Key Points Summary:**\n\n• AI content generation is revolutionizing digital creation\n• Multiple content types supported (emails, blogs, social media)\n• Significant time savings for content creators\n• Quality improvements through AI assistance\n• Future-ready technology for modern workflows",
-    "**Executive Summary:**\n\nThe AI content generation platform provides comprehensive solutions for modern content creation needs. With support for multiple formats and intelligent processing, it offers significant efficiency improvements while maintaining high-quality output standards.",
-  ],
-};
-
 export function AIGenerator() {
   const [prompt, setPrompt] = useState("");
   const [contentType, setContentType] = useState("email");
@@ -53,6 +30,8 @@ export function AIGenerator() {
   const [result, setResult] = useState("");
   const [copied, setCopied] = useState(false);
   const [generationCount, setGenerationCount] = useState(0);
+  const [currentJobId, setCurrentJobId] = useState<string | null>(null);
+  const [generationProgress, setGenerationProgress] = useState(0);
   const { addToast } = useToast();
 
   // Simulate dynamic stats
@@ -64,12 +43,51 @@ export function AIGenerator() {
     return () => clearInterval(interval);
   }, []);
 
-  const getRandomResponse = (type: string) => {
-    const responses =
-      simulatedResponses[type as keyof typeof simulatedResponses] ||
-      simulatedResponses.email;
-    return responses[Math.floor(Math.random() * responses.length)];
-  };
+  // Poll for job status if we have an async job
+  useEffect(() => {
+    if (!currentJobId) return;
+
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await aiApi.getJobStatus(currentJobId);
+        if (response.success && response.data) {
+          const { status, result: jobResult, tokens_used } = response.data;
+
+          if (status === "completed" && jobResult) {
+            setResult(jobResult);
+            setGenerationCount((prev) => prev + 1);
+            setCurrentJobId(null);
+            setIsGenerating(false);
+            setGenerationProgress(100);
+
+            addToast(
+              "success",
+              "Content Generated",
+              `Used ${tokens_used || 0} tokens • Total generations: ${
+                generationCount + 1
+              }`
+            );
+
+            // Reset progress after a short delay
+            setTimeout(() => setGenerationProgress(0), 1000);
+          } else if (status === "failed") {
+            setCurrentJobId(null);
+            setIsGenerating(false);
+            setGenerationProgress(0);
+            addToast(
+              "error",
+              "Generation Failed",
+              "The AI generation job failed. Please try again."
+            );
+          }
+        }
+      } catch (error) {
+        console.error("Error polling job status:", error);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    return () => clearInterval(pollInterval);
+  }, [currentJobId, generationCount, addToast]);
 
   const handleGenerate = async () => {
     if (!prompt.trim()) {
@@ -83,36 +101,66 @@ export function AIGenerator() {
 
     setIsGenerating(true);
     setResult("");
+    setGenerationProgress(10);
 
-    // Simulate API delay
-    const delay = Math.random() * 2000 + 1000; // 1-3 seconds
+    try {
+      // Create enhanced prompt with content type context
+      const enhancedPrompt = `Generate ${contentType} content: ${prompt}`;
 
-    setTimeout(() => {
-      try {
-        const generatedContent = getRandomResponse(contentType);
-        setResult(generatedContent);
-        setGenerationCount((prev) => prev + 1);
+      const response = await aiApi.generate({
+        prompt: enhancedPrompt,
+      });
 
-        // Simulate token usage
-        const tokensUsed = Math.floor(Math.random() * 500) + 100;
+      if (response.success && response.data) {
+        const { content, tokens_used, job_id } = response.data;
 
-        addToast(
-          "success",
-          "Content Generated",
-          `Used ${tokensUsed} tokens • Total generations: ${
-            generationCount + 1
-          }`
-        );
-      } catch (err) {
-        addToast(
-          "error",
-          "Generation Failed",
-          "Unable to generate content. Please try again."
-        );
-      } finally {
+        if (content) {
+          // Synchronous response
+          setResult(content);
+          setGenerationCount((prev) => prev + 1);
+          setGenerationProgress(100);
+
+          addToast(
+            "success",
+            "Content Generated",
+            `Used ${tokens_used || 0} tokens • Total generations: ${
+              generationCount + 1
+            }`
+          );
+
+          // Reset progress after a short delay
+          setTimeout(() => setGenerationProgress(0), 1000);
+        } else if (job_id) {
+          // Asynchronous response - start polling
+          setCurrentJobId(job_id);
+          setGenerationProgress(50);
+          addToast(
+            "info",
+            "Generation Started",
+            "Your content is being generated..."
+          );
+        } else {
+          throw new Error("No content or job ID returned");
+        }
+      } else {
+        throw new Error(response.message || "Generation failed");
+      }
+    } catch (error) {
+      console.error("Generation error:", error);
+      setGenerationProgress(0);
+      addToast(
+        "error",
+        "Generation Failed",
+        error instanceof Error
+          ? error.message
+          : "Unable to generate content. Please try again."
+      );
+    } finally {
+      // Only set isGenerating to false if we don't have an async job
+      if (!currentJobId) {
         setIsGenerating(false);
       }
-    }, delay);
+    }
   };
 
   const handleCopy = async () => {
@@ -192,7 +240,7 @@ export function AIGenerator() {
             {isGenerating ? (
               <>
                 <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-                Generating...
+                {currentJobId ? "Processing..." : "Generating..."}
               </>
             ) : (
               <>
@@ -213,6 +261,35 @@ export function AIGenerator() {
             </Button>
           )}
         </div>
+
+        {/* Progress bar */}
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className='mt-4'
+          >
+            <div className='flex items-center gap-3 mb-2'>
+              <Sparkles className='w-4 h-4 text-teal-400' />
+              <span className='text-sm text-slate-400'>
+                {currentJobId
+                  ? "Processing your request..."
+                  : "Generating your content..."}
+              </span>
+            </div>
+            <div className='w-full bg-slate-700 rounded-full h-2'>
+              <motion.div
+                className='bg-linear-to-r from-teal-500 to-emerald-500 h-2 rounded-full'
+                initial={{ width: 0 }}
+                animate={{ width: `${generationProgress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+            <div className='text-xs text-slate-500 mt-1 text-right'>
+              {Math.round(generationProgress)}%
+            </div>
+          </motion.div>
+        )}
 
         {result && (
           <motion.div

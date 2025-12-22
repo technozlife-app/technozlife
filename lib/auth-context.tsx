@@ -1,196 +1,109 @@
 "use client";
 
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  useCallback,
-  useRef,
-  type ReactNode,
-} from "react";
-import { authApi, userApi, type UserProfile, type ApiResponse } from "./api";
-import { executeRecaptcha } from "./recaptcha";
-import { useToast } from "@/hooks/use-toast";
+import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-
-// Auth response type
-interface AuthData {
-  user: UserProfile;
-  token: string;
-}
+import { authApi, userApi, type UserProfile, type AuthData } from "@/lib/api";
 
 interface AuthContextType {
   user: UserProfile | null;
-  isLoading: boolean;
   isAuthenticated: boolean;
+  isLoading: boolean;
   login: (
     email: string,
-    password: string
+    password: string,
+    recaptchaToken?: string
   ) => Promise<{ success: boolean; message?: string }>;
   register: (
     username: string,
     firstName: string,
     lastName: string,
     email: string,
-    password: string
-  ) => Promise<{ success: boolean; message?: string }>;
-  googleLogin: (
-    token: string
-  ) => Promise<{ success: boolean; message?: string }>;
-  githubLogin: (
-    code: string
+    password: string,
+    recaptchaToken?: string
   ) => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
+  googleLogin: (
+    code?: string,
+    credential?: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  githubLogin: (
+    code?: string,
+    accessToken?: string
+  ) => Promise<{ success: boolean; message?: string }>;
+  getGoogleRedirectUrl: () => Promise<{
+    success: boolean;
+    url?: string;
+    message?: string;
+  }>;
+  getGithubRedirectUrl: () => Promise<{
+    success: boolean;
+    url?: string;
+    message?: string;
+  }>;
   refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function setTokensFromResponse(data: AuthData) {
-  if (!data || typeof data.token !== "string") return;
-  localStorage.setItem("accessToken", data.token);
-  localStorage.removeItem("refreshToken");
-  localStorage.setItem("tokenExpiry", String(Date.now() + 3600 * 1000));
-}
-
-function clearTokens() {
-  localStorage.removeItem("accessToken");
-  localStorage.removeItem("refreshToken");
-  localStorage.removeItem("tokenExpiry");
-}
-
-export function AuthProvider({ children }: { children: ReactNode }) {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAuthenticating, setIsAuthenticating] = useState(false);
-  const [isRefreshing, setIsRefreshing] = useState(false);
-
-  const { toast } = useToast();
   const router = useRouter();
 
-  const refreshTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function scheduleProactiveRefresh() {
-    try {
-      const expiry = Number(localStorage.getItem("tokenExpiry"));
-      if (!expiry || isNaN(expiry)) return;
-      const msUntilExpiry = expiry - Date.now();
-      const refreshAt = msUntilExpiry - 60 * 1000; // 1 minute before expiry
-      if (refreshAt <= 0) return;
-      if (refreshTimer.current) clearTimeout(refreshTimer.current);
-      refreshTimer.current = setTimeout(() => {
-        tryRefresh();
-      }, Math.max(refreshAt, 1000));
-    } catch (e) {
-      // ignore
-    }
-  }
-
-  async function tryRefresh() {
-    // The API does not document a `/auth/refresh` endpoint. To avoid calling
-    // non-listed endpoints (which can return 404), we will NOT attempt a
-    // server-side refresh. Instead, clear credentials and require the user to
-    // re-authenticate.
-    clearTokens();
-    setUser(null);
-    setIsRefreshing(false);
-    toast({
-      title: "Session expired",
-      description: "Please sign in again.",
-      action: undefined,
-    });
-    try {
-      router.push("/auth");
-    } catch (e) {
-      // router may not be available in some contexts
-    }
-    return false;
-  }
-
-  const refreshUser = useCallback(async () => {
-    const token = localStorage.getItem("accessToken");
-    const refreshToken = localStorage.getItem("refreshToken");
-
-    if (!token && refreshToken) {
-      // attempt refresh
-      const ok = await tryRefresh();
+  // Check for existing token and load user on mount
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("accessToken");
+      if (token) {
+        try {
+          const response = await userApi.getProfile();
+          if (response.success && response.data?.user) {
+            setUser(response.data.user);
+          } else {
+            // Token is invalid, clear it
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("tokenExpiry");
+          }
+        } catch (error) {
+          // Token is invalid, clear it
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("tokenExpiry");
+        }
+      }
       setIsLoading(false);
-      return;
-    }
+    };
 
-    if (!token) {
-      setUser(null);
-      setIsLoading(false);
-      return;
-    }
-
-    const result: ApiResponse<{ user: UserProfile }> =
-      await userApi.getProfile();
-    if (result.success && result.data) {
-      setUser(result.data.user);
-      scheduleProactiveRefresh();
-    } else {
-      clearTokens();
-      setUser(null);
-    }
-    setIsLoading(false);
+    checkAuth();
   }, []);
 
-  useEffect(() => {
-    refreshUser();
-    return () => {
-      if (refreshTimer.current) {
-        clearTimeout(refreshTimer.current);
-        refreshTimer.current = null;
-      }
-    };
-  }, [refreshUser]);
-
-  const login = async (email: string, password: string) => {
-    setIsAuthenticating(true);
-    let recaptchaToken: string | undefined;
+  const login = async (
+    email: string,
+    password: string,
+    recaptchaToken?: string
+  ): Promise<{ success: boolean; message?: string }> => {
     try {
-      recaptchaToken = await executeRecaptcha("login");
-    } catch (e) {
-      // Optional - continue without reCAPTCHA if it fails
-      console.warn("reCAPTCHA failed:", e);
-    }
+      const response = await authApi.login(email, password, recaptchaToken);
+      if (response.success && response.data) {
+        const { user: userData, token } = response.data;
 
-    const result: ApiResponse<AuthData> = await authApi.login(
-      email,
-      password,
-      recaptchaToken
-    );
-    setIsAuthenticating(false);
+        // Store tokens
+        localStorage.setItem("accessToken", token);
+        // Note: Backend doesn't return refresh token in this implementation
+        // You may need to adjust based on your actual token structure
 
-    if (result.success && result.data) {
-      setTokensFromResponse(result.data);
-      setUser(result.data.user);
-      scheduleProactiveRefresh();
-
-      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
-      try {
-        const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user);
-        if (assigned) {
-          const profile: ApiResponse<{ user: UserProfile }> =
-            await userApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data.user);
-        }
-      } catch (e) {
-        // Ignore helper errors
+        setUser(userData);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
       }
-
-      toast({ title: "Signed in", description: "Welcome back!" });
-      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Login failed",
+      };
     }
-
-    toast({
-      title: "Sign in failed",
-      description: result.message || "Unable to sign in",
-    });
-    return { success: false, message: result.message };
   };
 
   const register = async (
@@ -198,166 +111,172 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     firstName: string,
     lastName: string,
     email: string,
-    password: string
-  ) => {
-    setIsAuthenticating(true);
-    let recaptchaToken: string | undefined;
+    password: string,
+    recaptchaToken?: string
+  ): Promise<{ success: boolean; message?: string }> => {
     try {
-      recaptchaToken = await executeRecaptcha("register");
-    } catch (e) {
-      // If reCAPTCHA fails, continue without it (optional)
-      console.warn("reCAPTCHA failed:", e);
-    }
+      const response = await authApi.register({
+        username,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        password,
+        recaptcha_token: recaptchaToken,
+      });
 
-    const result: ApiResponse<AuthData> = await authApi.register({
-      username,
-      first_name: firstName,
-      last_name: lastName,
-      email,
-      password,
-      recaptcha_token: recaptchaToken,
-    });
+      if (response.success && response.data) {
+        const { user: userData, token } = response.data;
 
-    setIsAuthenticating(false);
+        // Store tokens
+        localStorage.setItem("accessToken", token);
 
-    if (result.success && result.data) {
-      setTokensFromResponse(result.data);
-      setUser(result.data.user);
-      scheduleProactiveRefresh();
-
-      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
-      try {
-        const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user);
-        if (assigned) {
-          const profile: ApiResponse<{ user: UserProfile }> =
-            await userApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data.user);
-        }
-      } catch (e) {
-        // Ignore helper errors
+        setUser(userData);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
       }
-
-      toast({ title: "Account created", description: "Welcome!" });
-      return { success: true };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Registration failed",
+      };
     }
-
-    toast({
-      title: "Registration failed",
-      description: result.message || "Unable to register",
-    });
-    return { success: false, message: result.message };
   };
 
-  const googleLogin = async (token: string) => {
-    setIsAuthenticating(true);
-
-    // Determine if token is a JWT (credential) or authorization code
-    const isJWT = token.split(".").length === 3;
-    const result: ApiResponse<AuthData> = isJWT
-      ? await authApi.googleCallback(undefined, token)
-      : await authApi.googleCallback(token);
-
-    setIsAuthenticating(false);
-
-    if (result.success && result.data) {
-      setTokensFromResponse(result.data);
-      setUser(result.data.user);
-      scheduleProactiveRefresh();
-
-      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
-      try {
-        const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user);
-        if (assigned) {
-          const profile: ApiResponse<{ user: UserProfile }> =
-            await userApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data.user);
-        }
-      } catch (e) {
-        // Ignore helper errors
-      }
-
-      toast({ title: "Signed in", description: "Welcome back!" });
-      return { success: true };
-    }
-
-    toast({
-      title: "Sign in failed",
-      description: result.message || "Unable to sign in",
-    });
-    return { success: false, message: result.message };
-  };
-
-  const githubLogin = async (code: string) => {
-    setIsAuthenticating(true);
-    const result: ApiResponse<AuthData> = await authApi.githubCallback(code);
-    setIsAuthenticating(false);
-
-    if (result.success && result.data) {
-      setTokensFromResponse(result.data);
-      setUser(result.data.user);
-      scheduleProactiveRefresh();
-
-      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
-      try {
-        const { ensureUserHasPlan } = await import("./subscription-helper");
-        const assigned = await ensureUserHasPlan(result.data.user);
-        if (assigned) {
-          const profile: ApiResponse<{ user: UserProfile }> =
-            await userApi.getProfile();
-          if (profile.success && profile.data) setUser(profile.data.user);
-        }
-      } catch (e) {
-        // Ignore helper errors
-      }
-
-      toast({ title: "Signed in", description: "Welcome back!" });
-      return { success: true };
-    }
-
-    toast({
-      title: "Sign in failed",
-      description: result.message || "Unable to sign in",
-    });
-    return { success: false, message: result.message };
-  };
-
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
-      const result: ApiResponse = await authApi.logout();
-      // No need to check result.data as per API.md
-    } catch (e) {
-      // Ignore server errors
+      await authApi.logout();
+    } catch (error) {
+      // Even if logout fails on server, clear local state
+      console.error("Logout error:", error);
+    } finally {
+      // Clear local storage
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("refreshToken");
+      localStorage.removeItem("tokenExpiry");
+
+      // Clear user state
+      setUser(null);
+
+      // Redirect to auth page
+      router.push("/auth");
     }
-    clearTokens();
-    setUser(null);
-    toast({ title: "Signed out", description: "You have been signed out." });
-    try {
-      router.push("/");
-    } catch (e) {}
   };
 
-  return (
-    <AuthContext.Provider
-      value={{
-        user,
-        isLoading,
-        isAuthenticated: !!user,
-        login,
-        register,
-        googleLogin,
-        githubLogin,
-        logout,
-        refreshUser,
-      }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
+  const googleLogin = async (
+    code?: string,
+    credential?: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await authApi.googleCallback(code, credential);
+      if (response.success && response.data) {
+        const { user: userData, token } = response.data;
+
+        // Store token
+        localStorage.setItem("accessToken", token);
+
+        setUser(userData);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Google login failed",
+      };
+    }
+  };
+
+  const githubLogin = async (
+    code?: string,
+    accessToken?: string
+  ): Promise<{ success: boolean; message?: string }> => {
+    try {
+      const response = await authApi.githubCallback(code, accessToken);
+      if (response.success && response.data) {
+        const { user: userData, token } = response.data;
+
+        // Store token
+        localStorage.setItem("accessToken", token);
+
+        setUser(userData);
+        return { success: true };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "GitHub login failed",
+      };
+    }
+  };
+
+  const getGoogleRedirectUrl = async (): Promise<{
+    success: boolean;
+    url?: string;
+    message?: string;
+  }> => {
+    try {
+      const response = await authApi.getGoogleRedirect();
+      if (response.success && response.data?.url) {
+        return { success: true, url: response.data.url };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get Google redirect URL",
+      };
+    }
+  };
+
+  const getGithubRedirectUrl = async (): Promise<{
+    success: boolean;
+    url?: string;
+    message?: string;
+  }> => {
+    try {
+      const response = await authApi.getGithubRedirect();
+      if (response.success && response.data?.url) {
+        return { success: true, url: response.data.url };
+      } else {
+        return { success: false, message: response.message };
+      }
+    } catch (error) {
+      return {
+        success: false,
+        message:
+          error instanceof Error
+            ? error.message
+            : "Failed to get GitHub redirect URL",
+      };
+    }
+  };
+
+  const value: AuthContextType = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    login,
+    register,
+    logout,
+    googleLogin,
+    githubLogin,
+    getGoogleRedirectUrl,
+    getGithubRedirectUrl,
+    refreshUser,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }
 
-export function useAuth() {
+export function useAuth(): AuthContextType {
   const context = useContext(AuthContext);
   if (context === undefined) {
     throw new Error("useAuth must be used within an AuthProvider");

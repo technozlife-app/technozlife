@@ -13,7 +13,7 @@ Project overview (big picture)
 
 - Frontend: Next.js app (App Router, `app/` directory, Next 16). Uses React Server Components by default; client components must include `"use client"`.
 - UI: built with shadcn patterns (`components.json` exists), Tailwind CSS (`app/globals.css`), Radix UI and Lucide icons.
-- Backend: Not part of this repo. There is a detailed `API.md` describing a Laravel backend (Sanctum, Socialite, Gorq AI, payments). The front-end communicates with the API at `lib/api.ts` (see `API_BASE`).
+- Backend: Not part of this repo. There is a detailed `backend.md` describing a Laravel backend (Sanctum, Socialite, Gorq AI, payments). The front-end communicates with the API at `lib/api.ts` (see `API_BASE`).
 
 Key files / places to look (examples you should consult)
 
@@ -50,13 +50,16 @@ When adding features or changing behavior
 Files you should NOT modify without caution
 
 - `next.config.mjs` — changing `typescript.ignoreBuildErrors` changes the CI/build behavior.
-- `lib/api.ts` — changing the API contract (response shape, token keys) requires coordinated backend changes (see `API.md`).
+- Read the bacnkend API docs always to connect with the endpoints and update api.ts.
+- Backend doc is name 'Backend.md' in the root directory.
+
+Where to find more information
 
 If you need more context
 
-- Read `API.md` for backend behavior (auth, endpoints, password-hash requirement, OAuth flows, payments, Gorq AI details).
+- Read `Backend.md` for backend behavior (auth, endpoints, password-hash requirement, OAuth flows, payments, Gorq AI details).
 - Consult `components.json` and the `components/ui` folder for shadcn component conventions.
 
-Refer to the API.md and existing code for detailed behavior of auth flows, API calls and examples of backend api usage.
+Refer to the backend.md and existing code for detailed behavior of auth flows, API calls and examples of backend api usage.
 
 If anything here is unclear or you want additional details (e.g., preferred local environment variables, CI steps, or deploy targets), tell me which areas you want expanded and I’ll refine the instructions. Feedback requested: Are the sections and examples helpful and is there any missing detail I should add?

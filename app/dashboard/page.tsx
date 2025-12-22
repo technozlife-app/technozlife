@@ -9,6 +9,7 @@ import {
   Cpu,
   TrendingUp,
   Activity,
+  Sparkles,
 } from "lucide-react";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";

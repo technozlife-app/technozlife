@@ -4,6 +4,7 @@ import React from "react";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
+import { UserProfile } from "@/lib/api";
 
 export default function ProfileCard() {
   const { user } = useAuth();
@@ -19,17 +20,22 @@ export default function ProfileCard() {
     );
   }
 
-  const avatar = (user as any).avatar || "/avatar-placeholder.svg";
-  const displayName = (user as any).first_name
-    ? `${(user as any).first_name}${
-        (user as any).last_name ? ` ${(user as any).last_name}` : ""
+  const avatar = (user as UserProfile).avatar || "/avatar-placeholder.svg";
+  const displayName = (user as UserProfile).first_name
+    ? `${(user as UserProfile).first_name}${
+        (user as UserProfile).last_name
+          ? ` ${(user as UserProfile).last_name}`
+          : ""
       }`
-    : (user as any).username || user.name || user.email || "User";
-  const plan = (user as any).current_plan || (user as any).plan || null;
+    : (user as UserProfile).username || user.email || "User";
+  const plan =
+    (user as UserProfile).current_plan ||
+    (user as UserProfile).current_plan ||
+    null;
   const memberSince =
-    (user as any).created_at || (user as any).createdAt
+    (user as UserProfile).created_at || (user as UserProfile).created_at
       ? new Date(
-          (user as any).created_at || (user as any).createdAt
+          (user as UserProfile).created_at || (user as UserProfile).created_at
         ).toLocaleDateString()
       : null;
 

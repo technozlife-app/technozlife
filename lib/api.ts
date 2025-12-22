@@ -11,7 +11,7 @@ export interface ApiResponse<T = unknown> {
   timestamp: string;
 }
 
-// User Profile Interface
+// User Profile Interface (based on backend.md examples)
 export interface UserProfile {
   id: number;
   username: string;
@@ -19,13 +19,13 @@ export interface UserProfile {
   last_name: string;
   email: string;
   avatar?: string;
-  current_plan?: string;
   email_verified_at?: string;
+  current_plan?: string;
   created_at: string;
   updated_at: string;
 }
 
-// Auth Response Data
+// Auth Response Data (based on backend.md examples)
 export interface AuthData {
   user: UserProfile;
   token: string;
@@ -111,7 +111,7 @@ async function apiRequest<T>(
     if (!response.ok) {
       return {
         success: false,
-        message: data.message || "An error occurred",
+        message: data.message || "Request failed",
         code: response.status,
         timestamp: new Date().toISOString(),
       };
@@ -144,6 +144,7 @@ export const authApi = {
     email: string;
     password: string;
     password_hash_confirmation?: string;
+    turnstile_token?: string;
     recaptcha_token?: string;
   }): Promise<ApiResponse<AuthData>> {
     const hashedPassword = await hashPassword(data.password);
@@ -160,6 +161,9 @@ export const authApi = {
         data.password_hash_confirmation
       );
     }
+    if (data.turnstile_token) {
+      body.turnstile_token = data.turnstile_token;
+    }
     if (data.recaptcha_token) {
       body.recaptcha_token = data.recaptcha_token;
     }
@@ -174,6 +178,7 @@ export const authApi = {
   async login(
     email: string,
     password: string,
+    turnstile_token?: string,
     recaptcha_token?: string
   ): Promise<ApiResponse<AuthData>> {
     const hashedPassword = await hashPassword(password);
@@ -182,6 +187,9 @@ export const authApi = {
       password_hash: hashedPassword,
     };
 
+    if (turnstile_token) {
+      body.turnstile_token = turnstile_token;
+    }
     if (recaptcha_token) {
       body.recaptcha_token = recaptcha_token;
     }
@@ -209,27 +217,27 @@ export const authApi = {
 
     try {
       const response = await fetch(`${API_BASE}/auth/google/redirect`, {
-        method: "GET",
         headers,
         redirect: "manual",
       });
 
-      const location =
-        response.headers.get("location") || response.headers.get("Location");
-      if (location) {
-        return {
-          success: true,
-          message: "Redirect URL retrieved",
-          data: { url: location },
-          code: 200,
-          timestamp: new Date().toISOString(),
-        };
+      if (response.status === 302) {
+        const location = response.headers.get("location");
+        if (location) {
+          return {
+            success: true,
+            message: "Redirect URL generated",
+            data: { url: location },
+            code: 200,
+            timestamp: new Date().toISOString(),
+          };
+        }
       }
 
       return {
         success: false,
-        message: "Redirect location not available",
-        code: 400,
+        message: "Failed to get redirect URL",
+        code: response.status,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -269,27 +277,27 @@ export const authApi = {
 
     try {
       const response = await fetch(`${API_BASE}/auth/github/redirect`, {
-        method: "GET",
         headers,
         redirect: "manual",
       });
 
-      const location =
-        response.headers.get("location") || response.headers.get("Location");
-      if (location) {
-        return {
-          success: true,
-          message: "Redirect URL retrieved",
-          data: { url: location },
-          code: 200,
-          timestamp: new Date().toISOString(),
-        };
+      if (response.status === 302) {
+        const location = response.headers.get("location");
+        if (location) {
+          return {
+            success: true,
+            message: "Redirect URL generated",
+            data: { url: location },
+            code: 200,
+            timestamp: new Date().toISOString(),
+          };
+        }
       }
 
       return {
         success: false,
-        message: "Redirect location not available",
-        code: 400,
+        message: "Failed to get redirect URL",
+        code: response.status,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -318,10 +326,18 @@ export const authApi = {
   },
 
   // Password reset request
-  async forgotPassword(email: string): Promise<ApiResponse> {
+  async forgotPassword(
+    email: string,
+    turnstile_token?: string,
+    recaptcha_token?: string
+  ): Promise<ApiResponse> {
+    const body: any = { email };
+    if (turnstile_token) body.turnstile_token = turnstile_token;
+    if (recaptcha_token) body.recaptcha_token = recaptcha_token;
+
     return apiRequest("/auth/password/forgot", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(body),
     });
   },
 
@@ -403,28 +419,28 @@ export const authApi = {
       const response = await fetch(
         `${API_BASE}/auth/link/${provider}/redirect`,
         {
-          method: "GET",
           headers,
           redirect: "manual",
         }
       );
 
-      const location =
-        response.headers.get("location") || response.headers.get("Location");
-      if (location) {
-        return {
-          success: true,
-          message: "Redirect URL retrieved",
-          data: { url: location },
-          code: 200,
-          timestamp: new Date().toISOString(),
-        };
+      if (response.status === 302) {
+        const location = response.headers.get("location");
+        if (location) {
+          return {
+            success: true,
+            message: "Redirect URL generated",
+            data: { url: location },
+            code: 200,
+            timestamp: new Date().toISOString(),
+          };
+        }
       }
 
       return {
         success: false,
-        message: "Redirect location not available",
-        code: 400,
+        message: "Failed to get redirect URL",
+        code: response.status,
         timestamp: new Date().toISOString(),
       };
     } catch (error) {
@@ -532,6 +548,7 @@ export const mailApi = {
     email: string;
     subject: string;
     message: string;
+    turnstile_token?: string;
     recaptcha_token?: string;
   }): Promise<ApiResponse> {
     const body: any = {
@@ -541,6 +558,9 @@ export const mailApi = {
       message: data.message,
     };
 
+    if (data.turnstile_token) {
+      body.turnstile_token = data.turnstile_token;
+    }
     if (data.recaptcha_token) {
       body.recaptcha_token = data.recaptcha_token;
     }
@@ -552,10 +572,16 @@ export const mailApi = {
   },
 
   // Subscribe to newsletter
-  async subscribeNewsletter(email: string): Promise<ApiResponse> {
+  async subscribeNewsletter(
+    email: string,
+    name?: string
+  ): Promise<ApiResponse> {
+    const body: any = { email };
+    if (name) body.name = name;
+
     return apiRequest("/mail/newsletter", {
       method: "POST",
-      body: JSON.stringify({ email }),
+      body: JSON.stringify(body),
     });
   },
 
@@ -581,17 +607,27 @@ export const mailApi = {
 // AI API
 export const aiApi = {
   // Generate AI content
-  async generate(data: { prompt: string; model?: string }): Promise<
+  async generate(data: {
+    prompt: string;
+    model?: string;
+    temperature?: number;
+    max_tokens?: number;
+    async?: boolean;
+  }): Promise<
     ApiResponse<{
       content?: string;
       tokens_used?: number;
       job_id?: string;
+      result?: string;
+      request_id?: string;
     }>
   > {
     return apiRequest<{
       content?: string;
       tokens_used?: number;
       job_id?: string;
+      result?: string;
+      request_id?: string;
     }>("/ai/generate", {
       method: "POST",
       body: JSON.stringify(data),
@@ -618,10 +654,11 @@ export const aiApi = {
 export const mapsApi = {
   // Generate Google Maps embed URL
   async generatePin(data: {
-    location: string;
+    address: string;
     zoom?: number;
-  }): Promise<ApiResponse<{ embed_url: string }>> {
-    return apiRequest<{ embed_url: string }>("/maps/pin", {
+    size?: string;
+  }): Promise<ApiResponse<{ embed_url: string; direct_url: string }>> {
+    return apiRequest<{ embed_url: string; direct_url: string }>("/maps/pin", {
       method: "POST",
       body: JSON.stringify(data),
     });
@@ -778,44 +815,35 @@ export const adminApi = {
     const body: any = {};
     if (data?.seed) body.seed = data.seed;
     if (data?.path) body.path = data.path;
-
-    const headers: HeadersInit = {
-      "Content-Type": "application/json",
-      ...(data?.token && { "X-RUN-MIG-TOKEN": data.token }),
-    };
-
-    try {
-      const response = await fetch(`${API_BASE}/admin/migrate`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify(body),
-      });
-
-      const responseData = await response.json();
-
-      if (!response.ok) {
-        return {
-          success: false,
-          message: responseData.message || "Migration failed",
-          code: response.status,
-          timestamp: new Date().toISOString(),
-        };
-      }
-
-      return {
-        success: true,
-        message: responseData.message,
-        data: responseData.data,
-        code: responseData.code,
-        timestamp: responseData.timestamp,
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-        code: 0,
-        timestamp: new Date().toISOString(),
-      };
+    if (data?.token) {
+      // Include token in body for admin endpoints
+      body.token = data.token;
     }
+
+    return apiRequest<{
+      migrations?: string[];
+      message: string;
+    }>("/admin/migrate", {
+      method: "POST",
+      body: JSON.stringify(body),
+    });
+  },
+};
+
+// Backwards compatibility aliases
+export const contactApi = mailApi;
+export const subscriptionApi = {
+  getPlans: plansApi.getPlans,
+  getPlan: plansApi.getPlan,
+  createSubscription: paymentsApi.createSubscription,
+  getPaymentHistory: paymentsApi.getHistory,
+  cancelSubscription: async () => {
+    // This endpoint doesn't exist in the backend, return error
+    return {
+      success: false,
+      message: "Cancel subscription not implemented",
+      code: 501,
+      timestamp: new Date().toISOString(),
+    };
   },
 };

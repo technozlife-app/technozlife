@@ -162,7 +162,9 @@ export default function BillingPage() {
                   }
 
                   // Free plan - create subscription directly
-                  const res = await subscriptionApi.createSubscription(planId);
+                  const res = await subscriptionApi.createSubscription({
+                    plan_slug: planId,
+                  });
                   if (res.success && res.data) {
                     if (res.data.url) {
                       window.location.href = res.data.url;

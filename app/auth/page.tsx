@@ -63,8 +63,36 @@ export default function AuthPage() {
   });
 
   const router = useRouter();
-  const { login, register } = useAuth();
+  const {
+    login,
+    register,
+    getGoogleRedirectUrl,
+    getGithubRedirectUrl,
+    isAuthenticated,
+    isLoading: authLoading,
+  } = useAuth();
   const { addToast } = useToast();
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && isAuthenticated) {
+      router.replace("/dashboard");
+    }
+  }, [isAuthenticated, authLoading, router]);
+
+  // Show loading while checking auth
+  if (authLoading) {
+    return (
+      <div className='min-h-screen bg-slate-950 flex items-center justify-center'>
+        <div className='text-white'>Loading...</div>
+      </div>
+    );
+  }
+
+  // Don't render if authenticated
+  if (isAuthenticated) {
+    return null;
+  }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target;
@@ -144,15 +172,44 @@ export default function AuthPage() {
   };
 
   // OAuth redirect handlers (browser flow)
-  const handleGoogleAuth = () => {
+  const handleGoogleAuth = async () => {
     setIsLoading(true);
-    // Redirect the browser to backend OAuth endpoint which will return a token in the callback
-    window.location.href = API_BASE + "/auth/google/redirect";
+    try {
+      const result = await getGoogleRedirectUrl();
+      if (result.success && result.url) {
+        window.location.href = result.url;
+      } else {
+        addToast(
+          "error",
+          "OAuth Error",
+          result.message || "Failed to initiate Google login"
+        );
+        setIsLoading(false);
+      }
+    } catch (error) {
+      addToast("error", "OAuth Error", "Failed to initiate Google login");
+      setIsLoading(false);
+    }
   };
 
-  const handleGithubAuth = () => {
+  const handleGithubAuth = async () => {
     setIsLoading(true);
-    window.location.href = API_BASE + "/auth/github/redirect";
+    try {
+      const result = await getGithubRedirectUrl();
+      if (result.success && result.url) {
+        window.location.href = result.url;
+      } else {
+        addToast(
+          "error",
+          "OAuth Error",
+          result.message || "Failed to initiate GitHub login"
+        );
+        setIsLoading(false);
+      }
+    } catch (error) {
+      addToast("error", "OAuth Error", "Failed to initiate GitHub login");
+      setIsLoading(false);
+    }
   };
 
   return (
