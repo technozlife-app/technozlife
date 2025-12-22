@@ -350,100 +350,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     message?: string;
   }> => {
     try {
-      const token =
-        typeof window !== "undefined"
-          ? localStorage.getItem("accessToken")
-          : null;
-
-      // Attempt token-authenticated fetch first if we have a token
-      if (token) {
-        try {
-          const masked = `${token.slice(0, 8)}...${token.slice(-8)}`;
-          console.debug(
-            "refreshUser: attempting token auth with token:",
-            masked
-          );
-
-          const resp = await fetch(
-            `${process.env.NEXT_PUBLIC_API_BASE || ""}/user`,
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                Accept: "application/json",
-              },
-            }
-          );
-
-          const text = await resp.text();
-
-          if (resp.ok) {
-            const body = JSON.parse(text);
-            if (body?.data?.user) {
-              const userWithPlan = await ensureUserHasPlan(body.data.user);
-              setUser(userWithPlan);
-              return { success: true };
-            }
-
-            console.error(
-              "refreshUser: unexpected body from /user (token):",
-              body
-            );
-            return { success: false, message: "Unexpected /user response" };
-          }
-
-          console.warn(
-            "refreshUser: /user with token returned",
-            resp.status,
-            text
-          );
-
-          // If token auth failed with 401/403, fall through to cookie attempt
-        } catch (err) {
-          console.error("refreshUser: token fetch error:", err);
-        }
+      const response = await userApi.getProfile();
+      if (response.success && response.data?.user) {
+        const userWithPlan = await ensureUserHasPlan(response.data.user);
+        setUser(userWithPlan);
+        return { success: true };
       }
-
-      // Attempt cookie-based auth (in case backend set a session cookie)
-      try {
-        const resp2 = await fetch(
-          `${process.env.NEXT_PUBLIC_API_BASE || ""}/user`,
-          {
-            credentials: "include",
-            headers: { Accept: "application/json" },
-          }
-        );
-
-        const text2 = await resp2.text();
-        if (resp2.ok) {
-          const body2 = JSON.parse(text2);
-          if (body2?.data?.user) {
-            const userWithPlan = await ensureUserHasPlan(body2.data.user);
-            setUser(userWithPlan);
-            return { success: true };
-          }
-          console.error(
-            "refreshUser: unexpected body from /user (cookie):",
-            body2
-          );
-          return {
-            success: false,
-            message: "Unexpected /user response (cookie)",
-          };
-        }
-
-        console.warn(
-          "refreshUser: /user with cookie returned",
-          resp2.status,
-          text2
-        );
-        return { success: false, message: `Server returned ${resp2.status}` };
-      } catch (err) {
-        console.error("refreshUser: cookie fetch error:", err);
-        return {
-          success: false,
-          message: err instanceof Error ? err.message : "Fetch failed",
-        };
-      }
+      return { success: false, message: "Unable to fetch profile" };
     } catch (error) {
       return {
         success: false,
