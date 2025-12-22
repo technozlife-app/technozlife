@@ -6,6 +6,7 @@ import {
   authApi,
   userApi,
   plansApi,
+  API_BASE,
   type UserProfile,
   type AuthData,
   type SubscriptionPlan,
@@ -350,12 +351,139 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     message?: string;
   }> => {
     try {
-      const response = await userApi.getProfile();
-      if (response.success && response.data?.user) {
-        const userWithPlan = await ensureUserHasPlan(response.data.user);
-        setUser(userWithPlan);
-        return { success: true };
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+
+      if (!token) {
+        // No token available
+        console.warn("refreshUser: no accessToken present in localStorage");
+        return {
+          success: false,
+          message: `No token available (API_BASE=${API_BASE})`,
+        };
       }
+
+      // Try direct fetch to the API to verify token and get profile
+      try {
+        const url = `${API_BASE}/user`;
+        console.debug("refreshUser: attempting direct fetch to", url);
+        console.debug(
+          "refreshUser: token preview",
+          token.slice(0, 8),
+          "…",
+          token.slice(-8)
+        );
+        const res = await fetch(url, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        });
+
+        // Debug where the request actually went (origin detection)
+        if (typeof window !== "undefined") {
+          try {
+            const actualOrigin = new URL(res.url, window.location.href).origin;
+            const siteOrigin = window.location.origin;
+            if (actualOrigin === siteOrigin) {
+              console.warn(
+                "refreshUser: request was sent to the same origin. Confirm NEXT_PUBLIC_API_BASE configuration (current value=",
+                API_BASE,
+                ")"
+              );
+            } else {
+              console.debug(
+                "refreshUser: request sent to origin",
+                actualOrigin
+              );
+            }
+          } catch (e) {
+            console.debug(
+              "refreshUser: could not determine response URL origin",
+              e
+            );
+          }
+        }
+
+        if (res.ok) {
+          const body = await res.json().catch(() => null);
+
+          // Support both wrapped ApiResponse and direct user object
+          const maybeUser = body?.data?.user || body?.user || body;
+
+          if (maybeUser && typeof maybeUser === "object") {
+            const userWithPlan = await ensureUserHasPlan(
+              maybeUser as UserProfile
+            );
+            setUser(userWithPlan);
+            return { success: true };
+          }
+
+          console.warn("refreshUser: unexpected /user response format", body);
+        } else {
+          const text = await res.text().catch(() => "(no body)");
+          console.warn(`refreshUser: /user responded ${res.status}`, text);
+
+          // Try cookie-based auth if token header failed (some backends use API cookies)
+          try {
+            console.debug(
+              "refreshUser: trying cookie-based /user fetch with credentials: 'include'"
+            );
+            const rc = await fetch(url, {
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+                "X-Requested-With": "XMLHttpRequest",
+              },
+            });
+            if (rc.ok) {
+              const bodyc = await rc.json().catch(() => null);
+              const maybeUserC = bodyc?.data?.user || bodyc?.user || bodyc;
+              if (maybeUserC && typeof maybeUserC === "object") {
+                const userWithPlan = await ensureUserHasPlan(
+                  maybeUserC as UserProfile
+                );
+                setUser(userWithPlan);
+                return { success: true };
+              }
+            } else {
+              const textc = await rc.text().catch(() => "(no body)");
+              console.warn(
+                `refreshUser: cookie-based /user responded ${rc.status}`,
+                textc
+              );
+            }
+          } catch (cookieErr) {
+            console.warn(
+              "refreshUser: cookie-based /user fetch failed",
+              cookieErr
+            );
+          }
+
+          return {
+            success: false,
+            message: `User endpoint returned ${res.status}: ${text}`,
+          };
+        }
+      } catch (err) {
+        console.warn("refreshUser: direct /user fetch failed", err);
+      }
+
+      // Fallback to existing API helper
+      try {
+        const response = await userApi.getProfile();
+        if (response.success && response.data?.user) {
+          const userWithPlan = await ensureUserHasPlan(response.data.user);
+          setUser(userWithPlan);
+          return { success: true };
+        }
+      } catch (error) {
+        console.error("refreshUser: userApi.getProfile failed", error);
+      }
+
       return { success: false, message: "Unable to fetch profile" };
     } catch (error) {
       return {
