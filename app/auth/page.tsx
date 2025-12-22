@@ -87,26 +87,19 @@ export default function AuthPage() {
           return;
         }
 
-        // Execute reCAPTCHA for registration
-        let recaptchaToken: string | undefined = undefined;
-        try {
-          const { executeRecaptcha } = await import("@/lib/recaptcha");
-          recaptchaToken = await executeRecaptcha("register");
-        } catch (e) {
-          addToast(
-            "error",
-            "reCAPTCHA Error",
-            "Unable to verify captcha. Please try again or contact support."
-          );
-          setIsLoading(false);
-          return;
-        }
+        // reCAPTCHA is now handled internally in register function
+        // Split name into first and last name
+        const nameParts = formData.name.trim().split(" ");
+        const firstName = nameParts[0] || "";
+        const lastName = nameParts.slice(1).join(" ") || "";
+        const username = formData.email.split("@")[0]; // Use email prefix as username
 
         const result = await register(
+          username,
+          firstName,
+          lastName,
           formData.email,
-          formData.password,
-          formData.name,
-          recaptchaToken
+          formData.password
         );
         if (result.success) {
           addToast(

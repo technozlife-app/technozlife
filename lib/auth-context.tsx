@@ -10,6 +10,7 @@ import {
   type ReactNode,
 } from "react";
 import { authApi, type UserProfile } from "./api";
+import { executeRecaptcha } from "./recaptcha";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
@@ -170,6 +171,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     setIsAuthenticating(true);
+    let recaptchaToken: string | undefined;
+    try {
+      recaptchaToken = await executeRecaptcha("login");
+    } catch (e) {
+      // Optional
+      console.warn("reCAPTCHA failed:", e);
+    }
     const result: AuthSuccessResponse = await authApi.login(email, password);
     setIsAuthenticating(false);
     if (result.success && result.data) {
@@ -206,12 +214,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     password: string
   ) => {
     setIsAuthenticating(true);
+    let recaptchaToken: string | undefined;
+    try {
+      recaptchaToken = await executeRecaptcha("register");
+    } catch (e) {
+      // If reCAPTCHA fails, continue without it (optional)
+      console.warn("reCAPTCHA failed:", e);
+    }
     const result: AuthSuccessResponse = await authApi.registerFull({
       username,
       first_name: firstName,
       last_name: lastName,
       email,
       password,
+      recaptchaToken,
     });
     setIsAuthenticating(false);
     if (result.success && result.data) {
