@@ -96,6 +96,8 @@ async function apiRequest<T>(
 
   const headers: HeadersInit = {
     "Content-Type": "application/json",
+    Accept: "application/json",
+    "X-Requested-With": "XMLHttpRequest",
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };

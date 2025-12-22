@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
+import { API_BASE } from "@/lib/api";
 
 export default function AuthCompletePage() {
   const { refreshUser, googleLogin, githubLogin } = useAuth();
@@ -51,11 +52,74 @@ export default function AuthCompletePage() {
         url.pathname + (newHash || "")
       );
 
+      // Try to refresh the user profile using the token we just stored.
       try {
-        await refreshUser();
-        toast({ title: "Signed in", description: "Authentication completed." });
-        router.replace("/dashboard");
+        const res = await refreshUser();
+        if (res.success) {
+          toast({
+            title: "Signed in",
+            description: "Authentication completed.",
+          });
+          router.replace("/dashboard");
+          return;
+        }
+
+        // If refreshUser failed, attempt a direct /user request with Authorization header
+        try {
+          const r = await fetch(`${API_BASE}/user`, {
+            headers: { Authorization: `Bearer ${tokenValue}` },
+          });
+
+          if (r.ok) {
+            // If this succeeds, call refreshUser again and continue
+            await refreshUser();
+            toast({
+              title: "Signed in",
+              description: "Authentication completed.",
+            });
+            router.replace("/dashboard");
+            return;
+          } else {
+            const text = await r.text();
+            console.error("/user returned non-OK:", r.status, text);
+            toast({
+              title: "Sign in failed",
+              description: `Token verification failed (${r.status}).`,
+            });
+            router.replace("/auth");
+            return;
+          }
+        } catch (err2) {
+          console.error("Direct /user fetch failed:", err2);
+        }
+
+        // As a last attempt, try calling /user with credentials (cookie) in case backend set a cookie
+        try {
+          const r2 = await fetch(`${API_BASE}/user`, {
+            credentials: "include",
+          });
+          if (r2.ok) {
+            await refreshUser();
+            toast({
+              title: "Signed in",
+              description: "Authentication completed.",
+            });
+            router.replace("/dashboard");
+            return;
+          }
+        } catch (err3) {
+          console.error("Cookie-based /user fetch failed:", err3);
+        }
+
+        // If we reach here, give a helpful message and redirect to auth
+        toast({
+          title: "Sign in incomplete",
+          description:
+            "Unable to verify authentication with the server. Please sign in manually.",
+        });
+        router.replace("/auth");
       } catch (e) {
+        console.error("refreshUser threw:", e);
         toast({
           title: "Sign in incomplete",
           description: "Please sign in manually.",

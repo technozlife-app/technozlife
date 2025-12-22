@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/lib/auth-context";
-import { authApi } from "@/lib/api";
+import { authApi, userApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 
 export default function SettingsPage() {
@@ -15,13 +15,13 @@ export default function SettingsPage() {
   const { addToast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    name: user?.name || "",
+    name: user?.username || "",
     email: user?.email || "",
   });
 
   // Update form when user data becomes available or changes
   useEffect(() => {
-    setFormData({ name: user?.name || "", email: user?.email || "" });
+    setFormData({ name: user?.username || "", email: user?.email || "" });
   }, [user]);
   const [notifications, setNotifications] = useState({
     email: true,
@@ -32,7 +32,7 @@ export default function SettingsPage() {
   const handleUpdateProfile = async () => {
     setIsLoading(true);
     try {
-      const result = await authApi.updateProfile(formData);
+      const result = await userApi.updateProfile(formData);
       if (result.success) {
         await refreshUser();
         addToast("success", "Profile Updated", "Your changes have been saved");
