@@ -207,17 +207,8 @@ export default function AuthPage() {
   const handleGoogleAuth = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const result = await getGoogleRedirectUrl();
-      if (result.success && result.url) {
-        window.location.href = result.url;
-      } else {
-        addToast(
-          "error",
-          "OAuth Error",
-          result.message || "Failed to initiate Google login"
-        );
-        setIsLoading(false);
-      }
+      // Direct browser navigation to backend redirect endpoint (browser flow)
+      window.location.href = `${API_BASE}/auth/google/redirect`;
     } catch (error) {
       addToast("error", "OAuth Error", "Failed to initiate Google login");
       setIsLoading(false);
@@ -227,17 +218,8 @@ export default function AuthPage() {
   const handleGithubAuth = async (): Promise<void> => {
     setIsLoading(true);
     try {
-      const result = await getGithubRedirectUrl();
-      if (result.success && result.url) {
-        window.location.href = result.url;
-      } else {
-        addToast(
-          "error",
-          "OAuth Error",
-          result.message || "Failed to initiate GitHub login"
-        );
-        setIsLoading(false);
-      }
+      // Direct browser navigation to backend redirect endpoint (browser flow)
+      window.location.href = `${API_BASE}/auth/github/redirect`;
     } catch (error) {
       addToast("error", "OAuth Error", "Failed to initiate GitHub login");
       setIsLoading(false);
