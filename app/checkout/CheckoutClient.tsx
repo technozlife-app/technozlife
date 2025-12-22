@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { fetchWithAuth } from "@/lib/fetchWithRefresh";
+import { paymentsApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 import type { Plan } from "@/lib/plans";
 
@@ -14,57 +14,43 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
   const startCheckout = async () => {
     setIsProcessing(true);
     try {
-      const res = await fetchWithAuth(`/subscriptions`, {
-        method: "POST",
-        body: JSON.stringify({ plan_slug: plan.slug }),
+      const response = await paymentsApi.createSubscription({
+        plan_slug: plan.slug,
       });
 
-      let json: any = null;
-      try {
-        json = await res.json();
-      } catch (e) {
+      if (response.success && response.data) {
+        const payload = response.data;
+
+        // If backend returns a hosted checkout url, redirect
+        if (payload?.url) {
+          addToast("info", "Redirecting", "Opening secure payment provider...");
+          window.location.href = payload.url;
+          return;
+        }
+
+        // Otherwise, if subscription was created immediately
+        if (payload?.subscription_id) {
+          addToast(
+            "success",
+            "Subscription Active",
+            "Thank you — redirecting to dashboard..."
+          );
+          setTimeout(() => router.push("/dashboard"), 1200);
+          return;
+        }
+
         addToast(
           "error",
-          "Invalid Response",
-          "Payment service returned invalid data"
+          "Unexpected Response",
+          "Payment endpoint returned an unexpected response"
         );
-        return;
-      }
-
-      const payload = json?.data || json;
-
-      if (!res.ok) {
+      } else {
         addToast(
           "error",
           "Checkout Failed",
-          payload?.message || "Unable to start checkout"
+          response.message || "Unable to start checkout"
         );
-        return;
       }
-
-      // If backend returns a hosted checkout url, redirect
-      if (payload?.url) {
-        addToast("info", "Redirecting", "Opening secure payment provider...");
-        window.location.href = payload.url;
-        return;
-      }
-
-      // Otherwise, if subscription was created immediately
-      if (payload?.subscriptionId) {
-        addToast(
-          "success",
-          "Subscription Active",
-          "Thank you — redirecting to dashboard..."
-        );
-        setTimeout(() => router.push("/dashboard"), 1200);
-        return;
-      }
-
-      addToast(
-        "error",
-        "Unexpected Response",
-        "Payment endpoint returned an unexpected response"
-      );
     } catch (e) {
       addToast(
         "error",

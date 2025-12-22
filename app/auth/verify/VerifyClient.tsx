@@ -63,11 +63,26 @@ export default function VerifyClient() {
           <button
             className='mt-4 px-4 py-2 bg-teal-500 text-white rounded'
             onClick={async () => {
-              await authApi.resendVerification();
-              toast({
-                title: "Verification sent",
-                description: "Check your email for the verification link.",
-              });
+              try {
+                const res = await authApi.sendVerification();
+                if (res.success) {
+                  toast({
+                    title: "Verification sent",
+                    description: "Check your email for the verification link.",
+                  });
+                } else {
+                  toast({
+                    title: "Verification failed",
+                    description:
+                      res.message || "Unable to send verification email.",
+                  });
+                }
+              } catch {
+                toast({
+                  title: "Verification failed",
+                  description: "Unable to send verification email.",
+                });
+              }
             }}
           >
             Resend Verification

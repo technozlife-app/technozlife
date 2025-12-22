@@ -2,7 +2,80 @@
 
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { authApi, userApi, type UserProfile, type AuthData } from "@/lib/api";
+import {
+  authApi,
+  userApi,
+  plansApi,
+  type UserProfile,
+  type AuthData,
+  type SubscriptionPlan,
+} from "@/lib/api";
+import { getAllPlans, type Plan } from "@/lib/plans";
+
+// Helper function to ensure user has a plan assigned
+async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
+  // If user already has a current plan, return as is
+  if (user.current_plan) {
+    return user;
+  }
+
+  try {
+    // Check if there are any plans in the database
+    const plansResponse = await plansApi.getPlans();
+
+    let plans: SubscriptionPlan[] = [];
+    if (plansResponse.success && plansResponse.data?.plans) {
+      plans = plansResponse.data.plans;
+    }
+
+    // If no plans exist in database, create them from lib/plans.ts
+    if (plans.length === 0) {
+      const localPlans = getAllPlans();
+
+      // Create plans in the database
+      for (const localPlan of localPlans) {
+        try {
+          const createResponse = await plansApi.createPlan({
+            name: localPlan.name,
+            slug: localPlan.slug,
+            description: localPlan.description,
+            price: parseFloat(localPlan.price.replace("$", "")) || 0,
+            currency: "USD",
+            interval: localPlan.period === "/month" ? "month" : "year",
+            trial_days: localPlan.id === "free" ? 0 : 7,
+            features: localPlan.features,
+            is_active: true,
+          });
+
+          if (createResponse.success && createResponse.data) {
+            plans.push(createResponse.data);
+          }
+        } catch (error) {
+          console.error(`Failed to create plan ${localPlan.name}:`, error);
+        }
+      }
+    }
+
+    // Assign the first plan (free plan) to the user
+    if (plans.length > 0) {
+      const freePlan = plans.find((p) => p.slug === "free") || plans[0];
+
+      // Update user profile with the plan
+      const updateResponse = await userApi.updateProfile({
+        current_plan: freePlan.slug,
+      });
+
+      if (updateResponse.success && updateResponse.data) {
+        return { ...user, current_plan: freePlan.slug };
+      }
+    }
+  } catch (error) {
+    console.error("Failed to ensure user has plan:", error);
+  }
+
+  // Return original user if plan assignment failed
+  return user;
+}
 
 interface AuthContextType {
   user: UserProfile | null;
@@ -40,7 +113,6 @@ interface AuthContextType {
     url?: string;
     message?: string;
   }>;
-  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -58,7 +130,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const response = await userApi.getProfile();
           if (response.success && response.data?.user) {
-            setUser(response.data.user);
+            // Ensure user has a plan assigned
+            const userWithPlan = await ensureUserHasPlan(response.data.user);
+            setUser(userWithPlan);
           } else {
             // Token is invalid, clear it
             localStorage.removeItem("accessToken");
@@ -90,10 +164,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
         // Store tokens
         localStorage.setItem("accessToken", token);
-        // Note: Backend doesn't return refresh token in this implementation
-        // You may need to adjust based on your actual token structure
 
-        setUser(userData);
+        // Ensure user has a plan assigned
+        const userWithPlan = await ensureUserHasPlan(userData);
+
+        setUser(userWithPlan);
         return { success: true };
       } else {
         return { success: false, message: response.message };
@@ -130,7 +205,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Store tokens
         localStorage.setItem("accessToken", token);
 
-        setUser(userData);
+        // Ensure user has a plan assigned
+        const userWithPlan = await ensureUserHasPlan(userData);
+
+        setUser(userWithPlan);
         return { success: true };
       } else {
         return { success: false, message: response.message };
@@ -175,7 +253,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Store token
         localStorage.setItem("accessToken", token);
 
-        setUser(userData);
+        // Ensure user has a plan assigned
+        const userWithPlan = await ensureUserHasPlan(userData);
+
+        setUser(userWithPlan);
         return { success: true };
       } else {
         return { success: false, message: response.message };
@@ -200,7 +281,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         // Store token
         localStorage.setItem("accessToken", token);
 
-        setUser(userData);
+        // Ensure user has a plan assigned
+        const userWithPlan = await ensureUserHasPlan(userData);
+
+        setUser(userWithPlan);
         return { success: true };
       } else {
         return { success: false, message: response.message };
@@ -270,7 +354,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     githubLogin,
     getGoogleRedirectUrl,
     getGithubRedirectUrl,
-    refreshUser,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

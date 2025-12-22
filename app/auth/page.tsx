@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -25,6 +25,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
 import { API_BASE } from "@/lib/api";
+
+// Form data interface for better type safety
+interface AuthFormData {
+  name: string;
+  email: string;
+  password: string;
+  rememberMe: boolean;
+  agreeTerms: boolean;
+}
 
 // Google Icon component
 function GoogleIcon({ className }: { className?: string }) {
@@ -54,7 +63,7 @@ export default function AuthPage() {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<AuthFormData>({
     name: "",
     email: "",
     password: "",
@@ -95,11 +104,18 @@ export default function AuthPage() {
   }
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { id, value } = e.target;
-    setFormData((prev) => ({ ...prev, [id]: value }));
+    const { id, value, type, checked } = e.target;
+    const fieldValue = type === "checkbox" ? checked : value;
+
+    setFormData((prev) => ({
+      ...prev,
+      [id]: fieldValue,
+    }));
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (
+    e: React.FormEvent<HTMLFormElement>
+  ): Promise<void> => {
     e.preventDefault();
     setIsLoading(true);
 
@@ -172,7 +188,7 @@ export default function AuthPage() {
   };
 
   // OAuth redirect handlers (browser flow)
-  const handleGoogleAuth = async () => {
+  const handleGoogleAuth = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const result = await getGoogleRedirectUrl();
@@ -192,7 +208,7 @@ export default function AuthPage() {
     }
   };
 
-  const handleGithubAuth = async () => {
+  const handleGithubAuth = async (): Promise<void> => {
     setIsLoading(true);
     try {
       const result = await getGithubRedirectUrl();
@@ -350,19 +366,21 @@ export default function AuthPage() {
               <div className='relative bg-slate-900/80 backdrop-blur-xl border border-white/10 rounded-2xl p-8'>
                 {/* Toggle */}
                 <div className='flex gap-1 p-1 bg-slate-800/50 rounded-xl mb-8'>
-                  {(["login", "signup"] as const).map((tab) => (
-                    <button
-                      key={tab}
-                      onClick={() => setMode(tab)}
-                      className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
-                        mode === tab
-                          ? "bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950"
-                          : "text-slate-400 hover:text-white"
-                      }`}
-                    >
-                      {tab === "login" ? "Sign In" : "Create Account"}
-                    </button>
-                  ))}
+                  {(["login", "signup"] as const).map(
+                    (tab: "login" | "signup") => (
+                      <button
+                        key={tab}
+                        onClick={() => setMode(tab)}
+                        className={`flex-1 py-2.5 px-4 rounded-lg text-sm font-medium transition-all ${
+                          mode === tab
+                            ? "bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950"
+                            : "text-slate-400 hover:text-white"
+                        }`}
+                      >
+                        {tab === "login" ? "Sign In" : "Create Account"}
+                      </button>
+                    )
+                  )}
                 </div>
 
                 {/* Form */}
