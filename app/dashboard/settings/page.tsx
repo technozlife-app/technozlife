@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { User, Mail, Lock, Bell, Shield, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -18,6 +18,11 @@ export default function SettingsPage() {
     name: user?.name || "",
     email: user?.email || "",
   });
+
+  // Update form when user data becomes available or changes
+  useEffect(() => {
+    setFormData({ name: user?.name || "", email: user?.email || "" });
+  }, [user]);
   const [notifications, setNotifications] = useState({
     email: true,
     push: false,

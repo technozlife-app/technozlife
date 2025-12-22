@@ -34,7 +34,7 @@ export function DashboardSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { user, logout, isLoading } = useAuth();
   const { addToast } = useToast();
 
   const handleLogout = async () => {
@@ -120,10 +120,10 @@ export function DashboardSidebar() {
                 className='flex-1 min-w-0 overflow-hidden'
               >
                 <p className='text-sm font-medium text-white truncate'>
-                  {user?.name || "Guest"}
+                  {isLoading ? "Loading..." : user?.name || "Guest"}
                 </p>
                 <p className='text-xs text-slate-500 truncate'>
-                  {user?.email || "Not signed in"}
+                  {isLoading ? "" : user?.email || "Not signed in"}
                 </p>
               </motion.div>
             )}
