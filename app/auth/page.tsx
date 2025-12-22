@@ -25,6 +25,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
 import { API_BASE } from "@/lib/api";
+import { executeRecaptcha } from "@/lib/recaptcha";
 
 // Form data interface for better type safety
 interface AuthFormData {
@@ -81,6 +82,7 @@ export default function AuthPage() {
     isLoading: authLoading,
   } = useAuth();
   const { addToast } = useToast();
+  const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
 
   // Redirect if already authenticated
   useEffect(() => {
@@ -120,6 +122,16 @@ export default function AuthPage() {
     setIsLoading(true);
 
     try {
+      // Generate reCAPTCHA token
+      let recaptchaToken: string | undefined = undefined;
+      try {
+        recaptchaToken = await executeRecaptcha(
+          mode === "login" ? "login" : "register"
+        );
+      } catch (err) {
+        console.warn("reCAPTCHA failed, proceeding without token:", err);
+      }
+
       if (mode === "signup") {
         if (!formData.agreeTerms) {
           addToast(
@@ -131,7 +143,6 @@ export default function AuthPage() {
           return;
         }
 
-        // reCAPTCHA is now handled internally in register function
         // Split name into first and last name
         const nameParts = formData.name.trim().split(" ");
         const firstName = nameParts[0] || "";
@@ -143,7 +154,8 @@ export default function AuthPage() {
           firstName,
           lastName,
           formData.email,
-          formData.password
+          formData.password,
+          recaptchaToken
         );
         if (result.success) {
           addToast(
@@ -160,7 +172,11 @@ export default function AuthPage() {
           );
         }
       } else {
-        const result = await login(formData.email, formData.password);
+        const result = await login(
+          formData.email,
+          formData.password,
+          recaptchaToken
+        );
         if (result.success) {
           addToast(
             "success",
@@ -587,6 +603,20 @@ export default function AuthPage() {
                     Google
                   </Button>
                 </div>
+
+                {/* reCAPTCHA status */}
+                {!RECAPTCHA_SITE_KEY ? (
+                  <p className='text-sm text-amber-400 mt-4'>
+                    reCAPTCHA not configured — Authentication forms will not be
+                    protected. Please set{" "}
+                    <code>NEXT_PUBLIC_RECAPTCHA_SITE_KEY</code> in your
+                    environment.
+                  </p>
+                ) : (
+                  <p className='text-sm text-slate-500 mt-4'>
+                    This form is protected by reCAPTCHA.
+                  </p>
+                )}
               </div>
             </div>
 

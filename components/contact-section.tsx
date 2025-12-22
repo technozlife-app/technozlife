@@ -8,7 +8,7 @@ import { Send, Mail, MapPin, Clock, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { contactApi } from "@/lib/api";
+import { mailApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 
 const contactInfo = [
@@ -57,9 +57,9 @@ export function ContactSection() {
       }
 
       const payload: any = { ...formData };
-      if (recaptchaToken) payload.recaptchaToken = recaptchaToken;
+      if (recaptchaToken) payload.recaptcha_token = recaptchaToken;
 
-      const result = await contactApi.sendMessage(payload);
+      const result = await mailApi.sendContact(payload);
 
       if (result.success) {
         setIsSubmitted(true);
