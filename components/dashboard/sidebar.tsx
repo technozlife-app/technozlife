@@ -120,7 +120,11 @@ export function DashboardSidebar() {
                 className='flex-1 min-w-0 overflow-hidden'
               >
                 <p className='text-sm font-medium text-white truncate'>
-                  {isLoading ? "Loading..." : user?.name || "Guest"}
+                  {isLoading
+                    ? "Loading..."
+                    : user?.first_name
+                    ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`
+                    : user?.username || user?.email || "Guest"}
                 </p>
                 <p className='text-xs text-slate-500 truncate'>
                   {isLoading ? "" : user?.email || "Not signed in"}
