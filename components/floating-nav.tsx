@@ -94,12 +94,9 @@ export function FloatingNav() {
               <Link
                 href='/dashboard'
                 className='p-3 rounded-full text-slate-400 hover:text-teal-400 transition-colors'
+                aria-label='Dashboard'
               >
-                <img
-                  src={user.avatar || "/avatar-placeholder.svg"}
-                  alt={user.name || user.email || "User"}
-                  className='w-5 h-5 rounded-full'
-                />
+                <Home className='w-5 h-5' />
               </Link>
             ) : null}
           </div>

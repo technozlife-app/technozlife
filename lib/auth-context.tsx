@@ -164,7 +164,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const result = await authApi.getProfile();
     if (result.success && result.data) {
-      setUser(result.data);
+      // Normalize response shapes: backend may return user directly or { user: {...} }
+      let profile: any = result.data;
+      if (profile.user) profile = profile.user;
+      if (profile.data && profile.data.user) profile = profile.data.user;
+
+      setUser(profile);
       scheduleProactiveRefresh();
     } else {
       clearTokens();
