@@ -103,6 +103,8 @@ interface AuthContextType {
     code?: string,
     accessToken?: string
   ) => Promise<{ success: boolean; message?: string }>;
+  // Refresh user profile from the API (useful after token-only redirects)
+  refreshUser: () => Promise<{ success: boolean; message?: string }>;
   getGoogleRedirectUrl: () => Promise<{
     success: boolean;
     url?: string;
@@ -343,6 +345,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const refreshUser = async (): Promise<{
+    success: boolean;
+    message?: string;
+  }> => {
+    try {
+      const response = await userApi.getProfile();
+      if (response.success && response.data?.user) {
+        const userWithPlan = await ensureUserHasPlan(response.data.user);
+        setUser(userWithPlan);
+        return { success: true };
+      }
+      return { success: false, message: "Unable to fetch profile" };
+    } catch (error) {
+      return {
+        success: false,
+        message: error instanceof Error ? error.message : "Refresh failed",
+      };
+    }
+  };
+
   const value: AuthContextType = {
     user,
     isAuthenticated: !!user,
@@ -352,6 +374,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     logout,
     googleLogin,
     githubLogin,
+    refreshUser,
     getGoogleRedirectUrl,
     getGithubRedirectUrl,
   };
