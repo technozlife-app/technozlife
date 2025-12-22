@@ -70,6 +70,25 @@ export default function AuthCompletePage() {
             headers: { Authorization: `Bearer ${tokenValue}` },
           });
 
+          // If request was sent to same origin accidentally, warn the developer
+          if (typeof window !== "undefined") {
+            try {
+              const sentToOrigin =
+                new URL(r.url, window.location.href).origin ===
+                window.location.origin;
+              if (sentToOrigin) {
+                console.warn(
+                  "Auth complete: /user request was sent to same origin. Check NEXT_PUBLIC_API_BASE configuration."
+                );
+              }
+            } catch (e) {
+              console.warn(
+                "Auth complete: could not determine request URL origin",
+                e
+              );
+            }
+          }
+
           if (r.ok) {
             // If this succeeds, call refreshUser again and continue
             await refreshUser();
@@ -82,9 +101,38 @@ export default function AuthCompletePage() {
           } else {
             const text = await r.text();
             console.error("/user returned non-OK:", r.status, text);
+
+            // If we detect the request went to the same origin, attempt fallback to public API hostname
+            let triedFallback = false;
+            try {
+              const DEFAULT_API = "https://api.technozlife.com";
+              const fallbackUrl = `${DEFAULT_API}/user`;
+              console.warn(`Attempting fallback to ${fallbackUrl}`);
+              const rf = await fetch(fallbackUrl, {
+                headers: { Authorization: `Bearer ${tokenValue}` },
+              });
+              triedFallback = true;
+              if (rf.ok) {
+                await refreshUser();
+                toast({
+                  title: "Signed in",
+                  description: "Authentication completed.",
+                });
+                router.replace("/dashboard");
+                return;
+              } else {
+                const t2 = await rf.text();
+                console.error("Fallback /user returned non-OK:", rf.status, t2);
+              }
+            } catch (fbErr) {
+              console.error("Fallback /user fetch failed:", fbErr);
+            }
+
             toast({
               title: "Sign in failed",
-              description: `Token verification failed (${r.status}).`,
+              description: `Token verification failed (${r.status})${
+                triedFallback ? " (fallback tried)" : ""
+              }.`,
             });
             router.replace("/auth");
             return;

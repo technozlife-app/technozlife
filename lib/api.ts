@@ -101,7 +101,20 @@ async function apiRequest<T>(
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
-
+  // Developer-friendly diagnostic: warn when API_BASE looks relative (may cause calls to current origin)
+  if (typeof window !== "undefined") {
+    try {
+      const isAbsolute = /^https?:\/\//i.test(API_BASE);
+      if (!isAbsolute) {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[apiRequest] NEXT_PUBLIC_API_BASE='${API_BASE}' does not look like an absolute URL. Requests will be sent to the current origin + '${API_BASE}'. If your API is hosted on a separate domain, set NEXT_PUBLIC_API_BASE to the full URL (e.g. 'https://api.example.com').`
+        );
+      }
+    } catch (e) {
+      /* ignore */
+    }
+  }
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
