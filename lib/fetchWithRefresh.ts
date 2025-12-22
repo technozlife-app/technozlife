@@ -41,31 +41,12 @@ export async function fetchWithAuth(input: string, init: RequestInit = {}) {
 
   if (res.status !== 401) return res;
 
-  // Try refresh
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return res;
-
-  try {
-    const refreshResult = await authApi.refreshToken(refreshToken);
-    if (refreshResult.success && refreshResult.data) {
-      saveTokens(refreshResult.data);
-
-      // Retry original request with new token
-      const newToken = refreshResult.data.accessToken;
-      const retryHeaders: HeadersInit = {
-        "Content-Type": "application/json",
-        ...(init.headers || {}),
-        Authorization: `Bearer ${newToken}`,
-      };
-      const retryRes = await fetch(url, { ...init, headers: retryHeaders });
-      return retryRes;
-    }
-
-    // Refresh failed
-    clearTokens();
-    return res;
-  } catch (error) {
-    clearTokens();
-    return res;
-  }
+  // 401 received: API does not document a `/auth/refresh` endpoint, so avoid
+  // calling an undocumented refresh route. Clear tokens and return the 401
+  // response so the app can prompt for re-authentication.
+  clearTokens();
+  console.warn(
+    "Received 401 and no documented refresh endpoint is available. Cleared tokens."
+  );
+  return res;
 }

@@ -9,11 +9,18 @@ export interface ApiResponse<T = unknown> {
 
 export interface UserProfile {
   id: string;
+  username?: string;
+  first_name?: string;
+  last_name?: string;
   email: string;
-  name: string;
   avatar?: string;
-  plan: "free" | "pro" | "enterprise";
-  createdAt: string;
+  current_plan?: string;
+  // Backwards-compatible fields some callers may still use
+  name?: string;
+  plan?: string;
+  createdAt?: string;
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AuthTokens {
@@ -372,11 +379,15 @@ export const authApi = {
     return apiRequest("/auth/logout", { method: "POST" });
   },
 
-  async refreshToken(refreshToken: string) {
-    return apiRequest<AuthTokens>("/auth/refresh", {
-      method: "POST",
-      body: JSON.stringify({ refreshToken }),
-    });
+  // NOTE: `/auth/refresh` is NOT documented in API.md. To avoid calling
+  // non-listed endpoints that can cause 404s, expose a stub that returns
+  // an explicit failure message. Token refresh should be handled by the
+  // server only if an endpoint is documented in API.md.
+  async refreshToken(_refreshToken: string) {
+    return {
+      success: false,
+      message: "Token refresh not supported by API",
+    } as ApiResponse<any>;
   },
 
   async getProfile() {
@@ -508,32 +519,34 @@ export const subscriptionApi = {
 // Maps API
 export const mapsApi = {
   async getLocations() {
-    return apiRequest<{
-      locations: Array<{ id: string; name: string; lat: number; lng: number }>;
-    }>("/maps/locations");
+    // `/maps/locations` is not present in the documented API. Use `/maps/pin`
+    // (POST) as described in API.md, or provide a frontend-only fallback.
+    return {
+      success: false,
+      message: "Endpoint not available. Use POST /maps/pin",
+    } as ApiResponse<any>;
   },
 };
 
 // Dashboard API (simulated functions)
 export const dashboardApi = {
   async getStats() {
-    return apiRequest<{
-      totalGenerations: number;
-      tokensUsed: number;
-      savedTemplates: number;
-      activeProjects: number;
-    }>("/dashboard/stats");
+    // `/dashboard/stats` is not documented in API.md. Return a safe frontend
+    // fallback so the dashboard can render without causing 404s.
+    return {
+      success: true,
+      data: {
+        totalGenerations: 0,
+        tokensUsed: 0,
+        savedTemplates: 0,
+        activeProjects: 0,
+      },
+    } as ApiResponse<any>;
   },
 
   async getActivity() {
-    return apiRequest<{
-      activities: Array<{
-        id: string;
-        type: string;
-        description: string;
-        timestamp: string;
-      }>;
-    }>("/dashboard/activity");
+    // `/dashboard/activity` is not documented; return an empty activity list.
+    return { success: true, data: { activities: [] } } as ApiResponse<any>;
   },
 
   async generateContent(prompt: string, type: string) {
@@ -548,16 +561,19 @@ export const dashboardApi = {
   },
 
   async getJobs() {
-    return apiRequest<{
-      jobs: Array<{
-        id: string;
-        status: string;
-        prompt?: string;
-        result?: string;
-        tokensUsed?: number;
-        createdAt?: string;
-      }>;
-    }>("/ai/jobs");
+    // There is no documented endpoint to list AI jobs. Use a client-side
+    // fallback (localStorage history) to avoid calling undisclosed endpoints
+    // that would return 404s.
+    try {
+      const raw =
+        typeof window !== "undefined"
+          ? localStorage.getItem("ai_jobs_history")
+          : null;
+      const jobs = raw ? JSON.parse(raw) : [];
+      return { success: true, data: { jobs } } as ApiResponse<any>;
+    } catch (e) {
+      return { success: true, data: { jobs: [] } } as ApiResponse<any>;
+    }
   },
 
   async getJobStatus(jobId: string) {

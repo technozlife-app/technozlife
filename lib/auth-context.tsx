@@ -109,26 +109,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   async function tryRefresh() {
-    const refreshToken = localStorage.getItem("refreshToken");
-    if (!refreshToken) return false;
-    setIsRefreshing(true);
-
-    try {
-      const result = await authApi.refreshToken(refreshToken);
-      if (result.success && result.data) {
-        saveTokens(result.data);
-        // re-fetch profile
-        const profile = await authApi.getProfile();
-        if (profile.success && profile.data) setUser(profile.data);
-        scheduleProactiveRefresh();
-        setIsRefreshing(false);
-        return true;
-      }
-    } catch (e) {
-      // ignore
-    }
-
-    // refresh failed
+    // The API does not document a `/auth/refresh` endpoint. To avoid calling
+    // non-listed endpoints (which can return 404), we will NOT attempt a
+    // server-side refresh. Instead, clear credentials and require the user to
+    // re-authenticate.
     clearTokens();
     setUser(null);
     setIsRefreshing(false);

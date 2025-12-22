@@ -19,13 +19,17 @@ export default function ProfileCard() {
     );
   }
 
-  const avatar = user.avatar || "/avatar-placeholder.svg";
-  const displayName = user.name || user.email || "User";
-  const plan = (user as any).plan || (user as any).current_plan || null;
+  const avatar = (user as any).avatar || "/avatar-placeholder.svg";
+  const displayName = (user as any).first_name
+    ? `${(user as any).first_name}${
+        (user as any).last_name ? ` ${(user as any).last_name}` : ""
+      }`
+    : (user as any).username || user.name || user.email || "User";
+  const plan = (user as any).current_plan || (user as any).plan || null;
   const memberSince =
-    (user as any).createdAt || (user as any).created_at
+    (user as any).created_at || (user as any).createdAt
       ? new Date(
-          (user as any).createdAt || (user as any).created_at
+          (user as any).created_at || (user as any).createdAt
         ).toLocaleDateString()
       : null;
 

@@ -101,7 +101,18 @@ export default function DashboardPage() {
           className='mb-6 md:mb-8'
         >
           <h1 className='text-2xl md:text-3xl font-bold text-white mb-2'>
-            Welcome back{user?.name ? `, ${user.name.split(" ")[0]}` : ""}
+            Welcome back
+            {user
+              ? `, ${
+                  (
+                    (user as any).first_name ||
+                    (user as any).username ||
+                    user.email
+                  )
+                    .toString()
+                    .split(" ")[0]
+                }`
+              : ""}
           </h1>
           <p className='text-slate-400'>
             Here's what's happening with your bio-digital interface

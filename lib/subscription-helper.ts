@@ -13,7 +13,7 @@ import type { UserProfile } from "./api";
  */
 export async function ensureUserHasPlan(user?: UserProfile | null) {
   try {
-    const currentPlan = (user as any)?.plan;
+    const currentPlan = (user as any)?.current_plan || (user as any)?.plan;
     if (currentPlan) return currentPlan;
 
     const plansRes = await subscriptionApi.getPlans();
