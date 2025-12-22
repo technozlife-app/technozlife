@@ -9,38 +9,15 @@ import {
   useRef,
   type ReactNode,
 } from "react";
-import { authApi, type UserProfile } from "./api";
+import { authApi, userApi, type UserProfile, type ApiResponse } from "./api";
 import { executeRecaptcha } from "./recaptcha";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
 
-// Response interfaces to match API.md structures
-interface AuthSuccessResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    user: UserProfile;
-    token: string;
-  };
-  code: number;
-  timestamp: string;
-}
-
-interface ProfileResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    user: UserProfile;
-  };
-  code: number;
-  timestamp: string;
-}
-
-interface LogoutResponse {
-  success: boolean;
-  message: string;
-  code: number;
-  timestamp: string;
+// Auth response type
+interface AuthData {
+  user: UserProfile;
+  token: string;
 }
 
 interface AuthContextType {
@@ -70,7 +47,7 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function setTokensFromResponse(data: any) {
+function setTokensFromResponse(data: AuthData) {
   if (!data || typeof data.token !== "string") return;
   localStorage.setItem("accessToken", data.token);
   localStorage.removeItem("refreshToken");
@@ -148,7 +125,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    const result: ProfileResponse = await authApi.getProfile();
+    const result: ApiResponse<{ user: UserProfile }> =
+      await userApi.getProfile();
     if (result.success && result.data) {
       setUser(result.data.user);
       scheduleProactiveRefresh();
@@ -175,30 +153,39 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       recaptchaToken = await executeRecaptcha("login");
     } catch (e) {
-      // Optional
+      // Optional - continue without reCAPTCHA if it fails
       console.warn("reCAPTCHA failed:", e);
     }
-    const result: AuthSuccessResponse = await authApi.login(email, password);
+
+    const result: ApiResponse<AuthData> = await authApi.login(
+      email,
+      password,
+      recaptchaToken
+    );
     setIsAuthenticating(false);
+
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
       setUser(result.data.user);
       scheduleProactiveRefresh();
-      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+
+      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
         const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile: ProfileResponse = await authApi.getProfile();
+          const profile: ApiResponse<{ user: UserProfile }> =
+            await userApi.getProfile();
           if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
-        // ignore helper errors
+        // Ignore helper errors
       }
 
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
+
     toast({
       title: "Sign in failed",
       description: result.message || "Unable to sign in",
@@ -221,35 +208,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // If reCAPTCHA fails, continue without it (optional)
       console.warn("reCAPTCHA failed:", e);
     }
-    const result: AuthSuccessResponse = await authApi.registerFull({
+
+    const result: ApiResponse<AuthData> = await authApi.register({
       username,
       first_name: firstName,
       last_name: lastName,
       email,
       password,
-      recaptchaToken,
+      recaptcha_token: recaptchaToken,
     });
+
     setIsAuthenticating(false);
+
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
       setUser(result.data.user);
       scheduleProactiveRefresh();
 
-      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
         const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile: ProfileResponse = await authApi.getProfile();
+          const profile: ApiResponse<{ user: UserProfile }> =
+            await userApi.getProfile();
           if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
-        // ignore helper errors
+        // Ignore helper errors
       }
 
       toast({ title: "Account created", description: "Welcome!" });
       return { success: true };
     }
+
     toast({
       title: "Registration failed",
       description: result.message || "Unable to register",
@@ -259,28 +251,37 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const googleLogin = async (token: string) => {
     setIsAuthenticating(true);
-    const result: AuthSuccessResponse = await authApi.googleAuth(token);
+
+    // Determine if token is a JWT (credential) or authorization code
+    const isJWT = token.split(".").length === 3;
+    const result: ApiResponse<AuthData> = isJWT
+      ? await authApi.googleCallback(undefined, token)
+      : await authApi.googleCallback(token);
+
     setIsAuthenticating(false);
+
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
       setUser(result.data.user);
       scheduleProactiveRefresh();
 
-      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
         const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile: ProfileResponse = await authApi.getProfile();
+          const profile: ApiResponse<{ user: UserProfile }> =
+            await userApi.getProfile();
           if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
-        // ignore helper errors
+        // Ignore helper errors
       }
 
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
+
     toast({
       title: "Sign in failed",
       description: result.message || "Unable to sign in",
@@ -290,28 +291,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const githubLogin = async (code: string) => {
     setIsAuthenticating(true);
-    const result: AuthSuccessResponse = await authApi.githubAuth(code);
+    const result: ApiResponse<AuthData> = await authApi.githubCallback(code);
     setIsAuthenticating(false);
+
     if (result.success && result.data) {
       setTokensFromResponse(result.data);
       setUser(result.data.user);
       scheduleProactiveRefresh();
 
-      // ensure user has a plan (best-effort) and refresh profile if plan was assigned
+      // Ensure user has a plan (best-effort) and refresh profile if plan was assigned
       try {
         const { ensureUserHasPlan } = await import("./subscription-helper");
         const assigned = await ensureUserHasPlan(result.data.user);
         if (assigned) {
-          const profile: ProfileResponse = await authApi.getProfile();
+          const profile: ApiResponse<{ user: UserProfile }> =
+            await userApi.getProfile();
           if (profile.success && profile.data) setUser(profile.data.user);
         }
       } catch (e) {
-        // ignore helper errors
+        // Ignore helper errors
       }
 
       toast({ title: "Signed in", description: "Welcome back!" });
       return { success: true };
     }
+
     toast({
       title: "Sign in failed",
       description: result.message || "Unable to sign in",
@@ -321,10 +325,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = async () => {
     try {
-      const result: LogoutResponse = await authApi.logout();
+      const result: ApiResponse = await authApi.logout();
       // No need to check result.data as per API.md
     } catch (e) {
-      // ignore server errors
+      // Ignore server errors
     }
     clearTokens();
     setUser(null);

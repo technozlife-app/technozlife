@@ -11,10 +11,11 @@ import {
   Code,
   ArrowRight,
   Loader2,
+  CheckCircle,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { dashboardApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 
 const templates = [
@@ -49,7 +50,138 @@ export default function GeneratePage() {
   const [prompt, setPrompt] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [result, setResult] = useState("");
+  const [generationProgress, setGenerationProgress] = useState(0);
   const { addToast } = useToast();
+
+  // Simulated content generators for different templates
+  const generateSimulatedContent = (template: string, prompt: string) => {
+    const templates = {
+      email: `# Professional Email Template
+
+Subject: Exciting Updates About Our Latest Product Launch
+
+Dear [Recipient Name],
+
+I hope this email finds you well. I'm writing to share some exciting news about our upcoming product launch that I believe will be of great interest to you.
+
+**Key Highlights:**
+- Innovative features designed for modern workflows
+- Enhanced user experience with intuitive interface
+- Comprehensive support and documentation
+
+Based on your prompt: "${prompt}"
+
+We would love to schedule a demo or discussion to explore how this solution can benefit your organization. Please let me know your availability for a brief call.
+
+Best regards,
+[Your Name]
+Product Manager
+[Your Company]`,
+
+      blog: `# The Future of AI Technology: What You Need to Know
+
+## Introduction
+
+Artificial Intelligence continues to revolutionize industries across the globe, offering unprecedented opportunities for innovation and efficiency. In this comprehensive guide, we'll explore the latest developments and what they mean for businesses and consumers alike.
+
+## Current Trends in AI
+
+Based on your prompt: "${prompt}"
+
+### Machine Learning Advancements
+- Deep learning algorithms achieving human-like accuracy
+- Natural language processing breakthroughs
+- Computer vision applications expanding rapidly
+
+### Industry Applications
+- Healthcare: Diagnostic assistance and drug discovery
+- Finance: Fraud detection and algorithmic trading
+- Manufacturing: Predictive maintenance and quality control
+
+## The Road Ahead
+
+As AI technology continues to evolve, organizations that embrace these changes will be best positioned for success in the digital age.
+
+*This content was generated based on your specific requirements and can be customized further.*`,
+
+      social: `🚀 Exciting News! Our latest AI-powered platform is now live!
+
+Based on your prompt: "${prompt}"
+
+✨ Key Features:
+• Advanced content generation
+• Real-time collaboration
+• Seamless integration
+
+💡 Perfect for:
+- Content creators
+- Marketing teams
+- Business professionals
+
+#AI #Innovation #Technology #FutureOfWork
+
+What are you building with AI? Let us know in the comments! 👇`,
+
+      code: `// Generated React Component Example
+// Based on your prompt: "${prompt}"
+
+import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+
+interface GeneratedComponentProps {
+  title?: string;
+  data?: any[];
+}
+
+const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
+  title = "Generated Component",
+  data = []
+}) => {
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Simulate data loading
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div>
+      </div>
+    );
+  }
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="bg-white rounded-lg shadow-lg p-6"
+    >
+      <h2 className="text-2xl font-bold mb-4">{title}</h2>
+      <div className="space-y-2">
+        {data.map((item, index) => (
+          <div key={index} className="p-3 bg-gray-50 rounded">
+            {JSON.stringify(item, null, 2)}
+          </div>
+        ))}
+      </div>
+    </motion.div>
+  );
+};
+
+export default GeneratedComponent;
+
+// Usage example:
+// <GeneratedComponent title="My Data" data={[{name: "Item 1"}, {name: "Item 2"}]} />`,
+    };
+
+    return templates[template as keyof typeof templates] || templates.blog;
+  };
 
   const handleGenerate = async () => {
     if (!selectedTemplate) {
@@ -70,27 +202,49 @@ export default function GeneratePage() {
     }
 
     setIsGenerating(true);
+    setGenerationProgress(0);
+    setResult("");
+
     try {
-      const response = await dashboardApi.generateContent(
-        prompt,
-        selectedTemplate
+      // Simulate generation progress
+      const progressInterval = setInterval(() => {
+        setGenerationProgress((prev) => {
+          if (prev >= 90) {
+            clearInterval(progressInterval);
+            return prev;
+          }
+          return prev + Math.random() * 15;
+        });
+      }, 200);
+
+      // Simulate API delay (2-4 seconds)
+      const delay = 2000 + Math.random() * 2000;
+      await new Promise((resolve) => setTimeout(resolve, delay));
+
+      clearInterval(progressInterval);
+      setGenerationProgress(100);
+
+      // Generate simulated content
+      const generatedContent = generateSimulatedContent(
+        selectedTemplate,
+        prompt
+      );
+      setResult(generatedContent);
+
+      // Simulate token usage
+      const tokensUsed = Math.floor(Math.random() * 500) + 100;
+
+      addToast(
+        "success",
+        "Generated!",
+        `Content created using ${tokensUsed} tokens`
       );
 
-      if (response.success && response.data) {
-        setResult(response.data.content);
-        addToast(
-          "success",
-          "Generated!",
-          `Content created using ${response.data.tokensUsed} tokens`
-        );
-      } else {
-        // Demo simulation
-        const demoContent = `# Generated ${selectedTemplate} Content\n\nBased on your prompt: "${prompt}"\n\nThis is a demonstration of the AI generation capability. In production, this would be fully AI-generated content tailored to your specific requirements.\n\n---\n\nYour content would appear here with proper formatting, structure, and all the details you requested.`;
-        setResult(demoContent);
-        addToast("info", "Demo Mode", "Showing simulated generation");
-      }
-    } catch {
+      // Reset progress after a short delay
+      setTimeout(() => setGenerationProgress(0), 1000);
+    } catch (error) {
       addToast("error", "Failed", "Unable to generate content");
+      setGenerationProgress(0);
     } finally {
       setIsGenerating(false);
     }
@@ -181,7 +335,7 @@ export default function GeneratePage() {
           {isGenerating ? (
             <>
               <Loader2 className='w-4 h-4 mr-2 animate-spin' />
-              Generating...
+              Generating... {Math.round(generationProgress)}%
             </>
           ) : (
             <>
@@ -191,6 +345,30 @@ export default function GeneratePage() {
             </>
           )}
         </Button>
+
+        {/* Progress bar */}
+        {isGenerating && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className='mt-4'
+          >
+            <div className='flex items-center gap-3 mb-2'>
+              <Clock className='w-4 h-4 text-teal-400' />
+              <span className='text-sm text-slate-400'>
+                Generating your content...
+              </span>
+            </div>
+            <div className='w-full bg-slate-700 rounded-full h-2'>
+              <motion.div
+                className='bg-linear-to-r from-teal-500 to-emerald-500 h-2 rounded-full'
+                initial={{ width: 0 }}
+                animate={{ width: `${generationProgress}%` }}
+                transition={{ duration: 0.3 }}
+              />
+            </div>
+          </motion.div>
+        )}
       </motion.div>
 
       {/* Result */}

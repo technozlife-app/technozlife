@@ -17,7 +17,29 @@ import { useToast } from "@/components/ui/custom-toast";
 import { PlanCard } from "@/components/dashboard/plan-card";
 
 const plansInitial = [] as Array<any>;
-const mockPayments = [] as Array<any>;
+const mockPayments = [
+  {
+    id: "pay-1",
+    description: "Pro Plan - Monthly",
+    amount: "$29.99",
+    date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    status: "completed",
+  },
+  {
+    id: "pay-2",
+    description: "Pro Plan - Monthly",
+    amount: "$29.99",
+    date: new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    status: "completed",
+  },
+  {
+    id: "pay-3",
+    description: "Pro Plan - Monthly",
+    amount: "$29.99",
+    date: new Date(Date.now() - 90 * 24 * 60 * 60 * 1000).toLocaleDateString(),
+    status: "completed",
+  },
+];
 
 export default function BillingPage() {
   const { user } = useAuth();

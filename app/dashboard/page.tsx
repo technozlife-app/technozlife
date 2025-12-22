@@ -2,14 +2,20 @@
 
 import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Zap, FileText, FolderOpen, Cpu } from "lucide-react";
+import {
+  Zap,
+  FileText,
+  FolderOpen,
+  Cpu,
+  TrendingUp,
+  Activity,
+} from "lucide-react";
 import { StatsCard } from "@/components/dashboard/stats-card";
 import { ActivityFeed } from "@/components/dashboard/activity-feed";
 import { AIGenerator } from "@/components/dashboard/ai-generator";
 import { UsageChart } from "@/components/dashboard/usage-chart";
 import { useAuth } from "@/lib/auth-context";
 
-import { dashboardApi } from "@/lib/api";
 import { useToast } from "@/hooks/use-toast";
 import { getPlanBySlug } from "@/lib/plans";
 
@@ -29,6 +35,25 @@ const initialUsageData = [
 import RequireAuth from "@/components/auth/RequireAuth";
 import ProfileCard from "@/components/dashboard/profile-card";
 
+// Simulated activity types
+const activityTypes = [
+  { type: "generation", icon: "📝", color: "text-blue-400" },
+  { type: "login", icon: "🔐", color: "text-green-400" },
+  { type: "update", icon: "⚙️", color: "text-yellow-400" },
+  { type: "view", icon: "👁️", color: "text-purple-400" },
+];
+
+const activityMessages = [
+  "Generated a blog post about AI technology",
+  "Logged in from Chrome on Windows",
+  "Updated profile information",
+  "Viewed dashboard analytics",
+  "Generated social media content",
+  "Created email template",
+  "Accessed billing information",
+  "Viewed generation history",
+];
+
 export default function DashboardPage() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -37,59 +62,124 @@ export default function DashboardPage() {
   const [usageData, setUsageData] = useState(initialUsageData);
   const [isLoading, setIsLoading] = useState(true);
 
+  // Generate simulated data
   useEffect(() => {
     let mounted = true;
-    async function load() {
+
+    async function loadSimulatedData() {
       setIsLoading(true);
-      try {
-        const statsRes = await dashboardApi.getStats();
-        const activityRes = await dashboardApi.getActivity();
 
-        if (!mounted) return;
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
 
-        if (statsRes.success && statsRes.data) {
-          setStats(statsRes.data as StatsShape);
-          // update usageData from stats if possible
-          setUsageData((prev) =>
-            prev.map((u) => {
-              if (u.label === "Tokens Used")
-                return { ...u, value: statsRes.data.tokensUsed };
-              return u;
-            })
-          );
-        } else {
-          toast({
-            title: "Failed to load stats",
-            description: statsRes.message,
-          });
-        }
+      if (!mounted) return;
 
-        if (activityRes.success && activityRes.data) {
-          // activityRes.data should contain activities array
-          // Support both { activities: [...] } and direct array
-          const activitiesList =
-            (activityRes.data as any).activities || activityRes.data;
-          setActivities(activitiesList || []);
-        } else {
-          toast({
-            title: "Failed to load activity",
-            description: activityRes.message,
-          });
-        }
-      } catch (err) {
-        toast({
-          title: "Connection Error",
-          description: "Unable to load dashboard data",
-        });
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
+      // Generate random stats
+      const simulatedStats: StatsShape = {
+        totalGenerations: Math.floor(Math.random() * 50) + 10,
+        tokensUsed: Math.floor(Math.random() * 50000) + 10000,
+        savedTemplates: Math.floor(Math.random() * 20) + 5,
+        activeProjects: Math.floor(Math.random() * 10) + 1,
+      };
+
+      setStats(simulatedStats);
+
+      // Update usage data from simulated stats
+      setUsageData((prev) =>
+        prev.map((u) => {
+          if (u.label === "API Calls")
+            return { ...u, value: simulatedStats.totalGenerations };
+          if (u.label === "Tokens Used")
+            return { ...u, value: simulatedStats.tokensUsed };
+          if (u.label === "Storage")
+            return { ...u, value: simulatedStats.savedTemplates * 0.1 };
+          return u;
+        })
+      );
+
+      // Generate simulated activities
+      const simulatedActivities = Array.from({ length: 8 }, (_, i) => {
+        const activityType =
+          activityTypes[Math.floor(Math.random() * activityTypes.length)];
+        const message =
+          activityMessages[Math.floor(Math.random() * activityMessages.length)];
+        const timestamp = new Date(
+          Date.now() - Math.random() * 7 * 24 * 60 * 60 * 1000
+        ); // Last 7 days
+
+        return {
+          id: `activity-${i}`,
+          type: activityType.type,
+          message,
+          icon: activityType.icon,
+          color: activityType.color,
+          timestamp: timestamp.toISOString(),
+          timeAgo: getTimeAgo(timestamp),
+        };
+      }).sort(
+        (a, b) =>
+          new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
+      );
+
+      setActivities(simulatedActivities);
+      setIsLoading(false);
     }
-    load();
+
+    loadSimulatedData();
+
+    // Set up dynamic updates every 30 seconds
+    const interval = setInterval(() => {
+      if (!mounted) return;
+
+      setStats((prev) => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          totalGenerations:
+            prev.totalGenerations + Math.floor(Math.random() * 3),
+          tokensUsed: prev.tokensUsed + Math.floor(Math.random() * 100),
+        };
+      });
+
+      // Add new activity occasionally
+      if (Math.random() < 0.3) {
+        const activityType =
+          activityTypes[Math.floor(Math.random() * activityTypes.length)];
+        const message =
+          activityMessages[Math.floor(Math.random() * activityMessages.length)];
+        const timestamp = new Date();
+
+        const newActivity = {
+          id: `activity-${Date.now()}`,
+          type: activityType.type,
+          message,
+          icon: activityType.icon,
+          color: activityType.color,
+          timestamp: timestamp.toISOString(),
+          timeAgo: "Just now",
+        };
+
+        setActivities((prev) => [newActivity, ...prev.slice(0, 7)]);
+      }
+    }, 30000);
+
     return () => {
       mounted = false;
+      clearInterval(interval);
     };
-  }, [toast]);
+  }, []);
+
+  // Helper function to get time ago
+  function getTimeAgo(date: Date): string {
+    const now = new Date();
+    const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diffInSeconds < 60) return "Just now";
+    if (diffInSeconds < 3600) return `${Math.floor(diffInSeconds / 60)}m ago`;
+    if (diffInSeconds < 86400)
+      return `${Math.floor(diffInSeconds / 3600)}h ago`;
+    return `${Math.floor(diffInSeconds / 86400)}d ago`;
+  }
 
   return (
     <RequireAuth>
@@ -232,6 +322,3 @@ export default function DashboardPage() {
     </RequireAuth>
   );
 }
-
-// Need to import Sparkles for the stats card
-import { Sparkles } from "lucide-react";

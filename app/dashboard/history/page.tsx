@@ -13,11 +13,13 @@ import {
   Trash2,
   Copy,
   Check,
+  Clock,
+  CheckCircle,
+  XCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/custom-toast";
-import { dashboardApi } from "@/lib/api";
 import { JobDetail } from "@/components/dashboard/job-detail";
 
 const typeIcons: Record<string, typeof FileText> = {
@@ -29,12 +31,62 @@ const typeIcons: Record<string, typeof FileText> = {
 
 interface JobItem {
   id: string;
-  status: string;
+  status: "completed" | "processing" | "failed";
   prompt?: string;
   result?: string;
   tokensUsed?: number;
   createdAt?: string;
+  type?: string;
 }
+
+// Simulated job generation
+const generateSimulatedJobs = (): JobItem[] => {
+  const prompts = [
+    "Write a professional email introducing our new product launch",
+    "Create a blog post about AI technology trends",
+    "Generate social media captions for our brand campaign",
+    "Write clean React component code for a dashboard",
+    "Create an email newsletter template for subscribers",
+    "Generate SEO-optimized blog content about machine learning",
+    "Create engaging social media posts for product promotion",
+    "Write TypeScript code for API integration",
+    "Generate professional email responses to customer inquiries",
+    "Create content for our company blog about innovation",
+  ];
+
+  const types = ["email", "blog", "social", "code"];
+  const statuses: JobItem["status"][] = ["completed", "processing", "failed"];
+
+  return Array.from({ length: 15 }, (_, i) => {
+    const type = types[Math.floor(Math.random() * types.length)];
+    const status = statuses[Math.floor(Math.random() * statuses.length)];
+    const prompt = prompts[Math.floor(Math.random() * prompts.length)];
+    const createdAt = new Date(
+      Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000
+    ).toISOString();
+
+    let result = "";
+    if (status === "completed") {
+      result = `Generated ${type} content based on: "${prompt}". This is simulated content that would normally be the full AI-generated result.`;
+    }
+
+    return {
+      id: `job-${i + 1}`,
+      status,
+      prompt,
+      result,
+      tokensUsed:
+        status === "completed"
+          ? Math.floor(Math.random() * 500) + 50
+          : undefined,
+      createdAt,
+      type,
+    };
+  }).sort(
+    (a, b) =>
+      new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime()
+  );
+};
 
 export default function HistoryPage() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -48,18 +100,38 @@ export default function HistoryPage() {
     let mounted = true;
     async function loadJobs() {
       setIsLoading(true);
-      try {
-        const res = await dashboardApi.getJobs();
-        if (res.success && res.data && mounted) {
-          setHistory(res.data.jobs || []);
-        } else if (!res.success) {
-          addToast("error", "Failed", res.message || "Unable to fetch history");
-        }
-      } catch (e) {
-        addToast("error", "Connection Error", "Unable to fetch history");
-      } finally {
-        if (mounted) setIsLoading(false);
-      }
+
+      // Simulate API delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      if (!mounted) return;
+
+      // Generate simulated jobs
+      const simulatedJobs = generateSimulatedJobs();
+      setHistory(simulatedJobs);
+      setIsLoading(false);
+
+      // Set up dynamic updates - occasionally change job status
+      const interval = setInterval(() => {
+        if (!mounted) return;
+
+        setHistory((prev) =>
+          prev.map((job) => {
+            // Randomly update processing jobs to completed
+            if (job.status === "processing" && Math.random() < 0.1) {
+              return {
+                ...job,
+                status: "completed" as const,
+                result: `Generated ${job.type} content based on: "${job.prompt}". This is simulated content that would normally be the full AI-generated result.`,
+                tokensUsed: Math.floor(Math.random() * 500) + 50,
+              };
+            }
+            return job;
+          })
+        );
+      }, 10000); // Check every 10 seconds
+
+      return () => clearInterval(interval);
     }
     loadJobs();
     return () => {
@@ -74,6 +146,7 @@ export default function HistoryPage() {
   };
 
   const handleDelete = (id: string) => {
+    setHistory((prev) => prev.filter((job) => job.id !== id));
     addToast("info", "Deleted", "Item removed from history");
   };
 
@@ -168,9 +241,29 @@ export default function HistoryPage() {
                     >
                       {title}
                     </h3>
-                    <span className='text-xs text-slate-500 shrink-0'>
-                      {date}
-                    </span>
+                    <div className='flex items-center gap-2 shrink-0'>
+                      <span
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${
+                          item.status === "completed"
+                            ? "bg-green-500/20 text-green-400"
+                            : item.status === "processing"
+                            ? "bg-yellow-500/20 text-yellow-400"
+                            : "bg-red-500/20 text-red-400"
+                        }`}
+                      >
+                        {item.status === "completed" && (
+                          <CheckCircle className='w-3 h-3 inline mr-1' />
+                        )}
+                        {item.status === "processing" && (
+                          <Clock className='w-3 h-3 inline mr-1' />
+                        )}
+                        {item.status === "failed" && (
+                          <XCircle className='w-3 h-3 inline mr-1' />
+                        )}
+                        {item.status}
+                      </span>
+                      <span className='text-xs text-slate-500'>{date}</span>
+                    </div>
                   </div>
                   <p className='text-sm text-slate-400 line-clamp-2 mb-2'>
                     {preview}
