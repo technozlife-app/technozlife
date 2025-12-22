@@ -161,7 +161,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     recaptchaToken?: string
   ): Promise<{ success: boolean; message?: string }> => {
     try {
-      const response = await authApi.login(email, password, recaptchaToken);
+      // authApi.login signature is (email, password, turnstile_token?, recaptcha_token?)
+      // pass `undefined` for the turnstile token so `recaptchaToken` maps to the
+      // `recaptcha_token` parameter on the API.
+      const response = await authApi.login(
+        email,
+        password,
+        undefined,
+        recaptchaToken
+      );
       if (response.success && response.data) {
         const { user: userData, token } = response.data;
 

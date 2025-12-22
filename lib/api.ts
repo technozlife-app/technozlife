@@ -222,47 +222,16 @@ export const authApi = {
 
   // Google OAuth redirect URL
   async getGoogleRedirect(): Promise<ApiResponse<{ url: string }>> {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
-    const headers: HeadersInit = {
-      ...(token && { Authorization: `Bearer ${token}` }),
+    // For browser-based OAuth flow the frontend should navigate the browser
+    // directly to the backend redirect endpoint so the backend can start
+    // the provider handshake and ultimately redirect back to the frontend.
+    return {
+      success: true,
+      message: "Use this URL for browser redirect",
+      data: { url: `${API_BASE}/auth/google/redirect` },
+      code: 200,
+      timestamp: new Date().toISOString(),
     };
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/google/redirect`, {
-        headers,
-        redirect: "manual",
-      });
-
-      if (response.status === 302) {
-        const location = response.headers.get("location");
-        if (location) {
-          return {
-            success: true,
-            message: "Redirect URL generated",
-            data: { url: location },
-            code: 200,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      }
-
-      return {
-        success: false,
-        message: "Failed to get redirect URL",
-        code: response.status,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-        code: 0,
-        timestamp: new Date().toISOString(),
-      };
-    }
   },
 
   // Google OAuth callback (API flow)
@@ -282,47 +251,16 @@ export const authApi = {
 
   // GitHub OAuth redirect URL
   async getGithubRedirect(): Promise<ApiResponse<{ url: string }>> {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
-    const headers: HeadersInit = {
-      ...(token && { Authorization: `Bearer ${token}` }),
+    // See note in getGoogleRedirect: provide the backend redirect URL for
+    // browser navigation rather than attempting a fetch-for-302 (CORS/redirect
+    // issues). The frontend can use `window.location.href = url` to start flow.
+    return {
+      success: true,
+      message: "Use this URL for browser redirect",
+      data: { url: `${API_BASE}/auth/github/redirect` },
+      code: 200,
+      timestamp: new Date().toISOString(),
     };
-
-    try {
-      const response = await fetch(`${API_BASE}/auth/github/redirect`, {
-        headers,
-        redirect: "manual",
-      });
-
-      if (response.status === 302) {
-        const location = response.headers.get("location");
-        if (location) {
-          return {
-            success: true,
-            message: "Redirect URL generated",
-            data: { url: location },
-            code: 200,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      }
-
-      return {
-        success: false,
-        message: "Failed to get redirect URL",
-        code: response.status,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-        code: 0,
-        timestamp: new Date().toISOString(),
-      };
-    }
   },
 
   // GitHub OAuth callback (API flow)
@@ -422,50 +360,16 @@ export const authApi = {
 
   // Link OAuth provider (authenticated)
   async linkProvider(provider: "google" | "github"): Promise<ApiResponse> {
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("accessToken")
-        : null;
-    const headers: HeadersInit = {
-      ...(token && { Authorization: `Bearer ${token}` }),
+    // For linking providers while authenticated, the frontend should navigate
+    // the browser to the backend link redirect endpoint. The backend will
+    // perform the OAuth handshake and redirect back to the frontend.
+    return {
+      success: true,
+      message: "Use this URL for browser redirect",
+      data: { url: `${API_BASE}/auth/link/${provider}/redirect` },
+      code: 200,
+      timestamp: new Date().toISOString(),
     };
-
-    try {
-      const response = await fetch(
-        `${API_BASE}/auth/link/${provider}/redirect`,
-        {
-          headers,
-          redirect: "manual",
-        }
-      );
-
-      if (response.status === 302) {
-        const location = response.headers.get("location");
-        if (location) {
-          return {
-            success: true,
-            message: "Redirect URL generated",
-            data: { url: location },
-            code: 200,
-            timestamp: new Date().toISOString(),
-          };
-        }
-      }
-
-      return {
-        success: false,
-        message: "Failed to get redirect URL",
-        code: response.status,
-        timestamp: new Date().toISOString(),
-      };
-    } catch (error) {
-      return {
-        success: false,
-        message: error instanceof Error ? error.message : "Network error",
-        code: 0,
-        timestamp: new Date().toISOString(),
-      };
-    }
   },
 
   // Unlink OAuth provider (authenticated)

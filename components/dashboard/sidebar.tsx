@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -34,7 +34,7 @@ export function DashboardSidebar() {
   const [isMobileOpen, setIsMobileOpen] = useState(false);
   const pathname = usePathname();
   const router = useRouter();
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, isLoading, refreshUser } = useAuth();
   const { addToast } = useToast();
 
   const handleLogout = async () => {
@@ -122,8 +122,19 @@ export function DashboardSidebar() {
                 <p className='text-sm font-medium text-white truncate'>
                   {isLoading
                     ? "Loading..."
-                    : user?.first_name
-                    ? `${user.first_name}${user.last_name ? ` ${user.last_name}` : ""}`
+                    : // Be tolerant to different backend name formats
+                    user?.first_name ||
+                      (user as any)?.firstName ||
+                      (user as any)?.name
+                    ? `${
+                        (user?.first_name ||
+                          (user as any)?.firstName ||
+                          (user as any)?.name) as string
+                      }${
+                        user?.last_name || (user as any)?.lastName
+                          ? ` ${user?.last_name || (user as any)?.lastName}`
+                          : ""
+                      }`
                     : user?.username || user?.email || "Guest"}
                 </p>
                 <p className='text-xs text-slate-500 truncate'>
@@ -172,6 +183,25 @@ export function DashboardSidebar() {
       )}
     </div>
   );
+
+  // If there is an access token but no user in context, attempt to refresh
+  // the profile. This helps when the token was just written (e.g. during
+  // OAuth redirect) and the AuthProvider hasn't populated the user yet.
+  useEffect(() => {
+    try {
+      if (
+        typeof window !== "undefined" &&
+        !user &&
+        !isLoading &&
+        localStorage.getItem("accessToken")
+      ) {
+        // best-effort refresh, ignore result (AuthProvider will update state)
+        refreshUser().catch(() => {});
+      }
+    } catch (e) {
+      // noop
+    }
+  }, [user, isLoading, refreshUser]);
 
   return (
     <>
