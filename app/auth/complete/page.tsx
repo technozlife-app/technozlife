@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/hooks/use-toast";
@@ -10,8 +10,13 @@ export default function AuthCompletePage() {
   const { refreshUser, googleLogin, githubLogin } = useAuth();
   const router = useRouter();
   const { toast } = useToast();
+  const processedRef = useRef(false);
 
   useEffect(() => {
+    // Prevent duplicate processing
+    if (processedRef.current) return;
+    processedRef.current = true;
+
     console.debug("AuthComplete: location", window.location.href);
     // Read both query string and hash fragment to support different redirects
     const params = new URLSearchParams(window.location.search);
@@ -78,7 +83,8 @@ export default function AuthCompletePage() {
           });
           // Wait a bit more to ensure AuthProvider state is updated
           await new Promise((resolve) => setTimeout(resolve, 200));
-          router.replace("/dashboard");
+          console.log("[AuthComplete] Calling router.push('/dashboard')");
+          router.push("/dashboard");
           return;
         }
 
@@ -111,7 +117,10 @@ export default function AuthCompletePage() {
             description: "Please refresh if you see any issues.",
           });
           await new Promise((resolve) => setTimeout(resolve, 200));
-          router.replace("/dashboard");
+          console.log(
+            "[AuthComplete] Calling router.push('/dashboard') [fallback]"
+          );
+          router.push("/dashboard");
         }
       } catch (e) {
         console.error("[AuthComplete] refreshUser threw:", e);
@@ -182,9 +191,10 @@ export default function AuthCompletePage() {
       handleCode(code, provider || undefined);
     } else {
       toast({ title: "No token found", description: "Authentication failed." });
-      router.replace("/auth");
+      router.push("/auth");
     }
-  }, [refreshUser, router, toast]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return <div className='p-8'>Completing authentication...</div>;
 }
