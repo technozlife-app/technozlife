@@ -4,6 +4,8 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { paymentsApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
 import type { Plan } from "@/lib/plans";
 
 export default function CheckoutClient({ plan }: { plan: Plan }) {
@@ -150,144 +152,184 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
     }
   };
 
+  // simple formatter for display grouping
+  const formatCardNumber = (value: string) =>
+    value
+      .replace(/\D/g, "")
+      .replace(/(.{4})/g, "$1 ")
+      .trim();
+
   return (
-    <main className='max-w-3xl mx-auto px-6 py-20'>
-      <div className='glass rounded-2xl p-8'>
-        <h1 className='text-2xl font-bold text-slate-100 mb-2'>
-          Checkout — {plan.name}
-        </h1>
-        <p className='text-slate-400 mb-6'>{plan.description}</p>
+    <main className='max-w-4xl mx-auto px-6 py-20'>
+      <div className='glass rounded-2xl p-6 md:p-8 grid grid-cols-1 md:grid-cols-2 gap-6 items-start'>
+        <section className='space-y-4'>
+          <div>
+            <h1 className='text-2xl font-bold text-slate-100'>
+              Checkout — {plan.name}
+            </h1>
+            <p className='text-slate-400 mt-1'>{plan.description}</p>
+          </div>
 
-        <div className='mb-6'>
-          <div className='text-4xl font-bold text-slate-100'>{plan.price}</div>
-          {plan.period && <div className='text-slate-500'>{plan.period}</div>}
-        </div>
-
-        <div className='space-y-2 mb-6'>
-          {plan.features.map((f) => (
-            <div key={f} className='text-slate-300'>
-              • {f}
+          <div className='mt-4 p-4 rounded-lg bg-gradient-to-br from-slate-800/40 to-slate-900/20 border border-slate-800/40'>
+            <div className='text-4xl font-extrabold text-slate-100'>
+              {plan.price}
             </div>
-          ))}
-        </div>
+            {plan.period && <div className='text-slate-500'>{plan.period}</div>}
 
-        {/* Payment form */}
-        <div className='mb-6 space-y-4'>
+            <ul className='mt-3 space-y-2'>
+              {plan.features.map((f) => (
+                <li key={f} className='text-slate-300 flex items-start gap-2'>
+                  <span className='w-2 h-2 rounded-full bg-teal-400 mt-2' />
+                  <span>{f}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className='hidden md:block mt-4 p-4 rounded-lg bg-slate-800/20 border border-slate-800/40'>
+            <p className='text-sm text-slate-400'>
+              Secure payments processed by our provider. Card details are
+              encrypted in transit.
+            </p>
+          </div>
+        </section>
+
+        <form
+          className='bg-slate-900/30 p-6 rounded-lg border border-slate-800/40 shadow-sm'
+          onSubmit={(e) => {
+            e.preventDefault();
+            startCheckout();
+          }}
+        >
           {generalError && (
-            <div className='p-3 rounded-md bg-red-900/40 text-red-200'>
+            <div className='p-3 rounded-md bg-red-900/40 text-red-200 mb-4'>
               {generalError}
             </div>
           )}
 
-          <div>
-            <label className='block text-sm text-slate-300 mb-1'>
-              Cardholder
-            </label>
-            <input
-              value={cardHolder}
-              onChange={(e) => setCardHolder(e.target.value)}
-              placeholder='Full name as on card'
-              className='input w-full'
-            />
-            {fieldErrors.card_holder && (
-              <p className='text-xs text-red-300 mt-1'>
-                {fieldErrors.card_holder.join("; ")}
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className='block text-sm text-slate-300 mb-1'>
-              Card number
-            </label>
-            <input
-              value={cardNumber}
-              onChange={(e) => setCardNumber(e.target.value)}
-              placeholder='4242 4242 4242 4242'
-              inputMode='numeric'
-              className='input w-full'
-            />
-            {fieldErrors.card_number && (
-              <p className='text-xs text-red-300 mt-1'>
-                {fieldErrors.card_number.join("; ")}
-              </p>
-            )}
-          </div>
-
-          <div className='grid grid-cols-3 gap-3'>
+          <div className='space-y-4'>
             <div>
               <label className='block text-sm text-slate-300 mb-1'>
-                Exp. month
+                Cardholder
               </label>
-              <input
-                value={expiryMonth}
-                onChange={(e) => setExpiryMonth(e.target.value)}
-                placeholder='MM'
-                className='input w-full'
+              <Input
+                value={cardHolder}
+                onChange={(e) => setCardHolder(e.target.value)}
+                placeholder='Full name as on card'
+                aria-invalid={!!fieldErrors.card_holder}
               />
-              {fieldErrors.expiry_month && (
+              {fieldErrors.card_holder && (
                 <p className='text-xs text-red-300 mt-1'>
-                  {fieldErrors.expiry_month.join("; ")}
+                  {fieldErrors.card_holder.join("; ")}
                 </p>
               )}
             </div>
 
             <div>
               <label className='block text-sm text-slate-300 mb-1'>
-                Exp. year
+                Card number
               </label>
-              <input
-                value={expiryYear}
-                onChange={(e) => setExpiryYear(e.target.value)}
-                placeholder='YYYY'
-                className='input w-full'
-              />
-              {fieldErrors.expiry_year && (
-                <p className='text-xs text-red-300 mt-1'>
-                  {fieldErrors.expiry_year.join("; ")}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <label className='block text-sm text-slate-300 mb-1'>CVV</label>
-              <input
-                value={cvv}
-                onChange={(e) => setCvv(e.target.value)}
-                placeholder='123'
+              <Input
+                value={cardNumber}
+                onChange={(e) =>
+                  setCardNumber(formatCardNumber(e.target.value))
+                }
+                placeholder='4242 4242 4242 4242'
                 inputMode='numeric'
-                className='input w-full'
+                aria-invalid={!!fieldErrors.card_number}
               />
-              {fieldErrors.cvv && (
+              {fieldErrors.card_number && (
                 <p className='text-xs text-red-300 mt-1'>
-                  {fieldErrors.cvv.join("; ")}
+                  {fieldErrors.card_number.join("; ")}
                 </p>
               )}
             </div>
+
+            <div className='grid grid-cols-3 gap-3'>
+              <div>
+                <label className='block text-sm text-slate-300 mb-1'>
+                  Exp. month
+                </label>
+                <Input
+                  value={expiryMonth}
+                  onChange={(e) =>
+                    setExpiryMonth(
+                      e.target.value.replace(/[^0-9]/g, "").slice(0, 2)
+                    )
+                  }
+                  placeholder='MM'
+                  aria-invalid={!!fieldErrors.expiry_month}
+                />
+                {fieldErrors.expiry_month && (
+                  <p className='text-xs text-red-300 mt-1'>
+                    {fieldErrors.expiry_month.join("; ")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className='block text-sm text-slate-300 mb-1'>
+                  Exp. year
+                </label>
+                <Input
+                  value={expiryYear}
+                  onChange={(e) =>
+                    setExpiryYear(
+                      e.target.value.replace(/[^0-9]/g, "").slice(0, 4)
+                    )
+                  }
+                  placeholder='YYYY'
+                  aria-invalid={!!fieldErrors.expiry_year}
+                />
+                {fieldErrors.expiry_year && (
+                  <p className='text-xs text-red-300 mt-1'>
+                    {fieldErrors.expiry_year.join("; ")}
+                  </p>
+                )}
+              </div>
+
+              <div>
+                <label className='block text-sm text-slate-300 mb-1'>CVV</label>
+                <Input
+                  value={cvv}
+                  onChange={(e) =>
+                    setCvv(e.target.value.replace(/[^0-9]/g, "").slice(0, 4))
+                  }
+                  placeholder='123'
+                  inputMode='numeric'
+                  aria-invalid={!!fieldErrors.cvv}
+                />
+                {fieldErrors.cvv && (
+                  <p className='text-xs text-red-300 mt-1'>
+                    {fieldErrors.cvv.join("; ")}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <div className='flex items-center justify-between gap-3 mt-4'>
+              <Button
+                variant='default'
+                className='flex-1'
+                onClick={() => startCheckout()}
+                disabled={isProcessing}
+              >
+                {isProcessing ? "Processing…" : `Pay ${plan.price}`}
+              </Button>
+
+              <Button variant='outline' asChild>
+                <a href='/#pricing' className='w-full text-center'>
+                  Back to pricing
+                </a>
+              </Button>
+            </div>
+
+            <p className='mt-4 text-xs text-slate-500'>
+              We do not store card numbers on this site — payments are handled
+              securely by our payment provider.
+            </p>
           </div>
-        </div>
-
-        <div className='flex gap-3'>
-          <button
-            className='btn-primary'
-            onClick={startCheckout}
-            disabled={isProcessing}
-          >
-            {isProcessing ? "Processing…" : `Pay ${plan.price}`}
-          </button>
-
-          <button
-            className='btn-ghost'
-            onClick={() => router.push("/#pricing")}
-          >
-            Back to pricing
-          </button>
-        </div>
-
-        <p className='mt-6 text-sm text-slate-500'>
-          Secure payments are processed off-site by our payment provider. We do
-          not store card numbers on this site.
-        </p>
+        </form>
       </div>
     </main>
   );
