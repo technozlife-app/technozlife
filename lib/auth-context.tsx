@@ -91,25 +91,46 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
+  // Debug: Log when user state changes
+  useEffect(() => {
+    console.log(
+      "[AuthProvider] User state changed:",
+      user ? `${user.email} (plan: ${user.current_plan})` : "null"
+    );
+  }, [user]);
+
   // Check for existing token and load user on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("accessToken");
+      console.log("[AuthProvider] checkAuth running, token exists:", !!token);
+
       if (token) {
         try {
+          console.log("[AuthProvider] Fetching user profile with token");
           const response = await userApi.getProfile();
+          console.log(
+            "[AuthProvider] getProfile response:",
+            response.status,
+            response.message
+          );
+
           if (response.status === "success" && response.data?.user) {
             // Ensure user has a plan assigned
+            console.log("[AuthProvider] User fetched, ensuring plan...");
             const userWithPlan = await ensureUserHasPlan(response.data.user);
+            console.log("[AuthProvider] Setting user:", userWithPlan.email);
             setUser(userWithPlan);
           } else {
             // Token is invalid, clear it
+            console.warn("[AuthProvider] Invalid token, clearing localStorage");
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("tokenExpiry");
           }
         } catch (error) {
           // Token is invalid, clear it
+          console.error("[AuthProvider] Error fetching profile:", error);
           localStorage.removeItem("accessToken");
           localStorage.removeItem("refreshToken");
           localStorage.removeItem("tokenExpiry");

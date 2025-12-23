@@ -61,31 +61,60 @@ export default function AuthCompletePage() {
         url.pathname + (newHash || "")
       );
 
+      // Give a tiny delay to ensure localStorage is flushed
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       // Use the central refreshUser() and rely on AuthProvider for state population
       try {
         console.log("[AuthComplete] Calling refreshUser to load profile...");
         const res = await refreshUser();
         console.log("[AuthComplete] refreshUser result:", res);
+
         if (res.success) {
+          console.log("[AuthComplete] Success! Redirecting to dashboard...");
           toast({
             title: "Signed in",
             description: "Authentication completed.",
           });
+          // Wait a bit more to ensure AuthProvider state is updated
+          await new Promise((resolve) => setTimeout(resolve, 200));
           router.replace("/dashboard");
           return;
         }
 
-        // If verification failed, clear tokens and redirect to auth
-        localStorage.removeItem("accessToken");
-        localStorage.removeItem("refreshToken");
-        toast({
-          title: "Sign in incomplete",
-          description:
-            "Unable to verify authentication with the server. Please sign in manually.",
-        });
-        router.replace("/auth");
+        // If verification failed, check if token is still in localStorage (might have been cleared by 401)
+        const stillHasToken = localStorage.getItem("accessToken");
+        console.warn(
+          "[AuthComplete] refreshUser failed, token still exists:",
+          !!stillHasToken
+        );
+
+        if (!stillHasToken) {
+          // Token was cleared due to 401, clear everything and redirect
+          localStorage.removeItem("accessToken");
+          localStorage.removeItem("refreshToken");
+          localStorage.removeItem("tokenExpiry");
+          toast({
+            title: "Sign in failed",
+            description:
+              "The authentication token was invalid. Please try again.",
+          });
+          router.replace("/auth");
+        } else {
+          // Token exists but refresh failed - might be a temporary issue
+          // Let the user proceed to dashboard and let the auth guards handle it
+          console.warn(
+            "[AuthComplete] Token exists but refresh failed, proceeding to dashboard anyway"
+          );
+          toast({
+            title: "Signed in",
+            description: "Please refresh if you see any issues.",
+          });
+          await new Promise((resolve) => setTimeout(resolve, 200));
+          router.replace("/dashboard");
+        }
       } catch (e) {
-        console.error("refreshUser threw:", e);
+        console.error("[AuthComplete] refreshUser threw:", e);
         toast({
           title: "Sign in incomplete",
           description: "Please sign in manually.",

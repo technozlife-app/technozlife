@@ -96,6 +96,15 @@ async function apiRequest<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
+  // Debug logging
+  if (typeof window !== "undefined" && endpoint.includes("/user")) {
+    console.log(
+      `[apiRequest] ${endpoint} - Token exists:`,
+      !!token,
+      token?.substring(0, 20) + "..."
+    );
+  }
+
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",
@@ -111,6 +120,14 @@ async function apiRequest<T>(
     });
 
     const data = await response.json();
+
+    // Debug logging for auth issues
+    if (
+      typeof window !== "undefined" &&
+      (response.status === 401 || response.status === 422)
+    ) {
+      console.error(`[apiRequest] ${endpoint} failed:`, response.status, data);
+    }
 
     // Backend returns { status: 'success'|'error', message, data, code, timestamp }
     if (!response.ok) {

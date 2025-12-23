@@ -43,6 +43,22 @@ export function DashboardSidebar() {
   // Helper to select a display user (AuthProvider user preferred)
   const displayUser = user || remoteUser || null;
 
+  // Debug logging
+  useEffect(() => {
+    console.log(
+      "[Sidebar] user from AuthProvider:",
+      user ? user.email : "null"
+    );
+    console.log(
+      "[Sidebar] remoteUser:",
+      remoteUser ? remoteUser.email : "null"
+    );
+    console.log(
+      "[Sidebar] displayUser:",
+      displayUser ? displayUser.email : "null"
+    );
+  }, [user, remoteUser, displayUser]);
+
   const handleLogout = async () => {
     await logout();
     addToast("success", "Signed Out", "You have been logged out successfully");
