@@ -1,39 +1,10 @@
 import RequireAuth from "@/components/auth/RequireAuth";
-import CheckoutClient from "./CheckoutClient";
-import { getPlanBySlug, getAllPlans } from "@/lib/plans";
+import ClientCheckoutWrapper from "./ClientCheckoutWrapper";
 
-export default async function CheckoutPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ plan?: string }>;
-}) {
-  const params = await searchParams;
-  const planSlug = params?.plan;
-  const plan = planSlug ? getPlanBySlug(planSlug) : undefined;
-
-  console.log("[Checkout] Received planSlug:", planSlug);
-  console.log("[Checkout] Found plan:", plan);
-  console.log(
-    "[Checkout] All available plans:",
-    getAllPlans().map((p) => ({ id: p.id, slug: p.slug }))
-  );
-
-  if (!plan) {
-    return (
-      <main className='max-w-3xl mx-auto px-6 py-20'>
-        <h1 className='text-2xl font-bold text-slate-100'>Plan not found</h1>
-        <p className='mt-4 text-slate-400'>
-          We couldn't find the plan "{planSlug}". Please go back to the pricing
-          page.
-        </p>
-      </main>
-    );
-  }
-
+export default function CheckoutPage() {
   return (
     <RequireAuth>
-      {/* CheckoutClient is a client component that handles the interactive flow */}
-      <CheckoutClient plan={plan} />
+      <ClientCheckoutWrapper />
     </RequireAuth>
   );
 }
