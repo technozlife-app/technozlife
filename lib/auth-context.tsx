@@ -26,9 +26,9 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
       current_plan: "free",
     });
 
-    if (updateResponse.status === "success" && updateResponse.data?.user) {
+    if (updateResponse.status === "success" && updateResponse.data) {
       console.log("[ensureUserHasPlan] Successfully assigned free plan");
-      return updateResponse.data.user;
+      return updateResponse.data;
     } else {
       console.warn(
         "[ensureUserHasPlan] Failed to update profile:",
@@ -115,15 +115,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             response.message
           );
           console.log("[AuthProvider] response.data:", response.data);
-          console.log(
-            "[AuthProvider] response.data?.user:",
-            response.data?.user
-          );
 
-          if (response.status === "success" && response.data?.user) {
+          if (response.status === "success" && response.data) {
             // Ensure user has a plan assigned
             console.log("[AuthProvider] User fetched, ensuring plan...");
-            const userWithPlan = await ensureUserHasPlan(response.data.user);
+            const userWithPlan = await ensureUserHasPlan(response.data);
             console.log("[AuthProvider] Setting user:", userWithPlan.email);
             setUser(userWithPlan);
           } else {
@@ -468,8 +464,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fallback to existing API helper
       try {
         const response = await userApi.getProfile();
-        if (response.status === "success" && response.data?.user) {
-          const userWithPlan = await ensureUserHasPlan(response.data.user);
+        if (response.status === "success" && response.data) {
+          const userWithPlan = await ensureUserHasPlan(response.data);
           setUser(userWithPlan);
           return { success: true };
         }

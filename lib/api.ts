@@ -383,16 +383,16 @@ export const authApi = {
 // ============================================================================
 
 export const userApi = {
-  // GET /user (returns { user: UserProfile })
-  async getProfile(): Promise<ApiResponse<{ user: UserProfile }>> {
-    return apiRequest<{ user: UserProfile }>("/user");
+  // GET /user (backend returns user directly in data, not nested)
+  async getProfile(): Promise<ApiResponse<UserProfile>> {
+    return apiRequest<UserProfile>("/user");
   },
 
-  // PUT /user (returns { user: UserProfile })
+  // PUT /user (backend returns user directly in data, not nested)
   async updateProfile(
     data: Partial<UserProfile>
-  ): Promise<ApiResponse<{ user: UserProfile }>> {
-    return apiRequest<{ user: UserProfile }>("/user", {
+  ): Promise<ApiResponse<UserProfile>> {
+    return apiRequest<UserProfile>("/user", {
       method: "PUT",
       body: JSON.stringify(data),
     });

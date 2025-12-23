@@ -223,7 +223,7 @@ export function DashboardSidebar() {
                     ? `${token.slice(0, 8)}...${token.slice(-8)}`
                     : "(no token)";
                   const res = await userApi.getProfile();
-                  if (res.status === "success" && res.data?.user) {
+                  if (res.status === "success" && res.data) {
                     addToast(
                       "success",
                       "Auth OK",
@@ -287,8 +287,8 @@ export function DashboardSidebar() {
             // If refreshUser failed, attempt a direct API profile fetch
             const profile = await userApi.getProfile();
             console.debug("Sidebar dev: profile fetch (auto)", profile);
-            if (profile.status === "success" && profile.data?.user && mounted) {
-              setRemoteUser(profile.data.user);
+            if (profile.status === "success" && profile.data && mounted) {
+              setRemoteUser(profile.data);
               // Also trigger AuthProvider refresh in the background
               try {
                 await refreshUser();
