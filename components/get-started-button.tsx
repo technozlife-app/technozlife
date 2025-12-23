@@ -46,6 +46,22 @@ export function GetStartedButton() {
       >
         <Link href='/dashboard'>
           <div className='relative flex items-center gap-2 px-5 py-3 rounded-full bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold text-sm'>
+            {/* Show user profile avatar or if not available user name initial in a circle */}
+            <div className='w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs font-medium text-white'>
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt={`${user.first_name || user.username}'s avatar`}
+                  className='w-6 h-6 rounded-full object-cover'
+                />
+              ) : user.first_name ? (
+                user.first_name.charAt(0).toUpperCase()
+              ) : user.username ? (
+                user.username.charAt(0).toUpperCase()
+              ) : (
+                "U"
+              )}
+            </div>
             <span className='hidden sm:inline'>Dashboard</span>
             <motion.div
               animate={{ x: [0, 4, 0] }}

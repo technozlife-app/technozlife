@@ -57,7 +57,9 @@ export function PlanCard({
 
       <div className='text-2xl font-bold mb-3'>
         {price}
-        <span className='text-sm font-normal text-slate-500'>/mo</span>
+        <span className='text-sm font-normal text-slate-500'>
+          {price === "Free" ? "" : "/mo"}
+        </span>
       </div>
 
       <div className='flex gap-3'>

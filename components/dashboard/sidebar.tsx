@@ -206,60 +206,6 @@ export function DashboardSidebar() {
           />
         </button>
       )}
-
-      {/* Dev auth debug (visible in non-production) */}
-      {process.env.NODE_ENV !== "production" && (
-        <div className='p-3 border-t border-slate-800/50 mt-2'>
-          <div className='text-xs text-slate-500 mb-2'>
-            Auth Debug (dev only)
-          </div>
-          <div className='flex gap-2'>
-            <button
-              className='btn-ghost text-xs'
-              onClick={async () => {
-                try {
-                  const token = localStorage.getItem("accessToken");
-                  const tokenPreview = token
-                    ? `${token.slice(0, 8)}...${token.slice(-8)}`
-                    : "(no token)";
-                  const res = await userApi.getProfile();
-                  if (res.status === "success" && res.data) {
-                    addToast(
-                      "success",
-                      "Auth OK",
-                      "Fetched /user successfully"
-                    );
-                    setRemoteUser(res.data.user);
-                  } else if (res.code === 401) {
-                    addToast(
-                      "error",
-                      "401 Unauthorized",
-                      "Token invalid or expired"
-                    );
-                    localStorage.removeItem("accessToken");
-                    localStorage.removeItem("refreshToken");
-                    setRemoteUser(null);
-                  } else {
-                    addToast(
-                      "error",
-                      "Profile fetch failed",
-                      res.message || "Unknown error"
-                    );
-                  }
-                  // show console-friendly debug
-                  console.debug("Auth Debug - token preview:", tokenPreview);
-                  console.debug("Auth Debug - /user response:", res);
-                } catch (err) {
-                  console.error("Auth Debug failed:", err);
-                  addToast("error", "Auth Debug failed", String(err));
-                }
-              }}
-            >
-              Run Auth Debug
-            </button>
-          </div>
-        </div>
-      )}
     </div>
   );
 

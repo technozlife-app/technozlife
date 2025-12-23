@@ -86,19 +86,6 @@ export function FloatingNav() {
                 </AnimatePresence>
               </motion.a>
             ))}
-
-            {/* Auth / Dashboard link */}
-            {isLoading ? (
-              <div className='p-3 rounded-full text-slate-500'>...</div>
-            ) : user ? (
-              <Link
-                href='/dashboard'
-                className='p-3 rounded-full text-slate-400 hover:text-teal-400 transition-colors'
-                aria-label='Dashboard'
-              >
-                <Home className='w-5 h-5' />
-              </Link>
-            ) : null}
           </div>
         </div>
 

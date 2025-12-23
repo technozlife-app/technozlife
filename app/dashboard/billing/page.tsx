@@ -141,7 +141,7 @@ export default function BillingPage() {
                   if (!isFree) {
                     // Redirect paid plans to checkout flow
                     // Use slug first, fallback to id
-                    const slug = plan.slug || plan.id;
+                    const slug = plan.name.toLowerCase() || plan.id;
                     addToast(
                       "info",
                       "Taking you to checkout",
@@ -228,19 +228,6 @@ export default function BillingPage() {
               }}
             />
           ))}
-        </div>
-
-        <div className='flex flex-col sm:flex-row gap-3 mt-6'>
-          <Button className='bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950'>
-            Upgrade Plan
-          </Button>
-          <Button
-            variant='outline'
-            onClick={handleCancelSubscription}
-            className='border-slate-700 text-slate-400 hover:text-red-400 hover:border-red-500/50 bg-transparent'
-          >
-            Cancel Subscription
-          </Button>
         </div>
       </motion.div>
 
