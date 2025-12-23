@@ -27,8 +27,16 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
     });
 
     if (updateResponse.status === "success" && updateResponse.data) {
-      console.log("[ensureUserHasPlan] Successfully assigned free plan");
-      return updateResponse.data;
+      // Support both possible backend shapes: data may be the user object or { user: { ... } }
+      const updatedUser: UserProfile = ((updateResponse.data as any).user ??
+        updateResponse.data) as UserProfile;
+      console.log(
+        "[ensureUserHasPlan] Successfully assigned free plan, update returned:",
+        updatedUser
+      );
+      // If backend didn't actually persist the plan, ensure we have the free plan locally
+      if (!updatedUser.current_plan) updatedUser.current_plan = "free";
+      return updatedUser;
     } else {
       console.warn(
         "[ensureUserHasPlan] Failed to update profile:",
