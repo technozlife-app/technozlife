@@ -140,6 +140,19 @@ export function PricingSection() {
       }
       return;
     }
+    // Enterprise tier - contact sales
+    if (planId === "enterprise") {
+      const contactSection = document.getElementById("contact");
+      if (contactSection) {
+        contactSection.scrollIntoView({ behavior: "smooth" });
+        addToast(
+          "info",
+          "For Teams",
+          "Fill out the form below to discuss enterprise options"
+        );
+      }
+      return;
+    }
 
     // Paid tiers - check auth first
     if (!isAuthenticated) {
@@ -149,20 +162,6 @@ export function PricingSection() {
         "Please sign in to purchase a subscription"
       );
       router.push("/auth");
-      return;
-    }
-
-    // Enterprise tier - contact sales
-    if (planId === "enterprise") {
-      const contactSection = document.getElementById("contact");
-      if (contactSection) {
-        contactSection.scrollIntoView({ behavior: "smooth" });
-        addToast(
-          "info",
-          "Contact Sales",
-          "Fill out the form below to discuss enterprise options"
-        );
-      }
       return;
     }
 
