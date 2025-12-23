@@ -2,12 +2,13 @@ import RequireAuth from "@/components/auth/RequireAuth";
 import CheckoutClient from "./CheckoutClient";
 import { getPlanBySlug, getAllPlans } from "@/lib/plans";
 
-export default function CheckoutPage({
+export default async function CheckoutPage({
   searchParams,
 }: {
-  searchParams: { plan?: string };
+  searchParams: Promise<{ plan?: string }>;
 }) {
-  const planSlug = searchParams?.plan;
+  const params = await searchParams;
+  const planSlug = params?.plan;
   const plan = planSlug ? getPlanBySlug(planSlug) : undefined;
 
   console.log("[Checkout] Received planSlug:", planSlug);
