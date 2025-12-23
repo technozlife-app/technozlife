@@ -114,6 +114,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             response.status,
             response.message
           );
+          console.log("[AuthProvider] response.data:", response.data);
+          console.log(
+            "[AuthProvider] response.data?.user:",
+            response.data?.user
+          );
 
           if (response.status === "success" && response.data?.user) {
             // Ensure user has a plan assigned
@@ -124,6 +129,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           } else {
             // Token is invalid, clear it
             console.warn("[AuthProvider] Invalid token, clearing localStorage");
+            console.warn("[AuthProvider] response.status:", response.status);
+            console.warn("[AuthProvider] response.data:", response.data);
             localStorage.removeItem("accessToken");
             localStorage.removeItem("refreshToken");
             localStorage.removeItem("tokenExpiry");
