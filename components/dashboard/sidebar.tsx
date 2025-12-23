@@ -270,6 +270,7 @@ export function DashboardSidebar() {
 
             // If refreshUser failed, attempt a direct API profile fetch
             const profile = await userApi.getProfile();
+            console.debug("Sidebar dev: profile fetch (auto)", profile);
             if (profile.success && profile.data?.user && mounted) {
               setRemoteUser(profile.data.user);
               // Also trigger AuthProvider refresh in the background
@@ -288,6 +289,40 @@ export function DashboardSidebar() {
               localStorage.removeItem("tokenExpiry");
               setRemoteUser(null);
               addToast("info", "Session expired", "Please sign in again");
+            } else if (profile.success === false) {
+              // surface other errors in dev to help debugging
+              if (process.env.NODE_ENV !== "production") {
+                addToast(
+                  "error",
+                  "Profile fetch failed",
+                  profile.message || `Error code: ${profile.code}`
+                );
+              }
+            }
+
+            // In development, auto-run auth debug to surface details
+            if (process.env.NODE_ENV !== "production") {
+              try {
+                console.debug("Sidebar dev: running auth debug");
+                const token = localStorage.getItem("accessToken");
+                console.debug(
+                  "Sidebar dev: token preview",
+                  token
+                    ? `${token.slice(0, 8)}...${token.slice(-8)}`
+                    : "(no token)"
+                );
+                const res2 = await userApi.getProfile();
+                console.debug("Sidebar dev: second profile fetch", res2);
+                if (!res2.success) {
+                  addToast(
+                    "error",
+                    "Auth Debug",
+                    res2.message || `Code ${res2.code}`
+                  );
+                }
+              } catch (dbgErr) {
+                console.error("Sidebar dev: auth debug failed", dbgErr);
+              }
             }
           } catch (err) {
             // ignore
