@@ -12,6 +12,7 @@ export default function AuthCompletePage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    console.debug("AuthComplete: location", window.location.href);
     // Read both query string and hash fragment to support different redirects
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(
@@ -31,6 +32,13 @@ export default function AuthCompletePage() {
       hashParams.get("p");
     const refresh =
       params.get("refresh_token") || hashParams.get("refresh_token");
+
+    console.debug("AuthComplete: parsed", {
+      token: !!token,
+      code,
+      provider,
+      refresh: !!refresh,
+    });
 
     async function handleToken(tokenValue: string) {
       localStorage.setItem("accessToken", tokenValue);
@@ -187,17 +195,29 @@ export default function AuthCompletePage() {
       try {
         let res;
         if (providerValue === "google") {
+          console.debug(
+            "AuthComplete: exchanging code via googleLogin",
+            codeValue.slice(0, 8) + "..."
+          );
           res = await googleLogin(codeValue);
         } else if (providerValue === "github") {
+          console.debug(
+            "AuthComplete: exchanging code via githubLogin",
+            codeValue.slice(0, 8) + "..."
+          );
           res = await githubLogin(codeValue);
         } else {
           // Try google then github as fallback
+          console.debug(
+            "AuthComplete: provider unknown, trying google then github"
+          );
           res = await googleLogin(codeValue);
           if (!res || !res.success) {
             res = await githubLogin(codeValue);
           }
         }
 
+        console.debug("AuthComplete: token-exchange result", res);
         if (res && res.success) {
           toast({ title: "Signed in", description: "Welcome!" });
           router.replace("/dashboard");

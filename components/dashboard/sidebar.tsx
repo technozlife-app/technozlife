@@ -203,6 +203,12 @@ export function DashboardSidebar() {
         if (token) {
           const controller = new AbortController();
           const url = `${API_BASE}/user`;
+          console.debug(
+            "Sidebar: fetching user",
+            url,
+            "token preview",
+            token?.slice(0, 8) + "..."
+          );
           fetch(url, {
             method: "GET",
             headers: {
@@ -212,7 +218,11 @@ export function DashboardSidebar() {
             signal: controller.signal,
           })
             .then(async (res) => {
-              if (!res.ok) return null;
+              console.debug("Sidebar: /user responded", res.status, res.url);
+              if (!res.ok) {
+                console.warn("Sidebar: /user fetch not ok", res.status);
+                return null;
+              }
               try {
                 const body = await res.json().catch(() => null);
                 // Support ApiResponse shape or raw user object

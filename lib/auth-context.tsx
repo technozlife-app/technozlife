@@ -42,7 +42,10 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
             description: localPlan.description,
             price: parseFloat(localPlan.price.replace("$", "")) || 0,
             currency: "USD",
-            interval: localPlan.period === "/month" ? "month" : "year",
+            // Backend expects interval strings like "monthly" or "yearly"
+            interval: (localPlan.period || "").includes("month")
+              ? "monthly"
+              : "yearly",
             trial_days: localPlan.id === "free" ? 0 : 7,
             features: localPlan.features,
             is_active: true,
