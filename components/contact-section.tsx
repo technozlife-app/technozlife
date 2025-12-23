@@ -61,7 +61,7 @@ export function ContactSection() {
 
       const result = await mailApi.sendContact(payload);
 
-      if (result.success) {
+      if (result.status === "success") {
         setIsSubmitted(true);
         addToast(
           "success",

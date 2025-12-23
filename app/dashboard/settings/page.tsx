@@ -33,7 +33,7 @@ export default function SettingsPage() {
     setIsLoading(true);
     try {
       const result = await userApi.updateProfile(formData);
-      if (result.success) {
+      if (result.status === "success") {
         await refreshUser();
         addToast("success", "Profile Updated", "Your changes have been saved");
       } else {

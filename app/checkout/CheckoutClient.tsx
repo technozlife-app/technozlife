@@ -32,7 +32,7 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
       });
 
       // Handle unauthorized explicitly
-      if (!response.success && response.code === 401) {
+      if (response.status === "error" && response.code === 401) {
         addToast("info", "Session expired", "Please sign in again.");
         localStorage.removeItem("accessToken");
         router.push(
@@ -41,7 +41,7 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
         return;
       }
 
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const payload = response.data;
 
         // If backend returns a hosted checkout url, redirect
@@ -52,7 +52,7 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
         }
 
         // Otherwise, if subscription was created immediately
-        if (payload?.subscription_id) {
+        if (payload?.subscription?.id) {
           addToast(
             "success",
             "Subscription Active",

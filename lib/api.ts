@@ -2,16 +2,21 @@
 export const API_BASE =
   process.env.NEXT_PUBLIC_API_BASE || "https://api.technozlife.com";
 
-// Core API Response Interface
+// ============================================================================
+// RESPONSE INTERFACES (based on Backend.md)
+// ============================================================================
+
+// Backend returns: { status: 'success'|'error', message: string, data?: any, code: number, timestamp: string }
 export interface ApiResponse<T = unknown> {
-  success: boolean;
+  status: "success" | "error";
   message: string;
   data?: T;
   code: number;
   timestamp: string;
+  errors?: Record<string, string[]>; // Validation errors
 }
 
-// User Profile Interface (based on backend.md examples)
+// User Profile Interface
 export interface UserProfile {
   id: number;
   username: string;
@@ -21,11 +26,13 @@ export interface UserProfile {
   avatar?: string;
   email_verified_at?: string;
   current_plan?: string;
+  provider_name?: string | null;
+  provider_id?: string | null;
   created_at: string;
   updated_at: string;
 }
 
-// Auth Response Data (based on backend.md examples)
+// Auth Response Data
 export interface AuthData {
   user: UserProfile;
   token: string;
@@ -39,7 +46,7 @@ export interface SubscriptionPlan {
   description: string;
   price: number;
   currency: string;
-  interval: string;
+  interval: string; // "monthly" | "yearly"
   trial_days: number;
   features: string[];
   is_active: boolean;
@@ -62,22 +69,17 @@ export interface Payment {
   description: string;
   plan_name?: string;
   gateway_response?: any;
+  metadata?: any;
   paid_at?: string;
   created_at: string;
   updated_at: string;
 }
 
-// AI Job Interface
-export interface AIJob {
-  id: string;
-  status: string;
-  result?: string;
-  tokens_used?: number;
-  created_at: string;
-  updated_at: string;
-}
+// ============================================================================
+// HELPER FUNCTIONS
+// ============================================================================
 
-// SHA-256 Password Hashing
+// SHA-256 Password Hashing (required by backend)
 async function hashPassword(password: string): Promise<string> {
   const encoder = new TextEncoder();
   const data = encoder.encode(password);
@@ -101,20 +103,7 @@ async function apiRequest<T>(
     ...(token && { Authorization: `Bearer ${token}` }),
     ...options.headers,
   };
-  // Developer-friendly diagnostic: warn when API_BASE looks relative (may cause calls to current origin)
-  if (typeof window !== "undefined") {
-    try {
-      const isAbsolute = /^https?:\/\//i.test(API_BASE);
-      if (!isAbsolute) {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[apiRequest] NEXT_PUBLIC_API_BASE='${API_BASE}' does not look like an absolute URL. Requests will be sent to the current origin + '${API_BASE}'. If your API is hosted on a separate domain, set NEXT_PUBLIC_API_BASE to the full URL (e.g. 'https://api.example.com').`
-        );
-      }
-    } catch (e) {
-      /* ignore */
-    }
-  }
+
   try {
     const response = await fetch(`${API_BASE}${endpoint}`, {
       ...options,
@@ -123,25 +112,28 @@ async function apiRequest<T>(
 
     const data = await response.json();
 
+    // Backend returns { status: 'success'|'error', message, data, code, timestamp }
     if (!response.ok) {
       return {
-        success: false,
+        status: "error",
         message: data.message || "Request failed",
+        data: data.data,
+        errors: data.errors,
         code: response.status,
-        timestamp: new Date().toISOString(),
+        timestamp: data.timestamp || new Date().toISOString(),
       };
     }
 
     return {
-      success: true,
+      status: data.status || "success",
       message: data.message,
       data: data.data,
-      code: data.code,
-      timestamp: data.timestamp,
+      code: response.status,
+      timestamp: data.timestamp || new Date().toISOString(),
     };
   } catch (error) {
     return {
-      success: false,
+      status: "error",
       message: error instanceof Error ? error.message : "Network error",
       code: 0,
       timestamp: new Date().toISOString(),
@@ -149,16 +141,19 @@ async function apiRequest<T>(
   }
 }
 
-// Authentication API
+// ============================================================================
+// AUTHENTICATION API
+// ============================================================================
+
 export const authApi = {
-  // Register new user
+  // POST /auth/register
   async register(data: {
     username: string;
     first_name: string;
     last_name: string;
     email: string;
     password: string;
-    password_hash_confirmation?: string;
+    password_confirmation?: string;
     turnstile_token?: string;
     recaptcha_token?: string;
   }): Promise<ApiResponse<AuthData>> {
@@ -171,9 +166,9 @@ export const authApi = {
       password_hash: hashedPassword,
     };
 
-    if (data.password_hash_confirmation) {
+    if (data.password_confirmation) {
       body.password_hash_confirmation = await hashPassword(
-        data.password_hash_confirmation
+        data.password_confirmation
       );
     }
     if (data.turnstile_token) {
@@ -189,7 +184,7 @@ export const authApi = {
     });
   },
 
-  // Login with email and password
+  // POST /auth/login
   async login(
     email: string,
     password: string,
@@ -215,26 +210,20 @@ export const authApi = {
     });
   },
 
-  // Logout
+  // POST /auth/logout
   async logout(): Promise<ApiResponse> {
     return apiRequest("/auth/logout", { method: "POST" });
   },
 
-  // Google OAuth redirect URL
-  async getGoogleRedirect(): Promise<ApiResponse<{ url: string }>> {
-    // For browser-based OAuth flow the frontend should navigate the browser
-    // directly to the backend redirect endpoint so the backend can start
-    // the provider handshake and ultimately redirect back to the frontend.
+  // GET /auth/google/redirect (returns redirect URL for browser navigation)
+  getGoogleRedirect(): { status: "success"; data: { url: string } } {
     return {
-      success: true,
-      message: "Use this URL for browser redirect",
+      status: "success",
       data: { url: `${API_BASE}/auth/google/redirect` },
-      code: 200,
-      timestamp: new Date().toISOString(),
     };
   },
 
-  // Google OAuth callback (API flow)
+  // POST /auth/google/token (exchange code or credential for token)
   async googleCallback(
     code?: string,
     credential?: string
@@ -249,21 +238,15 @@ export const authApi = {
     });
   },
 
-  // GitHub OAuth redirect URL
-  async getGithubRedirect(): Promise<ApiResponse<{ url: string }>> {
-    // See note in getGoogleRedirect: provide the backend redirect URL for
-    // browser navigation rather than attempting a fetch-for-302 (CORS/redirect
-    // issues). The frontend can use `window.location.href = url` to start flow.
+  // GET /auth/github/redirect (returns redirect URL for browser navigation)
+  getGithubRedirect(): { status: "success"; data: { url: string } } {
     return {
-      success: true,
-      message: "Use this URL for browser redirect",
+      status: "success",
       data: { url: `${API_BASE}/auth/github/redirect` },
-      code: 200,
-      timestamp: new Date().toISOString(),
     };
   },
 
-  // GitHub OAuth callback (API flow)
+  // POST /auth/github/token (exchange code or access_token for token)
   async githubCallback(
     code?: string,
     access_token?: string
@@ -278,7 +261,7 @@ export const authApi = {
     });
   },
 
-  // Password reset request
+  // POST /auth/password/forgot
   async forgotPassword(
     email: string,
     turnstile_token?: string,
@@ -294,7 +277,7 @@ export const authApi = {
     });
   },
 
-  // Reset password with token
+  // POST /auth/password/reset
   async resetPassword(data: {
     email: string;
     token: string;
@@ -320,7 +303,7 @@ export const authApi = {
     });
   },
 
-  // Change password (authenticated)
+  // POST /auth/password/change (authenticated)
   async changePassword(data: {
     old_password?: string;
     password: string;
@@ -345,7 +328,7 @@ export const authApi = {
     });
   },
 
-  // Send email verification
+  // POST /auth/verify/send
   async sendVerification(email?: string): Promise<ApiResponse> {
     return apiRequest("/auth/verify/send", {
       method: "POST",
@@ -353,26 +336,23 @@ export const authApi = {
     });
   },
 
-  // Verify email with token
-  async verifyEmail(token: string): Promise<ApiResponse> {
-    return apiRequest(`/auth/verify/${token}`);
+  // GET /auth/verify/{token}
+  async verifyEmail(token: string): Promise<ApiResponse<AuthData>> {
+    return apiRequest<AuthData>(`/auth/verify/${token}`);
   },
 
-  // Link OAuth provider (authenticated)
-  async linkProvider(provider: "google" | "github"): Promise<ApiResponse> {
-    // For linking providers while authenticated, the frontend should navigate
-    // the browser to the backend link redirect endpoint. The backend will
-    // perform the OAuth handshake and redirect back to the frontend.
+  // Link OAuth provider (authenticated) - returns URL for browser navigation
+  linkProvider(provider: "google" | "github"): {
+    status: "success";
+    data: { url: string };
+  } {
     return {
-      success: true,
-      message: "Use this URL for browser redirect",
+      status: "success",
       data: { url: `${API_BASE}/auth/link/${provider}/redirect` },
-      code: 200,
-      timestamp: new Date().toISOString(),
     };
   },
 
-  // Unlink OAuth provider (authenticated)
+  // POST /auth/unlink (authenticated)
   async unlinkProvider(provider: string): Promise<ApiResponse> {
     return apiRequest("/auth/unlink", {
       method: "POST",
@@ -381,24 +361,27 @@ export const authApi = {
   },
 };
 
-// User Profile API
+// ============================================================================
+// USER PROFILE API
+// ============================================================================
+
 export const userApi = {
-  // Get current user profile
+  // GET /user (returns { user: UserProfile })
   async getProfile(): Promise<ApiResponse<{ user: UserProfile }>> {
     return apiRequest<{ user: UserProfile }>("/user");
   },
 
-  // Update user profile
+  // PUT /user (returns { user: UserProfile })
   async updateProfile(
     data: Partial<UserProfile>
-  ): Promise<ApiResponse<UserProfile>> {
-    return apiRequest<UserProfile>("/user", {
+  ): Promise<ApiResponse<{ user: UserProfile }>> {
+    return apiRequest<{ user: UserProfile }>("/user", {
       method: "PUT",
       body: JSON.stringify(data),
     });
   },
 
-  // Upload avatar
+  // POST /user/avatar (returns { avatar: string })
   async uploadAvatar(file: File): Promise<ApiResponse<{ avatar: string }>> {
     const token =
       typeof window !== "undefined"
@@ -408,6 +391,8 @@ export const userApi = {
     formData.append("avatar", file);
 
     const headers: HeadersInit = {
+      Accept: "application/json",
+      "X-Requested-With": "XMLHttpRequest",
       ...(token && { Authorization: `Bearer ${token}` }),
     };
 
@@ -422,23 +407,23 @@ export const userApi = {
 
       if (!response.ok) {
         return {
-          success: false,
+          status: "error",
           message: data.message || "Upload failed",
           code: response.status,
-          timestamp: new Date().toISOString(),
+          timestamp: data.timestamp || new Date().toISOString(),
         };
       }
 
       return {
-        success: true,
+        status: data.status || "success",
         message: data.message,
         data: data.data,
-        code: data.code,
-        timestamp: data.timestamp,
+        code: response.status,
+        timestamp: data.timestamp || new Date().toISOString(),
       };
     } catch (error) {
       return {
-        success: false,
+        status: "error",
         message: error instanceof Error ? error.message : "Network error",
         code: 0,
         timestamp: new Date().toISOString(),
@@ -446,12 +431,12 @@ export const userApi = {
     }
   },
 
-  // Delete user account
+  // DELETE /user
   async deleteAccount(): Promise<ApiResponse> {
     return apiRequest("/user", { method: "DELETE" });
   },
 
-  // Get public profile
+  // GET /users/{id}/public (returns { user: Partial<UserProfile> })
   async getPublicProfile(
     id: number
   ): Promise<ApiResponse<{ user: Partial<UserProfile> }>> {
@@ -459,9 +444,12 @@ export const userApi = {
   },
 };
 
-// Mail API
+// ============================================================================
+// MAIL API
+// ============================================================================
+
 export const mailApi = {
-  // Send contact message
+  // POST /mail/contact
   async sendContact(data: {
     name: string;
     email: string;
@@ -490,7 +478,7 @@ export const mailApi = {
     });
   },
 
-  // Subscribe to newsletter
+  // POST /mail/newsletter
   async subscribeNewsletter(
     email: string,
     name?: string
@@ -504,17 +492,17 @@ export const mailApi = {
     });
   },
 
-  // Verify newsletter subscription
+  // GET /mail/newsletter/verify/{token}
   async verifyNewsletter(token: string): Promise<ApiResponse> {
     return apiRequest(`/mail/newsletter/verify/${token}`);
   },
 
-  // Unsubscribe from newsletter
+  // GET /mail/newsletter/unsubscribe/{token}
   async unsubscribeNewsletter(token: string): Promise<ApiResponse> {
     return apiRequest(`/mail/newsletter/unsubscribe/${token}`);
   },
 
-  // Send password reset email (alternative endpoint)
+  // POST /mail/password-reset
   async sendPasswordReset(email: string): Promise<ApiResponse> {
     return apiRequest("/mail/password-reset", {
       method: "POST",
@@ -523,9 +511,12 @@ export const mailApi = {
   },
 };
 
+// ============================================================================
 // AI API
+// ============================================================================
+
 export const aiApi = {
-  // Generate AI content
+  // POST /ai/generate
   async generate(data: {
     prompt: string;
     model?: string;
@@ -553,7 +544,7 @@ export const aiApi = {
     });
   },
 
-  // Get AI job status
+  // GET /ai/jobs/{id}/status
   async getJobStatus(jobId: string): Promise<
     ApiResponse<{
       status: string;
@@ -569,9 +560,12 @@ export const aiApi = {
   },
 };
 
-// Maps API
+// ============================================================================
+// MAPS API
+// ============================================================================
+
 export const mapsApi = {
-  // Generate Google Maps embed URL
+  // POST /maps/pin
   async generatePin(data: {
     address: string;
     zoom?: number;
@@ -584,9 +578,12 @@ export const mapsApi = {
   },
 };
 
-// Captcha API
+// ============================================================================
+// CAPTCHA API
+// ============================================================================
+
 export const captchaApi = {
-  // Verify captcha token
+  // POST /captcha/verify
   async verify(data: {
     token: string;
     action?: string;
@@ -599,22 +596,71 @@ export const captchaApi = {
   },
 };
 
-// Payments API
+// ============================================================================
+// SUBSCRIPTION PLANS API
+// ============================================================================
+
+export const plansApi = {
+  // GET /subscription-plans (returns { plans: SubscriptionPlan[] })
+  async getPlans(): Promise<ApiResponse<{ plans: SubscriptionPlan[] }>> {
+    return apiRequest<{ plans: SubscriptionPlan[] }>("/subscription-plans");
+  },
+
+  // GET /subscription-plans/{slug} (returns { plan: SubscriptionPlan })
+  async getPlan(
+    slug: string
+  ): Promise<ApiResponse<{ plan: SubscriptionPlan }>> {
+    return apiRequest<{ plan: SubscriptionPlan }>(
+      `/subscription-plans/${slug}`
+    );
+  },
+
+  // POST /subscription-plans (authenticated, admin)
+  async createPlan(
+    data: Omit<SubscriptionPlan, "id" | "created_at" | "updated_at">
+  ): Promise<ApiResponse<{ plan: SubscriptionPlan }>> {
+    return apiRequest<{ plan: SubscriptionPlan }>("/subscription-plans", {
+      method: "POST",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // PUT /subscription-plans/{id} (authenticated, admin)
+  async updatePlan(
+    id: number,
+    data: Partial<SubscriptionPlan>
+  ): Promise<ApiResponse<{ plan: SubscriptionPlan }>> {
+    return apiRequest<{ plan: SubscriptionPlan }>(`/subscription-plans/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    });
+  },
+
+  // DELETE /subscription-plans/{id} (authenticated, admin)
+  async deletePlan(id: number): Promise<ApiResponse> {
+    return apiRequest(`/subscription-plans/${id}`, { method: "DELETE" });
+  },
+};
+
+// ============================================================================
+// PAYMENTS API
+// ============================================================================
+
 export const paymentsApi = {
-  // Create subscription
+  // POST /subscriptions (purchase a plan)
   async createSubscription(data: {
     plan_slug: string;
     payment_method?: any;
   }): Promise<
     ApiResponse<{
-      subscription_id?: string;
-      status?: string;
+      subscription?: { id: string; status: string };
+      payment?: Payment;
       url?: string;
     }>
   > {
     return apiRequest<{
-      subscription_id?: string;
-      status?: string;
+      subscription?: { id: string; status: string };
+      payment?: Payment;
       url?: string;
     }>("/subscriptions", {
       method: "POST",
@@ -622,7 +668,7 @@ export const paymentsApi = {
     });
   },
 
-  // Process one-time payment
+  // POST /payments/process (one-time payment)
   async processPayment(data: {
     amount: number;
     currency: string;
@@ -630,47 +676,47 @@ export const paymentsApi = {
     payment_method: any;
   }): Promise<
     ApiResponse<{
-      transaction_id: string;
-      status: string;
+      payment: Payment;
     }>
   > {
     return apiRequest<{
-      transaction_id: string;
-      status: string;
+      payment: Payment;
     }>("/payments/process", {
       method: "POST",
       body: JSON.stringify(data),
     });
   },
 
-  // Get payment history
+  // GET /payments (returns { payments: Payment[] })
   async getHistory(): Promise<ApiResponse<{ payments: Payment[] }>> {
     return apiRequest<{ payments: Payment[] }>("/payments");
   },
 
-  // Get last purchased plan
-  async getLastPlan(): Promise<ApiResponse<{ plan: SubscriptionPlan }>> {
-    return apiRequest<{ plan: SubscriptionPlan }>("/payments/last-plan");
+  // GET /payments/last-plan (returns { payment: Payment })
+  async getLastPlan(): Promise<ApiResponse<{ payment: Payment }>> {
+    return apiRequest<{ payment: Payment }>("/payments/last-plan");
   },
 
-  // Get payment details
-  async getPayment(transactionId: string): Promise<ApiResponse<Payment>> {
-    return apiRequest<Payment>(`/payments/${transactionId}`);
+  // GET /payments/{transactionId} (returns { payment: Payment })
+  async getPayment(
+    transactionId: string
+  ): Promise<ApiResponse<{ payment: Payment }>> {
+    return apiRequest<{ payment: Payment }>(`/payments/${transactionId}`);
   },
 
-  // Request refund
+  // POST /payments/refund/{transactionId}
   async requestRefund(transactionId: string): Promise<ApiResponse> {
     return apiRequest(`/payments/refund/${transactionId}`, {
       method: "POST",
     });
   },
 
-  // Revert/clear current plan
+  // POST /payments/revert-plan
   async revertPlan(): Promise<ApiResponse> {
     return apiRequest("/payments/revert-plan", { method: "POST" });
   },
 
-  // Payment webhook (usually called by payment provider)
+  // POST /payments/webhook (called by payment gateway)
   async webhook(data: any): Promise<ApiResponse> {
     return apiRequest("/payments/webhook", {
       method: "POST",
@@ -679,48 +725,12 @@ export const paymentsApi = {
   },
 };
 
-// Subscription Plans API
-export const plansApi = {
-  // List all plans
-  async getPlans(): Promise<ApiResponse<{ plans: SubscriptionPlan[] }>> {
-    return apiRequest<{ plans: SubscriptionPlan[] }>("/subscription-plans");
-  },
+// ============================================================================
+// ADMIN API
+// ============================================================================
 
-  // Get plan details
-  async getPlan(slug: string): Promise<ApiResponse<SubscriptionPlan>> {
-    return apiRequest<SubscriptionPlan>(`/subscription-plans/${slug}`);
-  },
-
-  // Create new plan (admin)
-  async createPlan(
-    data: Omit<SubscriptionPlan, "id" | "created_at" | "updated_at">
-  ): Promise<ApiResponse<SubscriptionPlan>> {
-    return apiRequest<SubscriptionPlan>("/subscription-plans", {
-      method: "POST",
-      body: JSON.stringify(data),
-    });
-  },
-
-  // Update plan (admin)
-  async updatePlan(
-    id: number,
-    data: Partial<SubscriptionPlan>
-  ): Promise<ApiResponse<SubscriptionPlan>> {
-    return apiRequest<SubscriptionPlan>(`/subscription-plans/${id}`, {
-      method: "PUT",
-      body: JSON.stringify(data),
-    });
-  },
-
-  // Delete plan (admin)
-  async deletePlan(id: number): Promise<ApiResponse> {
-    return apiRequest(`/subscription-plans/${id}`, { method: "DELETE" });
-  },
-};
-
-// Admin API
 export const adminApi = {
-  // Run database migrations
+  // POST /admin/migrate
   async runMigrations(data?: {
     token: string;
     seed?: boolean;
@@ -734,10 +744,13 @@ export const adminApi = {
     const body: any = {};
     if (data?.seed) body.seed = data.seed;
     if (data?.path) body.path = data.path;
-    if (data?.token) {
-      // Include token in body for admin endpoints
-      body.token = data.token;
-    }
+    if (data?.token) body.token = data.token;
+
+    const headers: HeadersInit = {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(data?.token && { "X-RUN-MIG-TOKEN": data.token }),
+    };
 
     return apiRequest<{
       migrations?: string[];
@@ -745,22 +758,26 @@ export const adminApi = {
     }>("/admin/migrate", {
       method: "POST",
       body: JSON.stringify(body),
+      headers,
     });
   },
 };
 
-// Backwards compatibility aliases
+// ============================================================================
+// BACKWARDS COMPATIBILITY ALIASES
+// ============================================================================
+
 export const contactApi = mailApi;
+
 export const subscriptionApi = {
   getPlans: plansApi.getPlans,
   getPlan: plansApi.getPlan,
   createSubscription: paymentsApi.createSubscription,
   getPaymentHistory: paymentsApi.getHistory,
-  cancelSubscription: async () => {
-    // This endpoint doesn't exist in the backend, return error
+  cancelSubscription: async (): Promise<ApiResponse> => {
     return {
-      success: false,
-      message: "Cancel subscription not implemented",
+      status: "error",
+      message: "Cancel subscription endpoint not implemented",
       code: 501,
       timestamp: new Date().toISOString(),
     };

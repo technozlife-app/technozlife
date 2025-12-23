@@ -207,7 +207,7 @@ export function DashboardSidebar() {
                     ? `${token.slice(0, 8)}...${token.slice(-8)}`
                     : "(no token)";
                   const res = await userApi.getProfile();
-                  if (res.success && res.data?.user) {
+                  if (res.status === "success" && res.data?.user) {
                     addToast(
                       "success",
                       "Auth OK",
@@ -271,7 +271,7 @@ export function DashboardSidebar() {
             // If refreshUser failed, attempt a direct API profile fetch
             const profile = await userApi.getProfile();
             console.debug("Sidebar dev: profile fetch (auto)", profile);
-            if (profile.success && profile.data?.user && mounted) {
+            if (profile.status === "success" && profile.data?.user && mounted) {
               setRemoteUser(profile.data.user);
               // Also trigger AuthProvider refresh in the background
               try {
@@ -289,7 +289,7 @@ export function DashboardSidebar() {
               localStorage.removeItem("tokenExpiry");
               setRemoteUser(null);
               addToast("info", "Session expired", "Please sign in again");
-            } else if (profile.success === false) {
+            } else if (profile.status === "error") {
               // surface other errors in dev to help debugging
               if (process.env.NODE_ENV !== "production") {
                 addToast(
@@ -313,7 +313,7 @@ export function DashboardSidebar() {
                 );
                 const res2 = await userApi.getProfile();
                 console.debug("Sidebar dev: second profile fetch", res2);
-                if (!res2.success) {
+                if (res2.status === "error") {
                   addToast(
                     "error",
                     "Auth Debug",

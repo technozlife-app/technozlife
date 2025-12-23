@@ -67,7 +67,7 @@ export default function BillingPage() {
 
         if (mounted) {
           if (
-            plansRes.success &&
+            plansRes.status === "success" &&
             plansRes.data &&
             (plansRes.data.plans || []).length > 0
           ) {
@@ -78,7 +78,7 @@ export default function BillingPage() {
             setPlans(getAllPlans());
           }
 
-          if (paymentsRes.success && paymentsRes.data)
+          if (paymentsRes.status === "success" && paymentsRes.data)
             setPayments(paymentsRes.data.payments || []);
         }
       } catch (e) {
@@ -96,7 +96,7 @@ export default function BillingPage() {
   }, [addToast]);
   const handleCancelSubscription = async () => {
     const result = await subscriptionApi.cancelSubscription();
-    if (result.success) {
+    if (result.status === "success") {
       addToast(
         "info",
         "Subscription Cancelled",
@@ -185,7 +185,7 @@ export default function BillingPage() {
                   });
 
                   // Explicitly handle unauthorized responses
-                  if (!res.success && res.code === 401) {
+                  if (res.status === "error" && res.code === 401) {
                     addToast(
                       "info",
                       "Session expired",
@@ -198,7 +198,7 @@ export default function BillingPage() {
                     return;
                   }
 
-                  if (res.success && res.data) {
+                  if (res.status === "success" && res.data) {
                     if (res.data.url) {
                       window.location.href = res.data.url;
                       return;

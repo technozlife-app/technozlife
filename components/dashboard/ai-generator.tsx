@@ -50,7 +50,7 @@ export function AIGenerator() {
     const pollInterval = setInterval(async () => {
       try {
         const response = await aiApi.getJobStatus(currentJobId);
-        if (response.success && response.data) {
+        if (response.status === "success" && response.data) {
           const { status, result: jobResult, tokens_used } = response.data;
 
           if (status === "completed" && jobResult) {
@@ -111,7 +111,7 @@ export function AIGenerator() {
         prompt: enhancedPrompt,
       });
 
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const { content, tokens_used, job_id } = response.data;
 
         if (content) {

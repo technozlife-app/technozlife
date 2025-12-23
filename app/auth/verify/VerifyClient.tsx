@@ -23,7 +23,7 @@ export default function VerifyClient() {
     authApi
       .verifyEmail(token)
       .then((res) => {
-        if (res.success) {
+        if (res.status === "success") {
           setStatus("success");
           toast({
             title: "Email verified",
@@ -65,7 +65,7 @@ export default function VerifyClient() {
             onClick={async () => {
               try {
                 const res = await authApi.sendVerification();
-                if (res.success) {
+                if (res.status === "success") {
                   toast({
                     title: "Verification sent",
                     description: "Check your email for the verification link.",

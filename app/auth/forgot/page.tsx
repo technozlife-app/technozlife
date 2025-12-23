@@ -19,7 +19,7 @@ export default function ForgotPasswordPage() {
     setIsLoading(true);
     try {
       const res = await authApi.forgotPassword(email);
-      if (res.success) {
+      if (res.status === "success") {
         addToast(
           "success",
           "Email Sent",

@@ -25,7 +25,7 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
     const plansResponse = await plansApi.getPlans();
 
     let plans: SubscriptionPlan[] = [];
-    if (plansResponse.success && plansResponse.data?.plans) {
+    if (plansResponse.status === "success" && plansResponse.data?.plans) {
       plans = plansResponse.data.plans;
     }
 
@@ -51,8 +51,11 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
             is_active: true,
           });
 
-          if (createResponse.success && createResponse.data) {
-            plans.push(createResponse.data);
+          if (
+            createResponse.status === "success" &&
+            createResponse.data?.plan
+          ) {
+            plans.push(createResponse.data.plan);
           }
         } catch (error) {
           console.error(`Failed to create plan ${localPlan.name}:`, error);
@@ -69,7 +72,7 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
         current_plan: freePlan.slug,
       });
 
-      if (updateResponse.success && updateResponse.data) {
+      if (updateResponse.status === "success" && updateResponse.data?.user) {
         return { ...user, current_plan: freePlan.slug };
       }
     }
@@ -109,16 +112,16 @@ interface AuthContextType {
   ) => Promise<{ success: boolean; message?: string }>;
   // Refresh user profile from the API (useful after token-only redirects)
   refreshUser: () => Promise<{ success: boolean; message?: string }>;
-  getGoogleRedirectUrl: () => Promise<{
+  getGoogleRedirectUrl: () => {
     success: boolean;
     url?: string;
     message?: string;
-  }>;
-  getGithubRedirectUrl: () => Promise<{
+  };
+  getGithubRedirectUrl: () => {
     success: boolean;
     url?: string;
     message?: string;
-  }>;
+  };
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -135,7 +138,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (token) {
         try {
           const response = await userApi.getProfile();
-          if (response.success && response.data?.user) {
+          if (response.status === "success" && response.data?.user) {
             // Ensure user has a plan assigned
             const userWithPlan = await ensureUserHasPlan(response.data.user);
             setUser(userWithPlan);
@@ -164,16 +167,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     recaptchaToken?: string
   ): Promise<{ success: boolean; message?: string }> => {
     try {
-      // authApi.login signature is (email, password, turnstile_token?, recaptcha_token?)
-      // pass `undefined` for the turnstile token so `recaptchaToken` maps to the
-      // `recaptcha_token` parameter on the API.
       const response = await authApi.login(
         email,
         password,
         undefined,
         recaptchaToken
       );
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const { user: userData, token } = response.data;
 
         // Store tokens
@@ -213,7 +213,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         recaptcha_token: recaptchaToken,
       });
 
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const { user: userData, token } = response.data;
 
         // Store tokens
@@ -261,7 +261,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await authApi.googleCallback(code, credential);
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const { user: userData, token } = response.data;
 
         // Store token
@@ -289,7 +289,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ): Promise<{ success: boolean; message?: string }> => {
     try {
       const response = await authApi.githubCallback(code, accessToken);
-      if (response.success && response.data) {
+      if (response.status === "success" && response.data) {
         const { user: userData, token } = response.data;
 
         // Store token
@@ -311,48 +311,34 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const getGoogleRedirectUrl = async (): Promise<{
+  const getGoogleRedirectUrl = (): {
     success: boolean;
     url?: string;
     message?: string;
-  }> => {
-    try {
-      const response = await authApi.getGoogleRedirect();
-      if (response.success && response.data?.url) {
-        return { success: true, url: response.data.url };
-      } else {
-        return { success: false, message: response.message };
-      }
-    } catch (error) {
+  } => {
+    const response = authApi.getGoogleRedirect();
+    if (response.status === "success" && response.data?.url) {
+      return { success: true, url: response.data.url };
+    } else {
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to get Google redirect URL",
+        message: "Failed to get Google redirect URL",
       };
     }
   };
 
-  const getGithubRedirectUrl = async (): Promise<{
+  const getGithubRedirectUrl = (): {
     success: boolean;
     url?: string;
     message?: string;
-  }> => {
-    try {
-      const response = await authApi.getGithubRedirect();
-      if (response.success && response.data?.url) {
-        return { success: true, url: response.data.url };
-      } else {
-        return { success: false, message: response.message };
-      }
-    } catch (error) {
+  } => {
+    const response = authApi.getGithubRedirect();
+    if (response.status === "success" && response.data?.url) {
+      return { success: true, url: response.data.url };
+    } else {
       return {
         success: false,
-        message:
-          error instanceof Error
-            ? error.message
-            : "Failed to get GitHub redirect URL",
+        message: "Failed to get GitHub redirect URL",
       };
     }
   };
@@ -494,7 +480,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Fallback to existing API helper
       try {
         const response = await userApi.getProfile();
-        if (response.success && response.data?.user) {
+        if (response.status === "success" && response.data?.user) {
           const userWithPlan = await ensureUserHasPlan(response.data.user);
           setUser(userWithPlan);
           return { success: true };
