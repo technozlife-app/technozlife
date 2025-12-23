@@ -90,7 +90,12 @@ export function getPlanById(id: string): Plan | undefined {
 }
 
 export function getPlanBySlug(slug: string): Plan | undefined {
-  return TIERS.find((p) => p.slug === slug);
+  // Match by slug first, then try id as fallback (case-insensitive)
+  const normalized = slug.toLowerCase();
+  return TIERS.find(
+    (p) =>
+      p.slug.toLowerCase() === normalized || p.id.toLowerCase() === normalized
+  );
 }
 export function getAllPlans(): Plan[] {
   return TIERS;

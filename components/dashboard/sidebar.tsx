@@ -147,7 +147,7 @@ export function DashboardSidebar() {
                     : displayUser?.username || displayUser?.email || "Guest"}
                 </p>
                 <p className='text-xs text-slate-500 truncate'>
-                  {isLoading ? "" : user?.email || "Not signed in"}
+                  {isLoading ? "" : displayUser?.email || "Not signed in"}
                 </p>
               </motion.div>
             )}

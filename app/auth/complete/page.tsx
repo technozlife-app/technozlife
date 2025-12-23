@@ -41,6 +41,7 @@ export default function AuthCompletePage() {
     });
 
     async function handleToken(tokenValue: string) {
+      console.log("[AuthComplete] Received token, saving to localStorage");
       localStorage.setItem("accessToken", tokenValue);
       if (refresh) localStorage.setItem("refreshToken", refresh);
 
@@ -62,7 +63,9 @@ export default function AuthCompletePage() {
 
       // Use the central refreshUser() and rely on AuthProvider for state population
       try {
+        console.log("[AuthComplete] Calling refreshUser to load profile...");
         const res = await refreshUser();
+        console.log("[AuthComplete] refreshUser result:", res);
         if (res.success) {
           toast({
             title: "Signed in",

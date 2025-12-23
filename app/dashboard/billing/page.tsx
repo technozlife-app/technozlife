@@ -60,26 +60,17 @@ export default function BillingPage() {
     let mounted = true;
     async function load() {
       try {
-        const [plansRes, paymentsRes] = await Promise.all([
-          subscriptionApi.getPlans(),
-          subscriptionApi.getPaymentHistory(),
-        ]);
-
+        // Always use local plans for display and checkout (consistent slugs)
+        const { getAllPlans } = await import("@/lib/plans");
+        const localPlans = getAllPlans();
         if (mounted) {
-          if (
-            plansRes.status === "success" &&
-            plansRes.data &&
-            (plansRes.data.plans || []).length > 0
-          ) {
-            setPlans(plansRes.data.plans || []);
-          } else {
-            // fallback to local static plans
-            const { getAllPlans } = await import("@/lib/plans");
-            setPlans(getAllPlans());
-          }
+          setPlans(localPlans);
+        }
 
-          if (paymentsRes.status === "success" && paymentsRes.data)
-            setPayments(paymentsRes.data.payments || []);
+        // Try to get payment history from API
+        const paymentsRes = await subscriptionApi.getPaymentHistory();
+        if (mounted && paymentsRes.status === "success" && paymentsRes.data) {
+          setPayments(paymentsRes.data.payments || []);
         }
       } catch (e) {
         addToast(
@@ -155,6 +146,12 @@ export default function BillingPage() {
                       "info",
                       "Taking you to checkout",
                       "Proceeding to secure checkout..."
+                    );
+                    console.log(
+                      "[Billing] Redirecting to checkout with slug:",
+                      slug,
+                      "from plan:",
+                      plan
                     );
                     // navigate to the unified checkout page with query param
                     window.location.href = `/checkout?plan=${encodeURIComponent(
