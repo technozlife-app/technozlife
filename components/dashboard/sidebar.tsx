@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { API_BASE } from "@/lib/api";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
@@ -35,6 +36,7 @@ export function DashboardSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { user, logout, isLoading, refreshUser } = useAuth();
+  const [remoteUser, setRemoteUser] = useState<any | null>(null);
   const { addToast } = useToast();
 
   const handleLogout = async () => {
@@ -195,8 +197,39 @@ export function DashboardSidebar() {
         !isLoading &&
         localStorage.getItem("accessToken")
       ) {
-        // best-effort refresh, ignore result (AuthProvider will update state)
-        refreshUser().catch(() => {});
+        // If token exists, fetch latest profile directly using Bearer token
+        // and show that data in the sidebar immediately.
+        const token = localStorage.getItem("accessToken");
+        if (token) {
+          const controller = new AbortController();
+          const url = `${API_BASE}/user`;
+          fetch(url, {
+            method: "GET",
+            headers: {
+              Authorization: `Bearer ${token}`,
+              Accept: "application/json",
+            },
+            signal: controller.signal,
+          })
+            .then(async (res) => {
+              if (!res.ok) return null;
+              try {
+                const body = await res.json().catch(() => null);
+                // Support ApiResponse shape or raw user object
+                const maybeUser = body?.data?.user || body?.user || body;
+                if (maybeUser && typeof maybeUser === "object") {
+                  setRemoteUser(maybeUser);
+                }
+              } catch (e) {
+                // ignore
+              }
+            })
+            .catch(() => null);
+
+          // also kick off auth-context refresh in background
+          refreshUser().catch(() => {});
+          return () => controller.abort();
+        }
       }
     } catch (e) {
       // noop
