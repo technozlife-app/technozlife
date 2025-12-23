@@ -5,13 +5,10 @@ import { useRouter } from "next/navigation";
 import {
   authApi,
   userApi,
-  plansApi,
   API_BASE,
   type UserProfile,
   type AuthData,
-  type SubscriptionPlan,
 } from "@/lib/api";
-import { getAllPlans, type Plan } from "@/lib/plans";
 
 // Helper function to ensure user has a plan assigned
 async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
@@ -21,67 +18,30 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
   }
 
   try {
-    // Check if there are any plans in the database
-    const plansResponse = await plansApi.getPlans();
+    // Assign the free plan by default (don't try to create plans in DB - that's admin-only)
+    console.log("[ensureUserHasPlan] User has no plan, assigning 'free' plan");
 
-    let plans: SubscriptionPlan[] = [];
-    if (plansResponse.status === "success" && plansResponse.data?.plans) {
-      plans = plansResponse.data.plans;
-    }
+    // Update user profile with the free plan
+    const updateResponse = await userApi.updateProfile({
+      current_plan: "free",
+    });
 
-    // If no plans exist in database, create them from lib/plans.ts
-    if (plans.length === 0) {
-      const localPlans = getAllPlans();
-
-      // Create plans in the database
-      for (const localPlan of localPlans) {
-        try {
-          const createResponse = await plansApi.createPlan({
-            name: localPlan.name,
-            slug: localPlan.slug,
-            description: localPlan.description,
-            price: parseFloat(localPlan.price.replace("$", "")) || 0,
-            currency: "USD",
-            // Backend expects interval strings like "monthly" or "yearly"
-            interval: (localPlan.period || "").includes("month")
-              ? "monthly"
-              : "yearly",
-            trial_days: localPlan.id === "free" ? 0 : 7,
-            features: localPlan.features,
-            is_active: true,
-          });
-
-          if (
-            createResponse.status === "success" &&
-            createResponse.data?.plan
-          ) {
-            plans.push(createResponse.data.plan);
-          }
-        } catch (error) {
-          console.error(`Failed to create plan ${localPlan.name}:`, error);
-        }
-      }
-    }
-
-    // Assign the first plan (free plan) to the user
-    if (plans.length > 0) {
-      const freePlan = plans.find((p) => p.slug === "free") || plans[0];
-
-      // Update user profile with the plan
-      const updateResponse = await userApi.updateProfile({
-        current_plan: freePlan.slug,
-      });
-
-      if (updateResponse.status === "success" && updateResponse.data?.user) {
-        return { ...user, current_plan: freePlan.slug };
-      }
+    if (updateResponse.status === "success" && updateResponse.data?.user) {
+      console.log("[ensureUserHasPlan] Successfully assigned free plan");
+      return updateResponse.data.user;
+    } else {
+      console.warn(
+        "[ensureUserHasPlan] Failed to update profile:",
+        updateResponse.message
+      );
+      // Return user with free plan set locally even if API update failed
+      return { ...user, current_plan: "free" };
     }
   } catch (error) {
-    console.error("Failed to ensure user has plan:", error);
+    console.error("[ensureUserHasPlan] Error:", error);
+    // Return user with free plan set locally as fallback
+    return { ...user, current_plan: "free" };
   }
-
-  // Return original user if plan assignment failed
-  return user;
 }
 
 interface AuthContextType {
