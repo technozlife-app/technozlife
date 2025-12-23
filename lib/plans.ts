@@ -20,7 +20,7 @@ export interface Plan {
 export const TIERS: Plan[] = [
   {
     id: "free",
-    slug: "free",
+    slug: "human",
     name: "Human",
     price: "Free",
     period: "forever",
@@ -40,7 +40,7 @@ export const TIERS: Plan[] = [
   },
   {
     id: "pro",
-    slug: "pro",
+    slug: "cyborg",
     name: "Cyborg",
     price: "$49",
     period: "/month",
@@ -62,7 +62,7 @@ export const TIERS: Plan[] = [
   },
   {
     id: "enterprise",
-    slug: "enterprise",
+    slug: "transcendence",
     name: "Transcendence",
     price: "$199",
     period: "/month",
