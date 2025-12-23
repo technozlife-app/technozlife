@@ -14,9 +14,32 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
   const startCheckout = async () => {
     setIsProcessing(true);
     try {
+      // Ensure user is authenticated before initiating a subscription
+      const token =
+        typeof window !== "undefined"
+          ? localStorage.getItem("accessToken")
+          : null;
+      if (!token) {
+        addToast("info", "Sign in required", "Please sign in to continue.");
+        // preserve current path
+        const next = encodeURIComponent(window.location.pathname);
+        router.push(`/auth?next=${next}`);
+        return;
+      }
+
       const response = await paymentsApi.createSubscription({
         plan_slug: plan.slug,
       });
+
+      // Handle unauthorized explicitly
+      if (!response.success && response.code === 401) {
+        addToast("info", "Session expired", "Please sign in again.");
+        localStorage.removeItem("accessToken");
+        router.push(
+          `/auth?next=${encodeURIComponent(window.location.pathname)}`
+        );
+        return;
+      }
 
       if (response.success && response.data) {
         const payload = response.data;
@@ -45,11 +68,22 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
           "Payment endpoint returned an unexpected response"
         );
       } else {
-        addToast(
-          "error",
-          "Checkout Failed",
-          response.message || "Unable to start checkout"
-        );
+        // Show validation errors if present
+        let message = response.message || "Unable to start checkout";
+        // @ts-ignore
+        if ((response as any).errors) {
+          // @ts-ignore
+          const errs = (response as any).errors;
+          const parts: string[] = [];
+          for (const k of Object.keys(errs)) {
+            if (Array.isArray(errs[k]))
+              parts.push(`${k}: ${errs[k].join(", ")}`);
+            else parts.push(`${k}: ${String(errs[k])}`);
+          }
+          if (parts.length) message = parts.join("; ");
+        }
+
+        addToast("error", "Checkout Failed", message);
       }
     } catch (e) {
       addToast(

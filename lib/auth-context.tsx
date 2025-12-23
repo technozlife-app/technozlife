@@ -438,6 +438,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           const text = await res.text().catch(() => "(no body)");
           console.warn(`refreshUser: /user responded ${res.status}`, text);
 
+          // If the token is invalid (401) clear stored credentials early
+          if (res.status === 401) {
+            console.warn("refreshUser: received 401 — clearing stored tokens");
+            localStorage.removeItem("accessToken");
+            localStorage.removeItem("refreshToken");
+            localStorage.removeItem("tokenExpiry");
+          }
+
           // Try cookie-based auth if token header failed (some backends use API cookies)
           try {
             console.debug(

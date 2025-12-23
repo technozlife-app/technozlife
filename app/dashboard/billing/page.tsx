@@ -162,9 +162,40 @@ export default function BillingPage() {
                   }
 
                   // Free plan - create subscription directly
+                  // Ensure user is signed in
+                  const token =
+                    typeof window !== "undefined"
+                      ? localStorage.getItem("accessToken")
+                      : null;
+                  if (!token) {
+                    addToast(
+                      "info",
+                      "Sign in required",
+                      "Please sign in to continue."
+                    );
+                    window.location.href = `/auth?next=${encodeURIComponent(
+                      window.location.pathname
+                    )}`;
+                    return;
+                  }
                   const res = await subscriptionApi.createSubscription({
                     plan_slug: planId,
                   });
+
+                  // Explicitly handle unauthorized responses
+                  if (!res.success && res.code === 401) {
+                    addToast(
+                      "info",
+                      "Session expired",
+                      "Please sign in again."
+                    );
+                    localStorage.removeItem("accessToken");
+                    window.location.href = `/auth?next=${encodeURIComponent(
+                      window.location.pathname
+                    )}`;
+                    return;
+                  }
+
                   if (res.success && res.data) {
                     if (res.data.url) {
                       window.location.href = res.data.url;

@@ -187,8 +187,8 @@ export function DashboardSidebar() {
   );
 
   // If there is an access token but no user in context, attempt to refresh
-  // the profile. This helps when the token was just written (e.g. during
-  // OAuth redirect) and the AuthProvider hasn't populated the user yet.
+  // the profile using the central AuthProvider. This avoids ad-hoc fetches
+  // and keeps token/error handling consistent across the app.
   useEffect(() => {
     try {
       if (
@@ -197,54 +197,32 @@ export function DashboardSidebar() {
         !isLoading &&
         localStorage.getItem("accessToken")
       ) {
-        // If token exists, fetch latest profile directly using Bearer token
-        // and show that data in the sidebar immediately.
-        const token = localStorage.getItem("accessToken");
-        if (token) {
-          const controller = new AbortController();
-          const url = `${API_BASE}/user`;
-          console.debug(
-            "Sidebar: fetching user",
-            url,
-            "token preview",
-            token?.slice(0, 8) + "..."
-          );
-          fetch(url, {
-            method: "GET",
-            headers: {
-              Authorization: `Bearer ${token}`,
-              Accept: "application/json",
-            },
-            signal: controller.signal,
-          })
-            .then(async (res) => {
-              console.debug("Sidebar: /user responded", res.status, res.url);
-              if (!res.ok) {
-                console.warn("Sidebar: /user fetch not ok", res.status);
-                return null;
-              }
-              try {
-                const body = await res.json().catch(() => null);
-                // Support ApiResponse shape or raw user object
-                const maybeUser = body?.data?.user || body?.user || body;
-                if (maybeUser && typeof maybeUser === "object") {
-                  setRemoteUser(maybeUser);
-                }
-              } catch (e) {
-                // ignore
-              }
-            })
-            .catch(() => null);
-
-          // also kick off auth-context refresh in background
-          refreshUser().catch(() => {});
-          return () => controller.abort();
-        }
+        // Attempt to refresh the user via AuthProvider.
+        (async () => {
+          try {
+            const res = await refreshUser();
+            if (!res.success) {
+              // Token likely invalid — clear stored tokens and notify user
+              localStorage.removeItem("accessToken");
+              localStorage.removeItem("refreshToken");
+              localStorage.removeItem("tokenExpiry");
+              setRemoteUser(null);
+              addToast(
+                "error",
+                "Session expired",
+                "Please sign in again to continue"
+              );
+            }
+            // If successful, AuthProvider will populate `user` state.
+          } catch (e) {
+            // ignore transient errors
+          }
+        })();
       }
     } catch (e) {
       // noop
     }
-  }, [user, isLoading, refreshUser]);
+  }, [user, isLoading, refreshUser, addToast]);
 
   return (
     <>

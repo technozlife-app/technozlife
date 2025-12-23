@@ -60,7 +60,7 @@ export default function AuthCompletePage() {
         url.pathname + (newHash || "")
       );
 
-      // Try to refresh the user profile using the token we just stored.
+      // Use the central refreshUser() and rely on AuthProvider for state population
       try {
         const res = await refreshUser();
         if (res.success) {
@@ -72,102 +72,9 @@ export default function AuthCompletePage() {
           return;
         }
 
-        // If refreshUser failed, attempt a direct /user request with Authorization header
-        try {
-          const r = await fetch(`${API_BASE}/user`, {
-            headers: { Authorization: `Bearer ${tokenValue}` },
-          });
-
-          // If request was sent to same origin accidentally, warn the developer
-          if (typeof window !== "undefined") {
-            try {
-              const sentToOrigin =
-                new URL(r.url, window.location.href).origin ===
-                window.location.origin;
-              if (sentToOrigin) {
-                console.warn(
-                  "Auth complete: /user request was sent to same origin. Check NEXT_PUBLIC_API_BASE configuration."
-                );
-              }
-            } catch (e) {
-              console.warn(
-                "Auth complete: could not determine request URL origin",
-                e
-              );
-            }
-          }
-
-          if (r.ok) {
-            // If this succeeds, call refreshUser again and continue
-            await refreshUser();
-            toast({
-              title: "Signed in",
-              description: "Authentication completed.",
-            });
-            router.replace("/dashboard");
-            return;
-          } else {
-            const text = await r.text();
-            console.error("/user returned non-OK:", r.status, text);
-
-            // If we detect the request went to the same origin, attempt fallback to public API hostname
-            let triedFallback = false;
-            try {
-              const DEFAULT_API = "https://api.technozlife.com";
-              const fallbackUrl = `${DEFAULT_API}/user`;
-              console.warn(`Attempting fallback to ${fallbackUrl}`);
-              const rf = await fetch(fallbackUrl, {
-                headers: { Authorization: `Bearer ${tokenValue}` },
-              });
-              triedFallback = true;
-              if (rf.ok) {
-                await refreshUser();
-                toast({
-                  title: "Signed in",
-                  description: "Authentication completed.",
-                });
-                router.replace("/dashboard");
-                return;
-              } else {
-                const t2 = await rf.text();
-                console.error("Fallback /user returned non-OK:", rf.status, t2);
-              }
-            } catch (fbErr) {
-              console.error("Fallback /user fetch failed:", fbErr);
-            }
-
-            toast({
-              title: "Sign in failed",
-              description: `Token verification failed (${r.status})${
-                triedFallback ? " (fallback tried)" : ""
-              }.`,
-            });
-            router.replace("/auth");
-            return;
-          }
-        } catch (err2) {
-          console.error("Direct /user fetch failed:", err2);
-        }
-
-        // As a last attempt, try calling /user with credentials (cookie) in case backend set a cookie
-        try {
-          const r2 = await fetch(`${API_BASE}/user`, {
-            credentials: "include",
-          });
-          if (r2.ok) {
-            await refreshUser();
-            toast({
-              title: "Signed in",
-              description: "Authentication completed.",
-            });
-            router.replace("/dashboard");
-            return;
-          }
-        } catch (err3) {
-          console.error("Cookie-based /user fetch failed:", err3);
-        }
-
-        // If we reach here, give a helpful message and redirect to auth
+        // If verification failed, clear tokens and redirect to auth
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("refreshToken");
         toast({
           title: "Sign in incomplete",
           description:
