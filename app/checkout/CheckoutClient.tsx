@@ -103,6 +103,22 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
           return;
         }
 
+        // Some responses return a payment object (one-time or subscription payment)
+        if (payload?.payment) {
+          const pay = payload.payment;
+          addToast(
+            "success",
+            "Payment processed",
+            `Transaction ${pay.transaction_id} — ${pay.status}`
+          );
+          // Give a brief moment to let backend propagate user changes, then refresh or redirect
+          setTimeout(() => {
+            // Preferably refresh user state; simply navigate to dashboard for now
+            router.push("/dashboard");
+          }, 900);
+          return;
+        }
+
         addToast(
           "error",
           "Unexpected Response",
