@@ -176,7 +176,7 @@ export function PricingSection() {
         "Redirecting",
         "Taking you to the secure checkout page..."
       );
-      router.push(`/checkout/${slug}`);
+      router.push(`/checkout?plan=${encodeURIComponent(slug)}`);
     } finally {
       setIsSubscribing(null);
     }

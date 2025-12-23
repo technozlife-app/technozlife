@@ -21,6 +21,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
+import { userApi } from "@/lib/api";
 
 const navItems = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
@@ -38,6 +39,9 @@ export function DashboardSidebar() {
   const { user, logout, isLoading, refreshUser } = useAuth();
   const [remoteUser, setRemoteUser] = useState<any | null>(null);
   const { addToast } = useToast();
+
+  // Helper to select a display user (AuthProvider user preferred)
+  const displayUser = user || remoteUser || null;
 
   const handleLogout = async () => {
     await logout();
@@ -124,20 +128,23 @@ export function DashboardSidebar() {
                 <p className='text-sm font-medium text-white truncate'>
                   {isLoading
                     ? "Loading..."
-                    : // Be tolerant to different backend name formats
-                    user?.first_name ||
-                      (user as any)?.firstName ||
-                      (user as any)?.name
+                    : // Prefer AuthProvider user, fallback to remoteUser
+                    displayUser?.first_name ||
+                      (displayUser as any)?.firstName ||
+                      (displayUser as any)?.name
                     ? `${
-                        (user?.first_name ||
-                          (user as any)?.firstName ||
-                          (user as any)?.name) as string
+                        (displayUser?.first_name ||
+                          (displayUser as any)?.firstName ||
+                          (displayUser as any)?.name) as string
                       }${
-                        user?.last_name || (user as any)?.lastName
-                          ? ` ${user?.last_name || (user as any)?.lastName}`
+                        displayUser?.last_name || (displayUser as any)?.lastName
+                          ? ` ${
+                              displayUser?.last_name ||
+                              (displayUser as any)?.lastName
+                            }`
                           : ""
                       }`
-                    : user?.username || user?.email || "Guest"}
+                    : displayUser?.username || displayUser?.email || "Guest"}
                 </p>
                 <p className='text-xs text-slate-500 truncate'>
                   {isLoading ? "" : user?.email || "Not signed in"}
@@ -183,6 +190,60 @@ export function DashboardSidebar() {
           />
         </button>
       )}
+
+      {/* Dev auth debug (visible in non-production) */}
+      {process.env.NODE_ENV !== "production" && (
+        <div className='p-3 border-t border-slate-800/50 mt-2'>
+          <div className='text-xs text-slate-500 mb-2'>
+            Auth Debug (dev only)
+          </div>
+          <div className='flex gap-2'>
+            <button
+              className='btn-ghost text-xs'
+              onClick={async () => {
+                try {
+                  const token = localStorage.getItem("accessToken");
+                  const tokenPreview = token
+                    ? `${token.slice(0, 8)}...${token.slice(-8)}`
+                    : "(no token)";
+                  const res = await userApi.getProfile();
+                  if (res.success && res.data?.user) {
+                    addToast(
+                      "success",
+                      "Auth OK",
+                      "Fetched /user successfully"
+                    );
+                    setRemoteUser(res.data.user);
+                  } else if (res.code === 401) {
+                    addToast(
+                      "error",
+                      "401 Unauthorized",
+                      "Token invalid or expired"
+                    );
+                    localStorage.removeItem("accessToken");
+                    localStorage.removeItem("refreshToken");
+                    setRemoteUser(null);
+                  } else {
+                    addToast(
+                      "error",
+                      "Profile fetch failed",
+                      res.message || "Unknown error"
+                    );
+                  }
+                  // show console-friendly debug
+                  console.debug("Auth Debug - token preview:", tokenPreview);
+                  console.debug("Auth Debug - /user response:", res);
+                } catch (err) {
+                  console.error("Auth Debug failed:", err);
+                  addToast("error", "Auth Debug failed", String(err));
+                }
+              }}
+            >
+              Run Auth Debug
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 
@@ -190,6 +251,7 @@ export function DashboardSidebar() {
   // the profile using the central AuthProvider. This avoids ad-hoc fetches
   // and keeps token/error handling consistent across the app.
   useEffect(() => {
+    let mounted = true;
     try {
       if (
         typeof window !== "undefined" &&
@@ -197,31 +259,48 @@ export function DashboardSidebar() {
         !isLoading &&
         localStorage.getItem("accessToken")
       ) {
-        // Attempt to refresh the user via AuthProvider.
+        // First try AuthProvider refresh to populate global user
         (async () => {
           try {
             const res = await refreshUser();
-            if (!res.success) {
-              // Token likely invalid — clear stored tokens and notify user
+            if (res.success) {
+              // AuthProvider now has user; nothing else needed
+              return;
+            }
+
+            // If refreshUser failed, attempt a direct API profile fetch
+            const profile = await userApi.getProfile();
+            if (profile.success && profile.data?.user && mounted) {
+              setRemoteUser(profile.data.user);
+              // Also trigger AuthProvider refresh in the background
+              try {
+                await refreshUser();
+              } catch (_) {
+                /* ignore */
+              }
+              return;
+            }
+
+            // If profile fetch failed (e.g., 401), clear tokens and notify
+            if (profile.code === 401) {
               localStorage.removeItem("accessToken");
               localStorage.removeItem("refreshToken");
               localStorage.removeItem("tokenExpiry");
               setRemoteUser(null);
-              addToast(
-                "error",
-                "Session expired",
-                "Please sign in again to continue"
-              );
+              addToast("info", "Session expired", "Please sign in again");
             }
-            // If successful, AuthProvider will populate `user` state.
-          } catch (e) {
-            // ignore transient errors
+          } catch (err) {
+            // ignore
           }
         })();
       }
     } catch (e) {
       // noop
     }
+
+    return () => {
+      mounted = false;
+    };
   }, [user, isLoading, refreshUser, addToast]);
 
   return (

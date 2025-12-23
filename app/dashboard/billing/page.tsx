@@ -156,8 +156,10 @@ export default function BillingPage() {
                       "Taking you to checkout",
                       "Proceeding to secure checkout..."
                     );
-                    // router is not available here directly; use window.location to navigate to checkout route
-                    window.location.href = `/checkout/${slug}`;
+                    // navigate to the unified checkout page with query param
+                    window.location.href = `/checkout?plan=${encodeURIComponent(
+                      slug
+                    )}`;
                     return;
                   }
 
