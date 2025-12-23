@@ -11,8 +11,20 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
   const { addToast } = useToast();
   const [isProcessing, setIsProcessing] = useState(false);
 
+  // Payment form state
+  const [cardHolder, setCardHolder] = useState("");
+  const [cardNumber, setCardNumber] = useState("");
+  const [cvv, setCvv] = useState("");
+  const [expiryMonth, setExpiryMonth] = useState("");
+  const [expiryYear, setExpiryYear] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const [generalError, setGeneralError] = useState<string | null>(null);
+
   const startCheckout = async () => {
     setIsProcessing(true);
+    setFieldErrors({});
+    setGeneralError(null);
+
     try {
       // Ensure user is authenticated before initiating a subscription
       const token =
@@ -22,13 +34,40 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
       if (!token) {
         addToast("info", "Sign in required", "Please sign in to continue.");
         // preserve current path
-        const next = encodeURIComponent(window.location.pathname);
+        const next = encodeURIComponent(
+          window.location.pathname + window.location.search
+        );
         router.push(`/auth?next=${next}`);
+        return;
+      }
+
+      // Client-side validation
+      const localErrors: Record<string, string[]> = {};
+      if (!cardHolder.trim())
+        localErrors["card_holder"] = ["Cardholder name required"];
+      if (!cardNumber.trim())
+        localErrors["card_number"] = ["Card number required"];
+      if (!cvv.trim()) localErrors["cvv"] = ["CVV required"];
+      if (!expiryMonth.trim())
+        localErrors["expiry_month"] = ["Expiry month required"];
+      if (!expiryYear.trim())
+        localErrors["expiry_year"] = ["Expiry year required"];
+
+      if (Object.keys(localErrors).length) {
+        setFieldErrors(localErrors);
+        setIsProcessing(false);
         return;
       }
 
       const response = await paymentsApi.createSubscription({
         plan_slug: plan.slug,
+        payment_method: {
+          card_holder: cardHolder.trim(),
+          card_number: cardNumber.replace(/\s+/g, ""),
+          cvv: cvv.trim(),
+          expiry_month: expiryMonth.trim(),
+          expiry_year: expiryYear.trim(),
+        },
       });
 
       // Handle unauthorized explicitly
@@ -74,15 +113,30 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
         if ((response as any).errors) {
           // @ts-ignore
           const errs = (response as any).errors;
+
+          const nextFieldErrors: Record<string, string[]> = {};
           const parts: string[] = [];
+
           for (const k of Object.keys(errs)) {
-            if (Array.isArray(errs[k]))
-              parts.push(`${k}: ${errs[k].join(", ")}`);
-            else parts.push(`${k}: ${String(errs[k])}`);
+            const val = errs[k];
+            if (k.startsWith("payment_method.")) {
+              const field = k.replace(/^payment_method\./, "");
+              nextFieldErrors[field] = Array.isArray(val) ? val : [String(val)];
+            } else if (k === "payment_method") {
+              parts.push(Array.isArray(val) ? val.join(", ") : String(val));
+            } else {
+              parts.push(
+                `${k}: ${Array.isArray(val) ? val.join(", ") : String(val)}`
+              );
+            }
           }
+
+          if (Object.keys(nextFieldErrors).length)
+            setFieldErrors(nextFieldErrors);
           if (parts.length) message = parts.join("; ");
         }
 
+        setGeneralError(message);
         addToast("error", "Checkout Failed", message);
       }
     } catch (e) {
@@ -117,17 +171,116 @@ export default function CheckoutClient({ plan }: { plan: Plan }) {
           ))}
         </div>
 
+        {/* Payment form */}
+        <div className='mb-6 space-y-4'>
+          {generalError && (
+            <div className='p-3 rounded-md bg-red-900/40 text-red-200'>
+              {generalError}
+            </div>
+          )}
+
+          <div>
+            <label className='block text-sm text-slate-300 mb-1'>
+              Cardholder
+            </label>
+            <input
+              value={cardHolder}
+              onChange={(e) => setCardHolder(e.target.value)}
+              placeholder='Full name as on card'
+              className='input w-full'
+            />
+            {fieldErrors.card_holder && (
+              <p className='text-xs text-red-300 mt-1'>
+                {fieldErrors.card_holder.join("; ")}
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className='block text-sm text-slate-300 mb-1'>
+              Card number
+            </label>
+            <input
+              value={cardNumber}
+              onChange={(e) => setCardNumber(e.target.value)}
+              placeholder='4242 4242 4242 4242'
+              inputMode='numeric'
+              className='input w-full'
+            />
+            {fieldErrors.card_number && (
+              <p className='text-xs text-red-300 mt-1'>
+                {fieldErrors.card_number.join("; ")}
+              </p>
+            )}
+          </div>
+
+          <div className='grid grid-cols-3 gap-3'>
+            <div>
+              <label className='block text-sm text-slate-300 mb-1'>
+                Exp. month
+              </label>
+              <input
+                value={expiryMonth}
+                onChange={(e) => setExpiryMonth(e.target.value)}
+                placeholder='MM'
+                className='input w-full'
+              />
+              {fieldErrors.expiry_month && (
+                <p className='text-xs text-red-300 mt-1'>
+                  {fieldErrors.expiry_month.join("; ")}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className='block text-sm text-slate-300 mb-1'>
+                Exp. year
+              </label>
+              <input
+                value={expiryYear}
+                onChange={(e) => setExpiryYear(e.target.value)}
+                placeholder='YYYY'
+                className='input w-full'
+              />
+              {fieldErrors.expiry_year && (
+                <p className='text-xs text-red-300 mt-1'>
+                  {fieldErrors.expiry_year.join("; ")}
+                </p>
+              )}
+            </div>
+
+            <div>
+              <label className='block text-sm text-slate-300 mb-1'>CVV</label>
+              <input
+                value={cvv}
+                onChange={(e) => setCvv(e.target.value)}
+                placeholder='123'
+                inputMode='numeric'
+                className='input w-full'
+              />
+              {fieldErrors.cvv && (
+                <p className='text-xs text-red-300 mt-1'>
+                  {fieldErrors.cvv.join("; ")}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+
         <div className='flex gap-3'>
           <button
             className='btn-primary'
             onClick={startCheckout}
             disabled={isProcessing}
           >
-            {isProcessing ? "Processing…" : "Proceed to Secure Checkout"}
+            {isProcessing ? "Processing…" : `Pay ${plan.price}`}
           </button>
 
-          <button className='btn-ghost' onClick={() => router.push("/pricing")}>
-            Back
+          <button
+            className='btn-ghost'
+            onClick={() => router.push("/#pricing")}
+          >
+            Back to pricing
           </button>
         </div>
 
