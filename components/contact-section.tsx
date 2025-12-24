@@ -12,8 +12,12 @@ import { mailApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 
 const contactInfo = [
-  { icon: Mail, label: "Email", value: "connect@technozlife.io" },
-  { icon: MapPin, label: "Location", value: "San Francisco, CA" },
+  { icon: Mail, label: "Email", value: "support@technozlife.com" },
+  {
+    icon: MapPin,
+    label: "Location",
+    value: "380 Spring Street, Los Angeles, CA",
+  },
   { icon: Clock, label: "Response Time", value: "Within 24 hours" },
 ];
 
@@ -28,7 +32,7 @@ export function ContactSection() {
   });
   const { addToast } = useToast();
   const RECAPTCHA_SITE_KEY = process.env.NEXT_PUBLIC_RECAPTCHA_SITE_KEY || "";
-
+  const captchaProviderLabel = RECAPTCHA_SITE_KEY ? "reCAPTCHA" : null;
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
   ) => {
@@ -40,24 +44,23 @@ export function ContactSection() {
     e.preventDefault();
     setIsLoading(true);
 
+    const payload: any = { ...formData };
+
     try {
       // Execute reCAPTCHA for contact submissions
-      let recaptchaToken: string | undefined = undefined;
       try {
         const { executeRecaptcha } = await import("@/lib/recaptcha");
-        recaptchaToken = await executeRecaptcha("contact");
+        const token = await executeRecaptcha("contact");
+        if (token) payload.recaptcha_token = token;
       } catch (err) {
         addToast(
           "error",
-          "reCAPTCHA Error",
-          "Unable to verify captcha. Please try again or contact support."
+          "Captcha Error",
+          "Unable to verify reCAPTCHA. Please try again or contact support."
         );
         setIsLoading(false);
         return;
       }
-
-      const payload: any = { ...formData };
-      if (recaptchaToken) payload.recaptcha_token = recaptchaToken;
 
       const result = await mailApi.sendContact(payload);
 
@@ -118,7 +121,7 @@ export function ContactSection() {
         </motion.div>
 
         {/* Two column layout */}
-        <div className='flex flex-col lg:flex-row gap-12 lg:gap-16'>
+        <div className='flex flex-col items-stretch lg:flex-row gap-12 lg:gap-16'>
           {/* Left - Contact info */}
           <motion.div
             initial={{ opacity: 0, x: -30 }}
@@ -199,7 +202,7 @@ export function ContactSection() {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.2 }}
             viewport={{ once: true }}
-            className='lg:w-3/5'
+            className='lg:w-3/5 self-center'
           >
             <div className='glass-strong rounded-2xl p-8 md:p-10 glow-teal'>
               {isSubmitted ? (
@@ -227,7 +230,10 @@ export function ContactSection() {
                   </Button>
                 </motion.div>
               ) : (
-                <form onSubmit={handleSubmit} className='space-y-6'>
+                <form
+                  onSubmit={handleSubmit}
+                  className='flex h-full flex-col justify-center space-y-6'
+                >
                   <div className='grid md:grid-cols-2 gap-6'>
                     <div className='space-y-2'>
                       <label className='text-sm text-slate-400'>
@@ -321,7 +327,7 @@ export function ContactSection() {
                     </Button>
 
                     {/* reCAPTCHA status */}
-                    {!RECAPTCHA_SITE_KEY ? (
+                    {!captchaProviderLabel ? (
                       <p className='text-sm text-amber-400 mt-2'>
                         reCAPTCHA not configured — Contact form will not be
                         protected. Please set{" "}
@@ -330,7 +336,8 @@ export function ContactSection() {
                       </p>
                     ) : (
                       <p className='text-sm text-slate-500 mt-2'>
-                        This form is protected by reCAPTCHA.
+                        This form is protected by{" "}
+                        <strong>{captchaProviderLabel}</strong>.
                       </p>
                     )}
                   </div>

@@ -15,12 +15,12 @@ import {
 import Link from "next/link";
 
 const navItems = [
-  { icon: Home, label: "Home", href: "#hero" },
-  { icon: Layers, label: "Features", href: "#features" },
-  { icon: Sparkles, label: "How It Works", href: "#how-it-works" },
-  { icon: DollarSign, label: "Pricing", href: "#pricing" },
-  { icon: Users, label: "About", href: "#about" },
-  { icon: Mail, label: "Contact", href: "#contact" },
+  { icon: Home, label: "Home", href: "/#hero" },
+  { icon: Layers, label: "Features", href: "/#features" },
+  { icon: Sparkles, label: "How It Works", href: "/#how-it-works" },
+  { icon: DollarSign, label: "Pricing", href: "/#pricing" },
+  { icon: Users, label: "About", href: "/#about" },
+  { icon: Mail, label: "Contact", href: "/#contact" },
 ];
 
 import { useAuth } from "@/lib/auth-context";
