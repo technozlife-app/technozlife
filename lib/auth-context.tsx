@@ -19,7 +19,7 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
 
   try {
     // Assign the free plan by default (don't try to create plans in DB - that's admin-only)
-    console.log("[ensureUserHasPlan] User has no plan, assigning 'free' plan");
+
 
     // Update user profile with the free plan
     const updateResponse = await userApi.updateProfile({
@@ -30,10 +30,6 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
       // Support both possible backend shapes: data may be the user object or { user: { ... } }
       const updatedUser: UserProfile = ((updateResponse.data as any).user ??
         updateResponse.data) as UserProfile;
-      console.log(
-        "[ensureUserHasPlan] Successfully assigned free plan, update returned:",
-        updatedUser
-      );
       // If backend didn't actually persist the plan, ensure we have the free plan locally
       if (!updatedUser.current_plan) updatedUser.current_plan = "free";
       return updatedUser;
@@ -99,36 +95,20 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
-  // Debug: Log when user state changes
-  useEffect(() => {
-    console.log(
-      "[AuthProvider] User state changed:",
-      user ? `${user.email} (plan: ${user.current_plan})` : "null"
-    );
-  }, [user]);
+
 
   // Check for existing token and load user on mount
   useEffect(() => {
     const checkAuth = async () => {
       const token = localStorage.getItem("accessToken");
-      console.log("[AuthProvider] checkAuth running, token exists:", !!token);
 
       if (token) {
         try {
-          console.log("[AuthProvider] Fetching user profile with token");
           const response = await userApi.getProfile();
-          console.log(
-            "[AuthProvider] getProfile response:",
-            response.status,
-            response.message
-          );
-          console.log("[AuthProvider] response.data:", response.data);
 
           if (response.status === "success" && response.data) {
             // Ensure user has a plan assigned
-            console.log("[AuthProvider] User fetched, ensuring plan...");
             const userWithPlan = await ensureUserHasPlan(response.data);
-            console.log("[AuthProvider] Setting user:", userWithPlan.email);
             setUser(userWithPlan);
           } else {
             // Token is invalid, clear it
@@ -357,13 +337,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // Try direct fetch to the API to verify token and get profile
       try {
         const url = `${API_BASE}/user`;
-        console.debug("refreshUser: attempting direct fetch to", url);
-        console.debug(
-          "refreshUser: token preview",
-          token.slice(0, 8),
-          "…",
-          token.slice(-8)
-        );
         const res = await fetch(url, {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -384,16 +357,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
                 ")"
               );
             } else {
-              console.debug(
-                "refreshUser: request sent to origin",
-                actualOrigin
-              );
+              // origin differs
             }
           } catch (e) {
-            console.debug(
-              "refreshUser: could not determine response URL origin",
-              e
-            );
+            // could not determine response URL origin
           }
         }
 
@@ -426,9 +393,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
           // Try cookie-based auth if token header failed (some backends use API cookies)
           try {
-            console.debug(
-              "refreshUser: trying cookie-based /user fetch with credentials: 'include'"
-            );
             const rc = await fetch(url, {
               credentials: "include",
               headers: {

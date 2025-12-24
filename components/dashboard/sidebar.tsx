@@ -43,21 +43,7 @@ export function DashboardSidebar() {
   // Helper to select a display user (AuthProvider user preferred)
   const displayUser = user || remoteUser || null;
 
-  // Debug logging
-  useEffect(() => {
-    console.log(
-      "[Sidebar] user from AuthProvider:",
-      user ? user.email : "null"
-    );
-    console.log(
-      "[Sidebar] remoteUser:",
-      remoteUser ? remoteUser.email : "null"
-    );
-    console.log(
-      "[Sidebar] displayUser:",
-      displayUser ? displayUser.email : "null"
-    );
-  }, [user, remoteUser, displayUser]);
+
 
   const handleLogout = async () => {
     await logout();
@@ -232,7 +218,6 @@ export function DashboardSidebar() {
 
             // If refreshUser failed, attempt a direct API profile fetch
             const profile = await userApi.getProfile();
-            console.debug("Sidebar dev: profile fetch (auto)", profile);
             if (profile.status === "success" && profile.data && mounted) {
               setRemoteUser(profile.data);
               // Also trigger AuthProvider refresh in the background
@@ -265,16 +250,8 @@ export function DashboardSidebar() {
             // In development, auto-run auth debug to surface details
             if (process.env.NODE_ENV !== "production") {
               try {
-                console.debug("Sidebar dev: running auth debug");
                 const token = localStorage.getItem("accessToken");
-                console.debug(
-                  "Sidebar dev: token preview",
-                  token
-                    ? `${token.slice(0, 8)}...${token.slice(-8)}`
-                    : "(no token)"
-                );
                 const res2 = await userApi.getProfile();
-                console.debug("Sidebar dev: second profile fetch", res2);
                 if (res2.status === "error") {
                   addToast(
                     "error",

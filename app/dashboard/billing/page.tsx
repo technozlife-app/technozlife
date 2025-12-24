@@ -147,12 +147,6 @@ export default function BillingPage() {
                       "Taking you to checkout",
                       "Proceeding to secure checkout..."
                     );
-                    console.log(
-                      "[Billing] Redirecting to checkout with slug:",
-                      slug,
-                      "from plan:",
-                      plan
-                    );
                     // navigate to the unified checkout page with query param
                     window.location.href = `/checkout?plan=${encodeURIComponent(
                       slug
