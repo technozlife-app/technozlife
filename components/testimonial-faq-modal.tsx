@@ -36,7 +36,7 @@ export function TestimonialFaqModal({
   const [isMobile, setIsMobile] = useState(false);
 
   // determine faqs per page based on viewport
-  const faqsPerPage = isMobile ? 3 : 4;
+  const faqsPerPage = isMobile ? 2 : 4;
 
   const toggleFaq = (id: string) => {
     setExpandedFaq(expandedFaq === id ? null : id);
@@ -170,7 +170,7 @@ export function TestimonialFaqModal({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className='text-center mb-12'
+                  className='text-center mb-4 sm:mb-12'
                 >
                   <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
                     {activeView === "testimonials"
@@ -236,7 +236,7 @@ export function TestimonialFaqModal({
 
                       {/* Testimonial carousel */}
                       <div
-                        className='w-full max-w-3xl px-4 md:px-20'
+                        className='w-full max-w-3xl md:px-20'
                         ref={constraintsRef}
                       >
                         <AnimatePresence
