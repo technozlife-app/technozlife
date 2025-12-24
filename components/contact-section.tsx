@@ -244,7 +244,7 @@ export function ContactSection() {
                         name='name'
                         value={formData.name}
                         onChange={handleInputChange}
-                        placeholder='John Doe'
+                        placeholder='Your name'
                         className='bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-600 focus:border-teal-500/50 focus:ring-teal-500/20'
                       />
                     </div>
@@ -258,7 +258,7 @@ export function ContactSection() {
                         name='email'
                         value={formData.email}
                         onChange={handleInputChange}
-                        placeholder='john@example.com'
+                        placeholder='your.email@example.com'
                         className='bg-slate-800/50 border-slate-700/50 text-slate-100 placeholder:text-slate-600 focus:border-teal-500/50 focus:ring-teal-500/20'
                       />
                     </div>
