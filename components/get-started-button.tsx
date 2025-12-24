@@ -98,7 +98,7 @@ export function GetStartedButton() {
 
           {/* Button */}
           <div className='relative flex items-center gap-2 px-5 py-3 bg-linear-to-r from-teal-500 to-emerald-500 rounded-full text-slate-950 font-semibold text-sm'>
-            <span className='hidden sm:inline'>Get Started</span>
+            <span className='inline'>Get Started</span>
             <motion.div
               animate={{ x: [0, 4, 0] }}
               transition={{

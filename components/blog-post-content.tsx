@@ -3,15 +3,8 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import {
-  ArrowLeft,
-  Clock,
-  Calendar,
-  Twitter,
-  Linkedin,
-  Link2,
-  ArrowUpRight,
-} from "lucide-react";
+import { ArrowLeft, Clock, Calendar, Link2, ArrowUpRight } from "lucide-react";
+import { FaXTwitter as Twitter, FaLinkedin as Linkedin } from "react-icons/fa6";
 import { FloatingNav } from "@/components/floating-nav";
 import { GetStartedButton } from "@/components/get-started-button";
 import { Footer } from "@/components/footer";
@@ -207,7 +200,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                     whileHover={{ y: -2 }}
                     onClick={handleShareTwitter}
                     title='Share on Twitter'
-                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
+                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors cursor-pointer'
                     aria-label='Share on Twitter'
                   >
                     <Twitter className='w-4 h-4' />
@@ -216,7 +209,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                     whileHover={{ y: -2 }}
                     onClick={handleShareLinkedIn}
                     title='Share on LinkedIn'
-                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
+                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors cursor-pointer'
                     aria-label='Share on LinkedIn'
                   >
                     <Linkedin className='w-4 h-4' />
@@ -225,7 +218,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                     whileHover={{ y: -2 }}
                     onClick={handleCopyLink}
                     title='Copy link'
-                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
+                    className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors cursor-pointer'
                     aria-label='Copy link'
                   >
                     <Link2 className='w-4 h-4' />

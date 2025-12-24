@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import {
-  FaX as Twitter,
+  FaXTwitter as Twitter,
   FaFacebook as Facebook,
   FaLinkedin as Linkedin,
   FaYoutube as Youtube,
@@ -112,6 +112,7 @@ export function Footer() {
                       <li key={link.label}>
                         <Link
                           href={link.href}
+                          aria-label={link.label}
                           className='text-sm text-slate-500 hover:text-teal-400 transition-colors inline-block'
                         >
                           {link.label}
@@ -135,8 +136,11 @@ export function Footer() {
         >
           <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
             <p className='text-sm text-slate-600'>
-              &copy; {new Date().getFullYear()} Technozlife. All rights
-              reserved.
+              &copy; {new Date().getFullYear()}{" "}
+              <Link href='/' className='text-teal-400 hover:underline cursor-pointer'>
+                Technozlife.com
+              </Link>{" "}
+              All rights reserved.
             </p>
             <div className='flex items-center gap-6'>
               <span className='text-xs text-slate-600'>

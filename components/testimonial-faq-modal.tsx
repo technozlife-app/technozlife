@@ -32,8 +32,11 @@ export function TestimonialFaqModal({
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [direction, setDirection] = useState(0);
   const constraintsRef = useRef(null);
+  const modalRef = useRef<HTMLDivElement | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
 
-  const faqsPerPage = 4;
+  // determine faqs per page based on viewport
+  const faqsPerPage = isMobile ? 2 : 4;
 
   const toggleFaq = (id: string) => {
     setExpandedFaq(expandedFaq === id ? null : id);
@@ -76,7 +79,20 @@ export function TestimonialFaqModal({
       setCurrentTestimonial(0);
       setCurrentFaqPage(0);
       setExpandedFaq(null);
+      // lock body scroll while modal is open
+      document.body.style.overflow = "hidden";
+      setIsMobile(window.innerWidth < 768);
+    } else {
+      // restore
+      document.body.style.overflow = "";
     }
+
+    const onResize = () => setIsMobile(window.innerWidth < 768);
+    window.addEventListener("resize", onResize);
+    return () => {
+      window.removeEventListener("resize", onResize);
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
   const slideVariants = {
@@ -94,7 +110,8 @@ export function TestimonialFaqModal({
     }),
   };
 
-  const swipeConfidenceThreshold = 10000;
+  // Lower swipe threshold for mobile friendliness
+  const swipeConfidenceThreshold = 1000;
   const swipePower = (offset: number, velocity: number) => {
     return Math.abs(offset) * velocity;
   };
@@ -153,7 +170,7 @@ export function TestimonialFaqModal({
                   initial={{ opacity: 0, y: -20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.1 }}
-                  className='text-center mb-12'
+                  className='text-center mb-4 sm:mb-12'
                 >
                   <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
                     {activeView === "testimonials"
@@ -203,7 +220,7 @@ export function TestimonialFaqModal({
                       {/* Navigation buttons */}
                       <button
                         onClick={prevTestimonial}
-                        className='absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 glass-strong rounded-full hover:bg-slate-800/80 transition-all duration-300 group hover:scale-110 active:scale-95'
+                        className='hidden md:block absolute left-0 top-1/2 -translate-y-1/2 z-10 p-4 glass-strong rounded-full hover:bg-slate-800/80 transition-all duration-300 group hover:scale-110 active:scale-95'
                         aria-label='Previous testimonial'
                       >
                         <ChevronLeft className='w-6 h-6 text-slate-400 group-hover:text-teal-400 transition-colors' />
@@ -211,7 +228,7 @@ export function TestimonialFaqModal({
 
                       <button
                         onClick={nextTestimonial}
-                        className='absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 glass-strong rounded-full hover:bg-slate-800/80 transition-all duration-300 group hover:scale-110 active:scale-95'
+                        className='hidden md:block absolute right-0 top-1/2 -translate-y-1/2 z-10 p-4 glass-strong rounded-full hover:bg-slate-800/80 transition-all duration-300 group hover:scale-110 active:scale-95'
                         aria-label='Next testimonial'
                       >
                         <ChevronRight className='w-6 h-6 text-slate-400 group-hover:text-teal-400 transition-colors' />
@@ -219,7 +236,7 @@ export function TestimonialFaqModal({
 
                       {/* Testimonial carousel */}
                       <div
-                        className='w-full max-w-4xl px-20'
+                        className='w-full max-w-3xl md:px-20'
                         ref={constraintsRef}
                       >
                         <AnimatePresence
@@ -253,7 +270,7 @@ export function TestimonialFaqModal({
                                 prevTestimonial();
                               }
                             }}
-                            className='glass-strong rounded-3xl p-10 md:p-12 shadow-2xl cursor-grab active:cursor-grabbing'
+                            className='glass-strong rounded-3xl p-4 md:p-12 shadow-2xl cursor-grab active:cursor-grabbing'
                           >
                             {(() => {
                               const testimonial =
@@ -273,20 +290,20 @@ export function TestimonialFaqModal({
                                   </div>
 
                                   {/* Content */}
-                                  <blockquote className='text-slate-200 text-xl md:text-2xl leading-relaxed mb-8 italic font-light'>
+                                  <blockquote className='text-slate-200 text-sm cove md:text-2xl leading-relaxed mb-6 italic font-light'>
                                     "{testimonial.content}"
                                   </blockquote>
 
                                   {/* Author info */}
                                   <div className='flex items-center gap-5 pt-6 border-t border-slate-700/50'>
-                                    <div className='w-16 h-16 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg'>
+                                    <div className='w-16 h-16 hidden rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 sm:flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg'>
                                       {testimonial.name.charAt(0)}
                                     </div>
                                     <div>
-                                      <div className='font-semibold text-slate-100 text-lg'>
+                                      <div className='font-semibold text-slate-100 text-sm sm:text-lg'>
                                         {testimonial.name}
                                       </div>
-                                      <div className='text-slate-400'>
+                                      <div className='text-slate-400 text-sm sm:text-lg'>
                                         {testimonial.role}
                                         {testimonial.company &&
                                           ` • ${testimonial.company}`}
@@ -336,7 +353,7 @@ export function TestimonialFaqModal({
                         animate={{ opacity: 1, scale: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95, y: -20 }}
                         transition={{ duration: 0.4 }}
-                        className='flex-1 max-w-4xl mx-auto w-full space-y-4'
+                        className='flex-1 max-w-4xl mx-auto w-full space-y-4 px-4 md:px-0'
                       >
                         {currentFaqs.map((faq, index) => {
                           const isExpanded = expandedFaq === faq.id;
@@ -350,7 +367,7 @@ export function TestimonialFaqModal({
                             >
                               <button
                                 onClick={() => toggleFaq(faq.id)}
-                                className='w-full flex items-start justify-between p-6 text-left group'
+                                className='w-full flex items-start justify-between p-4 md:p-6 text-left group'
                               >
                                 <div className='flex-1'>
                                   <div className='flex items-center gap-3 mb-2'>
@@ -380,7 +397,7 @@ export function TestimonialFaqModal({
                                     transition={{ duration: 0.3 }}
                                     className='overflow-hidden'
                                   >
-                                    <div className='px-6 pb-6 text-slate-300 leading-relaxed border-t border-slate-700/50 pt-4'>
+                                    <div className='px-4 md:px-6 pb-6 text-slate-300 leading-relaxed border-t border-slate-700/50 pt-4'>
                                       {faq.answer}
                                     </div>
                                   </motion.div>
