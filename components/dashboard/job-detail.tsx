@@ -44,7 +44,7 @@ export function JobDetail({
   const handleDelete = () => {
     // Placeholder: deletion will require backend support
     // For now, simply show a toast in the consumer
-  }; 
+  };
 
   return (
     <div className='bg-slate-900/60 border border-white/5 rounded-xl p-4'>

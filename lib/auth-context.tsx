@@ -20,7 +20,6 @@ async function ensureUserHasPlan(user: UserProfile): Promise<UserProfile> {
   try {
     // Assign the free plan by default (don't try to create plans in DB - that's admin-only)
 
-
     // Update user profile with the free plan
     const updateResponse = await userApi.updateProfile({
       current_plan: "free",
@@ -94,8 +93,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<UserProfile | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
-
-
 
   // Check for existing token and load user on mount
   useEffect(() => {

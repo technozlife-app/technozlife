@@ -13,8 +13,6 @@ export default function ClientCheckoutWrapper() {
     return planSlug ? getPlanBySlug(planSlug) : undefined;
   }, [planSlug]);
 
-
-
   if (!plan) {
     return (
       <main className='max-w-3xl mx-auto px-6 py-20'>

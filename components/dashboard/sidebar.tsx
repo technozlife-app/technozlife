@@ -43,8 +43,6 @@ export function DashboardSidebar() {
   // Helper to select a display user (AuthProvider user preferred)
   const displayUser = user || remoteUser || null;
 
-
-
   const handleLogout = async () => {
     await logout();
     addToast("success", "Signed Out", "You have been logged out successfully");
