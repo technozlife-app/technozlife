@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { ArrowRight, Clock, Calendar, ArrowUpRight } from "lucide-react";
@@ -8,6 +9,8 @@ import { FloatingNav } from "@/components/floating-nav";
 import { GetStartedButton } from "@/components/get-started-button";
 import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
+import { mailApi } from "@/lib/api";
+import { useToast } from "@/components/ui/custom-toast";
 
 const categories = [
   "All",
@@ -22,6 +25,48 @@ const categories = [
 export default function BlogPage() {
   const featuredPost = getFeaturedPost();
   const otherPosts = blogPosts.filter((post) => !post.featured);
+
+  const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const { addToast } = useToast();
+
+  const isValidEmail = (value: string) => /^\S+@\S+\.\S+$/.test(value);
+
+  const handleSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setSuccessMessage(null);
+
+    const value = email.trim();
+    if (!isValidEmail(value)) {
+      addToast("error", "Invalid email", "Please enter a valid email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await mailApi.subscribeNewsletter(value);
+      if (res?.status === "success") {
+        setSuccessMessage(
+          "Thanks — check your email to confirm your subscription."
+        );
+        addToast(
+          "success",
+          "Subscribed",
+          "Check your inbox for a confirmation email."
+        );
+        setEmail("");
+      } else {
+        const msg = (res && res.message) || "Unable to complete subscription.";
+        addToast("error", "Subscription failed", msg);
+      }
+    } catch (err) {
+      console.error(err);
+      addToast("error", "Subscription error", "Please try again later.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <main className='min-h-screen bg-slate-950 text-slate-100 overflow-hidden'>
@@ -305,25 +350,42 @@ export default function BlogPage() {
               <h3 className='text-3xl md:text-4xl font-serif font-bold mb-4'>
                 Stay <span className='text-gradient'>Connected</span>
               </h3>
-              <p className='text-slate-400 mb-8 max-w-xl mx-auto'>
+              <p className='text-slate-400 mb-6 max-w-xl mx-auto'>
                 Subscribe to our newsletter for the latest insights on neural
-                technology, AI ethics, and the future of human potential.
+                technology, AI ethics, and important platform updates. We will
+                send occasional, high-quality emails — no spam.
               </p>
 
-              <div className='flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto'>
+              <form
+                onSubmit={handleSubscribe}
+                className='flex flex-col sm:flex-row gap-4 justify-center max-w-md mx-auto'
+              >
                 <input
                   type='email'
+                  aria-label='Email address'
                   placeholder='Enter your email'
-                  className='flex-1 px-5 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 transition-all'
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className='flex-1 px-5 py-3 bg-slate-800/50 border border-slate-700 rounded-xl text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-teal-500/50 focus:ring-2 focus:ring-teal-500/20 transition-all disabled:opacity-60'
+                  disabled={loading}
+                  required
                 />
                 <motion.button
+                  type='submit'
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  className='px-8 py-3 bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold rounded-xl hover:shadow-lg hover:shadow-teal-500/25 transition-all'
+                  className='px-8 py-3 bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold rounded-xl hover:shadow-lg hover:shadow-teal-500/25 transition-all disabled:opacity-60 disabled:cursor-not-allowed'
+                  disabled={!isValidEmail(email) || loading}
                 >
-                  Subscribe
+                  {loading ? "Subscribing..." : "Subscribe"}
                 </motion.button>
-              </div>
+              </form>
+
+              {successMessage && (
+                <p className='mt-4 text-sm text-emerald-400'>
+                  {successMessage}
+                </p>
+              )}
             </div>
           </motion.div>
         </div>

@@ -20,7 +20,6 @@ const footerLinks = {
   ],
   Resources: [
     { label: "Blog", href: "/blog" },
-    { label: "Documentation", href: "#" },
     { label: "F6S", href: "https://www.f6s.com/technozlife" },
     {
       label: "Crunchbase",

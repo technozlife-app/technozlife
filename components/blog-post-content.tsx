@@ -1,5 +1,6 @@
 "use client";
 
+import React, { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -15,6 +16,7 @@ import { FloatingNav } from "@/components/floating-nav";
 import { GetStartedButton } from "@/components/get-started-button";
 import { Footer } from "@/components/footer";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/components/ui/custom-toast";
 import type { BlogPost } from "@/lib/blog-data";
 import ReactMarkdown from "react-markdown";
 
@@ -25,6 +27,93 @@ interface BlogPostContentProps {
 
 export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
   const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const { addToast } = useToast();
+
+  const getCurrentUrl = () =>
+    typeof window !== "undefined" ? window.location.href : "";
+
+  const handleShareTwitter = () => {
+    if (typeof window === "undefined") return;
+    const url = getCurrentUrl();
+    const share = `https://twitter.com/intent/tweet?url=${encodeURIComponent(
+      url
+    )}&text=${encodeURIComponent(post.title)}`;
+    window.open(share, "_blank", "noopener,noreferrer");
+  };
+
+  const handleShareLinkedIn = () => {
+    if (typeof window === "undefined") return;
+    const url = getCurrentUrl();
+    const share = `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(
+      url
+    )}`;
+    window.open(share, "_blank", "noopener,noreferrer");
+  };
+
+  const handleCopyLink = async () => {
+    if (typeof window === "undefined") return;
+    const url = getCurrentUrl();
+    try {
+      await navigator.clipboard.writeText(url);
+      addToast(
+        "success",
+        "Link copied",
+        "The article link has been copied to your clipboard."
+      );
+    } catch (err) {
+      // Fallback
+      // eslint-disable-next-line no-alert
+      window.prompt("Copy this link:", url);
+      addToast("info", "Copy link", "Use your browser to copy the link.");
+    }
+  };
+
+  // Reading progress
+  const [progress, setProgress] = useState(0);
+  const [isScrollable, setIsScrollable] = useState(false);
+  const articleRef = useRef<HTMLElement | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !articleRef.current) return;
+
+    let ticking = false;
+
+    const update = () => {
+      const el = articleRef.current!;
+      const rect = el.getBoundingClientRect();
+      const windowHeight = window.innerHeight;
+      const articleTop = rect.top + window.pageYOffset;
+      const articleHeight = el.scrollHeight;
+      const total = articleHeight - windowHeight;
+      setIsScrollable(total > 0);
+
+      const scrolled = Math.min(
+        Math.max(window.pageYOffset - articleTop, 0),
+        Math.max(total, 0)
+      );
+      const pct = total > 0 ? (scrolled / total) * 100 : 0;
+      setProgress(Math.max(0, Math.min(100, pct)));
+      ticking = false;
+    };
+
+    const onScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(update);
+        ticking = true;
+      }
+    };
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    window.addEventListener("resize", onScroll);
+
+    // initialize
+    update();
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      window.removeEventListener("resize", onScroll);
+    };
+  }, [articleRef]);
 
   return (
     <main className='min-h-screen bg-slate-950 text-slate-100 overflow-hidden'>
@@ -32,7 +121,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
       <div className='fixed inset-0 mesh-gradient opacity-30' />
       <div className='fixed inset-0 noise-overlay pointer-events-none' />
 
-      <FloatingNav />
+      <FloatingNav progress={progress} showProgress={isScrollable} />
       <GetStartedButton />
 
       {/* Back Button */}
@@ -45,17 +134,19 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
           >
             <Link
               href='/blog'
-              className='inline-flex items-center gap-2 text-slate-400 hover:text-teal-400 transition-colors group'
+              className='inline-flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-full px-4 py-2 text-slate-200 hover:bg-slate-900/70 hover:border-teal-500 transition-all shadow-sm'
             >
-              <ArrowLeft className='w-4 h-4 group-hover:-translate-x-1 transition-transform' />
-              Back to Blog
+              <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 text-slate-950 shadow-sm'>
+                <ArrowLeft className='w-4 h-4' />
+              </span>
+              <span className='font-medium'>Back to Blog</span>
             </Link>
           </motion.div>
         </div>
       </div>
 
       {/* Article Header */}
-      <article className='relative'>
+      <article ref={articleRef} className='relative'>
         <header className='px-6 pt-8 pb-12'>
           <div className='max-w-4xl mx-auto'>
             <motion.div
@@ -114,6 +205,8 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                   <span className='text-sm text-slate-500 mr-2'>Share</span>
                   <motion.button
                     whileHover={{ y: -2 }}
+                    onClick={handleShareTwitter}
+                    title='Share on Twitter'
                     className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
                     aria-label='Share on Twitter'
                   >
@@ -121,6 +214,8 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                   </motion.button>
                   <motion.button
                     whileHover={{ y: -2 }}
+                    onClick={handleShareLinkedIn}
+                    title='Share on LinkedIn'
                     className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
                     aria-label='Share on LinkedIn'
                   >
@@ -128,6 +223,8 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
                   </motion.button>
                   <motion.button
                     whileHover={{ y: -2 }}
+                    onClick={handleCopyLink}
+                    title='Copy link'
                     className='p-2 glass rounded-lg text-slate-400 hover:text-teal-400 transition-colors'
                     aria-label='Copy link'
                   >
@@ -147,12 +244,12 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
           className='px-6 pb-16'
         >
           <div className='max-w-5xl mx-auto'>
-            <div className='relative rounded-3xl overflow-hidden'>
+            <div className='relative rounded-3xl overflow-hidden p-1 bg-gradient-to-r from-teal-500/6 via-violet-500/6 to-emerald-500/6'>
               <div className='absolute -inset-2 bg-linear-to-r from-teal-500/20 via-violet-500/20 to-emerald-500/20 rounded-3xl blur-xl' />
               <img
                 src={post.coverImage || "/placeholder.svg"}
                 alt={post.title}
-                className='relative w-full h-64 md:h-96 lg:h-125 object-cover rounded-3xl'
+                className='relative w-full h-64 md:h-96 lg:h-125 object-cover rounded-2xl'
               />
             </div>
           </div>
@@ -165,38 +262,45 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
           transition={{ duration: 0.8, delay: 0.4 }}
           className='px-6 pb-24'
         >
-          <div className='max-w-3xl mx-auto'>
-            <div
-              className='prose prose-lg prose-invert prose-slate max-w-none
-              prose-headings:font-serif prose-headings:font-bold prose-headings:text-slate-100
-              prose-h2:text-3xl prose-h2:mt-12 prose-h2:mb-6
-              prose-h3:text-2xl prose-h3:mt-8 prose-h3:mb-4
-              prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-6
-              prose-a:text-teal-400 prose-a:no-underline hover:prose-a:underline
-              prose-strong:text-slate-100 prose-strong:font-semibold
-              prose-blockquote:border-l-teal-500 prose-blockquote:bg-slate-900/50 
-              prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-xl
-              prose-blockquote:text-slate-300 prose-blockquote:italic prose-blockquote:not-italic
-              prose-code:text-teal-400 prose-code:bg-slate-800/50 prose-code:px-2 prose-code:py-1 prose-code:rounded
-              prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-slate-700/50
-              prose-ul:text-slate-300 prose-ol:text-slate-300
-              prose-li:marker:text-teal-500
-            '
-            >
-              <ReactMarkdown>{post.content}</ReactMarkdown>
+          <div className='max-w-5xl mx-auto'>
+            <div className='relative rounded-3xl overflow-hidden p-6'>
+              <div className='absolute -inset-2 bg-linear-to-r from-teal-500/8 via-violet-500/8 to-emerald-500/8 rounded-3xl blur-xl' />
+              <div className='relative border border-teal-500/20 rounded-2xl bg-gradient-to-b from-slate-900/60 to-slate-800/40 p-8'>
+                <div
+                  className='prose prose-lg prose-invert prose-slate max-w-none space-y-6
+                  prose-headings:font-serif prose-headings:font-bold prose-headings:text-slate-100
+                  prose-h1:text-3xl md:prose-h1:text-4xl lg:prose-h1:text-5xl prose-h1:leading-tight prose-h1:mb-6
+                  prose-h2:text-2xl md:prose-h2:text-3xl lg:prose-h2:text-4xl prose-h2:mt-12 prose-h2:mb-6
+                  prose-h3:text-xl md:prose-h3:text-2xl lg:prose-h3:text-3xl prose-h3:mt-8 prose-h3:mb-4
+                  prose-h4:text-lg md:prose-h4:text-xl prose-h4:mt-6 prose-h4:mb-3
+                  prose-p:text-slate-300 prose-p:leading-relaxed prose-p:mb-6
+                  prose-a:text-teal-400 prose-a:no-underline hover:prose-a:underline
+                  prose-strong:text-slate-100 prose-strong:font-semibold
+                  prose-blockquote:border-l-teal-500 prose-blockquote:bg-slate-900/60 
+                  prose-blockquote:px-6 prose-blockquote:py-4 prose-blockquote:rounded-r-xl
+                  prose-blockquote:text-slate-300 prose-blockquote:italic prose-blockquote:not-italic
+                  prose-code:text-teal-400 prose-code:bg-slate-800/50 prose-code:px-2 prose-code:py-1 prose-code:rounded
+                  prose-pre:bg-slate-900/80 prose-pre:border prose-pre:border-slate-700/50
+                  prose-ul:text-slate-300 prose-ol:text-slate-300
+                  prose-li:marker:text-teal-500
+                '
+                >
+                  <ReactMarkdown>{post.content}</ReactMarkdown>
+                </div>
+              </div>
             </div>
           </div>
         </motion.div>
 
         {/* Author Bio */}
         <div className='px-6 pb-24'>
-          <div className='max-w-3xl mx-auto'>
+          <div className='max-w-5xl mx-auto'>
             <motion.div
               initial={{ opacity: 0, y: 30 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
               viewport={{ once: true }}
-              className='glass rounded-2xl p-8'
+              className='glass rounded-2xl p-8 border border-teal-500/10'
             >
               <div className='flex flex-col sm:flex-row items-start gap-6'>
                 <img
