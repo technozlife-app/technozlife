@@ -4,12 +4,20 @@ import type React from "react";
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Send, Mail, MapPin, Clock, CheckCircle2 } from "lucide-react";
+import {
+  Send,
+  Mail,
+  MapPin,
+  Clock,
+  CheckCircle2,
+  MessageSquare,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { mailApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
+import { TestimonialFaqModal } from "@/components/testimonial-faq-modal";
 
 const contactInfo = [
   { icon: Mail, label: "Email", value: "support@technozlife.com" },
@@ -24,6 +32,7 @@ const contactInfo = [
 export function ContactSection() {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -175,7 +184,7 @@ export function ContactSection() {
                   ))}
                 </div>
                 <div className='text-sm text-slate-400'>
-                  Join <span className='text-teal-400 font-medium'>2,000+</span>{" "}
+                  Join <span className='text-teal-400 font-medium'>2,00+</span>{" "}
                   others who connected this month
                 </div>
               </div>
@@ -194,6 +203,29 @@ export function ContactSection() {
                 </span>
               </div>
             </div>
+
+            {/* Success Stories button */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              viewport={{ once: true }}
+              className='mt-6'
+            >
+              <Button
+                onClick={() => setIsModalOpen(true)}
+                className='group relative w-full overflow-hidden bg-gradient-to-r from-violet-600 via-purple-600 to-fuchsia-600 text-white font-bold hover:from-violet-500 hover:via-purple-500 hover:to-fuchsia-500 transition-all duration-500 py-7 rounded-2xl shadow-2xl shadow-violet-500/30 hover:shadow-violet-500/50 hover:scale-[1.02] active:scale-[0.98]'
+              >
+                <span className='absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000' />
+                <span className='relative flex items-center justify-center gap-3'>
+                  <MessageSquare className='w-5 h-5 group-hover:rotate-12 transition-transform duration-300' />
+                  <span className='text-lg'>Hear Success Stories</span>
+                  <span className='text-xs bg-white/20 px-2 py-0.5 rounded-full'>
+                    & FAQ
+                  </span>
+                </span>
+              </Button>
+            </motion.div>
           </motion.div>
 
           {/* Right - Form */}
@@ -347,6 +379,12 @@ export function ContactSection() {
           </motion.div>
         </div>
       </div>
+
+      {/* Testimonial & FAQ Modal */}
+      <TestimonialFaqModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+      />
     </section>
   );
 }
