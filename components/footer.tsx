@@ -112,6 +112,7 @@ export function Footer() {
                       <li key={link.label}>
                         <Link
                           href={link.href}
+                          aria-label={link.label}
                           className='text-sm text-slate-500 hover:text-teal-400 transition-colors inline-block'
                         >
                           {link.label}
