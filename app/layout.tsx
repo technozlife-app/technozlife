@@ -6,6 +6,7 @@ import "./globals.css";
 
 import { ScrollToTop } from "@/components/scroll-to-top";
 import CookieConsent from "@/components/cookie-consent";
+import TawkChat from "@/components/chat/TawkChat";
 import { AuthProvider } from "@/lib/auth-context";
 import { ToastProvider } from "@/components/ui/custom-toast";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
             <ScrollToTop />
             {children}
             <CookieConsent />
+            <TawkChat />
           </ToastProvider>
         </AuthProvider>
         <Analytics />
