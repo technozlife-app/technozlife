@@ -124,6 +124,39 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           localStorage.removeItem("tokenExpiry");
         }
       }
+
+      // DEV-ONLY: If there's no token and we're on localhost in a non-production
+      // environment, populate a lightweight mock user so developers can test
+      // authenticated pages (like the dashboard) without a real auth flow.
+      if (
+        !localStorage.getItem("accessToken") &&
+        process.env.NODE_ENV !== "production" &&
+        typeof window !== "undefined"
+      ) {
+        const hostname = window.location.hostname || "";
+        const isLocalhost =
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname.endsWith(".localhost");
+
+        if (isLocalhost) {
+          const devUser: UserProfile = {
+            id: 0,
+            username: "dev",
+            first_name: "Dev",
+            last_name: "User",
+            email: "dev@localhost",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+            current_plan: "free",
+          } as UserProfile;
+
+          setUser(devUser);
+          setIsLoading(false);
+          return;
+        }
+      }
+
       setIsLoading(false);
     };
 
