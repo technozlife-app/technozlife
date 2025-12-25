@@ -17,19 +17,16 @@ import {
   X,
   Fingerprint,
   User,
+  TrendingUp,
+  List,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
 import { userApi } from "@/lib/api";
 
-const navItems = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { icon: Sparkles, label: "AI Generate", href: "/dashboard/generate" },
-  { icon: History, label: "History", href: "/dashboard/history" },
-  { icon: CreditCard, label: "Billing", href: "/dashboard/billing" },
-  { icon: Settings, label: "Settings", href: "/dashboard/settings" },
-];
+// Nav items are computed inside the component so we can include dev-only links (admin simulator)
 
 export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -40,24 +37,51 @@ export function DashboardSidebar() {
   const [remoteUser, setRemoteUser] = useState<any | null>(null);
   const { addToast } = useToast();
 
+  // Compute nav items here so we can inject dev-only links when appropriate
+  const navItems = (() => {
+    const base = [
+      { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
+      { icon: Sparkles, label: "AI Generate", href: "/dashboard/generate" },
+      {
+        icon: List,
+        label: "Recommendations",
+        href: "/dashboard/recommendations",
+      },
+      { icon: History, label: "History", href: "/dashboard/history" },
+      { icon: TrendingUp, label: "Trends", href: "/dashboard/trends" },
+      { icon: CheckSquare, label: "Habits", href: "/dashboard/habits" },
+      { icon: CreditCard, label: "Billing", href: "/dashboard/billing" },
+      { icon: Settings, label: "Settings", href: "/dashboard/settings" },
+    ] as { icon: any; label: string; href: string }[];
+
+    // Dev-only Admin Simulator (only on localhost / non-production)
+    try {
+      if (
+        process.env.NODE_ENV !== "production" &&
+        typeof window !== "undefined"
+      ) {
+        const hostname = window.location.hostname || "";
+        const isLocalhost =
+          hostname === "localhost" ||
+          hostname === "127.0.0.1" ||
+          hostname.endsWith(".localhost");
+        if (isLocalhost) {
+          base.push({
+            icon: Sparkles,
+            label: "Admin Simulator",
+            href: "/dashboard/admin-sim",
+          });
+        }
+      }
+    } catch (e) {
+      /* ignore */
+    }
+
+    return base;
+  })();
+
   // Helper to select a display user (AuthProvider user preferred)
   const displayUser = user || remoteUser || null;
-
-  // Debug logging
-  useEffect(() => {
-    console.log(
-      "[Sidebar] user from AuthProvider:",
-      user ? user.email : "null"
-    );
-    console.log(
-      "[Sidebar] remoteUser:",
-      remoteUser ? remoteUser.email : "null"
-    );
-    console.log(
-      "[Sidebar] displayUser:",
-      displayUser ? displayUser.email : "null"
-    );
-  }, [user, remoteUser, displayUser]);
 
   const handleLogout = async () => {
     await logout();
@@ -232,7 +256,6 @@ export function DashboardSidebar() {
 
             // If refreshUser failed, attempt a direct API profile fetch
             const profile = await userApi.getProfile();
-            console.debug("Sidebar dev: profile fetch (auto)", profile);
             if (profile.status === "success" && profile.data && mounted) {
               setRemoteUser(profile.data);
               // Also trigger AuthProvider refresh in the background
@@ -265,16 +288,8 @@ export function DashboardSidebar() {
             // In development, auto-run auth debug to surface details
             if (process.env.NODE_ENV !== "production") {
               try {
-                console.debug("Sidebar dev: running auth debug");
                 const token = localStorage.getItem("accessToken");
-                console.debug(
-                  "Sidebar dev: token preview",
-                  token
-                    ? `${token.slice(0, 8)}...${token.slice(-8)}`
-                    : "(no token)"
-                );
                 const res2 = await userApi.getProfile();
-                console.debug("Sidebar dev: second profile fetch", res2);
                 if (res2.status === "error") {
                   addToast(
                     "error",

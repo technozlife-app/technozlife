@@ -13,13 +13,6 @@ export default function ClientCheckoutWrapper() {
     return planSlug ? getPlanBySlug(planSlug) : undefined;
   }, [planSlug]);
 
-  // Helpful debug logs (client-side)
-  console.debug("[ClientCheckout] planSlug:", planSlug);
-  console.debug(
-    "[ClientCheckout] available:",
-    getAllPlans().map((p) => ({ id: p.id, slug: p.slug }))
-  );
-
   if (!plan) {
     return (
       <main className='max-w-3xl mx-auto px-6 py-20'>

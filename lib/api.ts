@@ -96,15 +96,6 @@ async function apiRequest<T>(
   const token =
     typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
 
-  // Debug logging
-  if (typeof window !== "undefined" && endpoint.includes("/user")) {
-    console.log(
-      `[apiRequest] ${endpoint} - Token exists:`,
-      !!token,
-      token?.substring(0, 20) + "..."
-    );
-  }
-
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     Accept: "application/json",

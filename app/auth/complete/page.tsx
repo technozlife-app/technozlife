@@ -17,7 +17,6 @@ export default function AuthCompletePage() {
     if (processedRef.current) return;
     processedRef.current = true;
 
-    console.debug("AuthComplete: location", window.location.href);
     // Read both query string and hash fragment to support different redirects
     const params = new URLSearchParams(window.location.search);
     const hashParams = new URLSearchParams(
@@ -38,15 +37,7 @@ export default function AuthCompletePage() {
     const refresh =
       params.get("refresh_token") || hashParams.get("refresh_token");
 
-    console.debug("AuthComplete: parsed", {
-      token: !!token,
-      code,
-      provider,
-      refresh: !!refresh,
-    });
-
     async function handleToken(tokenValue: string) {
-      console.log("[AuthComplete] Received token, saving to localStorage");
       localStorage.setItem("accessToken", tokenValue);
       if (refresh) localStorage.setItem("refreshToken", refresh);
 
@@ -71,19 +62,15 @@ export default function AuthCompletePage() {
 
       // Use the central refreshUser() and rely on AuthProvider for state population
       try {
-        console.log("[AuthComplete] Calling refreshUser to load profile...");
         const res = await refreshUser();
-        console.log("[AuthComplete] refreshUser result:", res);
 
         if (res.success) {
-          console.log("[AuthComplete] Success! Redirecting to dashboard...");
           toast({
             title: "Signed in",
             description: "Authentication completed.",
           });
           // Wait a bit more to ensure AuthProvider state is updated
           await new Promise((resolve) => setTimeout(resolve, 200));
-          console.log("[AuthComplete] Calling router.push('/dashboard')");
           router.push("/dashboard");
           return;
         }
@@ -117,9 +104,6 @@ export default function AuthCompletePage() {
             description: "Please refresh if you see any issues.",
           });
           await new Promise((resolve) => setTimeout(resolve, 200));
-          console.log(
-            "[AuthComplete] Calling router.push('/dashboard') [fallback]"
-          );
           router.push("/dashboard");
         }
       } catch (e) {
@@ -143,29 +127,17 @@ export default function AuthCompletePage() {
       try {
         let res;
         if (providerValue === "google") {
-          console.debug(
-            "AuthComplete: exchanging code via googleLogin",
-            codeValue.slice(0, 8) + "..."
-          );
           res = await googleLogin(codeValue);
         } else if (providerValue === "github") {
-          console.debug(
-            "AuthComplete: exchanging code via githubLogin",
-            codeValue.slice(0, 8) + "..."
-          );
           res = await githubLogin(codeValue);
         } else {
           // Try google then github as fallback
-          console.debug(
-            "AuthComplete: provider unknown, trying google then github"
-          );
           res = await googleLogin(codeValue);
           if (!res || !res.success) {
             res = await githubLogin(codeValue);
           }
         }
 
-        console.debug("AuthComplete: token-exchange result", res);
         if (res && res.success) {
           toast({ title: "Signed in", description: "Welcome!" });
           router.replace("/dashboard");
