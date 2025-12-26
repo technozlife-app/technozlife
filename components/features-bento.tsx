@@ -60,33 +60,33 @@ function FeatureCard({
 const features = [
   {
     icon: Brain,
-    title: "Neural Processing",
+    title: "AI-Personalized Wellness Intelligence",
     description:
-      "Advanced AI algorithms that adapt to your cognitive patterns, creating a seamless mind-machine interface for enhanced decision making.",
+      "Tailored recommendations for sleep, fitness, nutrition, and mental wellness—continuously refined by your behavior and data patterns.",
     gradient: "from-teal-500/20 to-emerald-500/20",
     glowColor: "bg-teal-500",
   },
   {
     icon: Fingerprint,
-    title: "Biometric Security",
+    title: "Habit Optimization Engine",
     description:
-      "256-bit encrypted bio-authentication ensuring your digital identity remains uniquely yours. Multi-layer verification protocols.",
+      "AI identifies friction points and growth triggers, helping you build sustainable routines that evolve with your lifestyle.",
     gradient: "from-violet-500/20 to-purple-500/20",
     glowColor: "bg-violet-500",
   },
   {
     icon: Network,
-    title: "Mesh Connectivity",
+    title: "Predictive Lifestyle Analytics",
     description:
-      "Decentralized network architecture enabling instant synchronization across all your devices and neural endpoints.",
+      "Forecast wellness trends before they surface, enabling proactive decisions rather than reactive health management.",
     gradient: "from-cyan-500/20 to-blue-500/20",
     glowColor: "bg-cyan-500",
   },
   {
     icon: Zap,
-    title: "Instant Sync",
+    title: "Wearable & IoT Ecosystem Integration",
     description:
-      "Sub-millisecond response times with our proprietary quantum-bridging technology. Experience zero latency in bio-digital communication.",
+      "Seamlessly unify data from wearables and smart devices to create a single, intelligent view of your lifestyle.",
     gradient: "from-amber-500/20 to-orange-500/20",
     glowColor: "bg-amber-500",
   },
@@ -110,12 +110,12 @@ export function FeaturesBento() {
             Core Capabilities
           </span>
           <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6 text-balance'>
-            Technology That Evolves With You
+            Intelligence That Understands, Predicts, and Elevates Your Lifestyle
           </h2>
           <p className='text-lg text-slate-400 leading-relaxed'>
-            Our platform combines cutting-edge biotechnology with advanced
-            artificial intelligence, creating an ecosystem that grows alongside
-            your needs.
+            TechnozLife combines behavioral science, AI intelligence, and
+            real-time data to transform everyday habits into optimized,
+            future-ready wellness decisions.
           </p>
         </motion.div>
 
@@ -148,12 +148,11 @@ export function FeaturesBento() {
                 </span>
               </div>
               <h3 className='text-2xl md:text-3xl font-serif font-bold text-slate-100 mb-3'>
-                Quantum Neural Bridge
+                Adaptive AI Coaching
               </h3>
               <p className='text-slate-400 max-w-xl'>
-                The next generation of human-machine interface. Direct
-                thought-to-action translation with zero perceptible delay. Join
-                the waitlist for early access.
+                Next-generation AI coaching that learns, adapts, and guides
+                lifestyle improvements in real time as your life changes.
               </p>
             </div>
 
