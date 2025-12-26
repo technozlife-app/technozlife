@@ -13,15 +13,19 @@ const stats = [
 
 const team = [
   {
-    name: "Dr. Elena Voss",
-    role: "Founder & Chief Scientist",
-    specialty: "Neural Engineering",
+    name: "Kaelin Rosh",
+    role: "Founder & CEO",
+    specialty: "Leadership & Vision",
   },
-  { name: "Marcus Chen", role: "CTO", specialty: "Quantum Computing" },
   {
-    name: "Dr. Aisha Rahman",
-    role: "Head of Research",
-    specialty: "Biotech Integration",
+    name: "Lyra Voss",
+    role: "Chief Operations Officer",
+    specialty: "Operations & Strategy",
+  },
+  {
+    name: "Jarek Solis",
+    role: "Head of Product & Strategy",
+    specialty: "Biotech & Product Development",
   },
 ];
 
@@ -50,29 +54,34 @@ export function AboutSection() {
               Our Story
             </span>
             <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-8'>
-              Pioneering the <span className='text-gradient'>Next Chapter</span>{" "}
-              of Human Evolution
+              Next chapter of <span className='text-gradient'>Technozlife</span>{" "}
+              Starts Here
             </h2>
 
             <div className='space-y-6 text-slate-400 leading-relaxed'>
               <p>
-                Founded in 2019, Technozlife emerged from a singular vision: to
-                dissolve the barrier between human consciousness and digital
-                capability. What began in a small research lab has evolved into
-                a global movement redefining what it means to be human in the
-                digital age.
+                Founded on 21 August 2023, TechnozLife was created to redefine
+                personal wellness through AI-driven intelligence. In a world
+                overflowing with data, we realized that people need more than
+                tracking—they need actionable insights. Our platform combines
+                artificial intelligence, behavioral science, and real-time
+                lifestyle data to deliver personalized recommendations,
+                predictive trends, and habit optimization.
               </p>
               <p>
-                Our team of neuroscientists, quantum physicists, and software
-                architects work at the bleeding edge of possibility, developing
-                technology that doesn't just augment human capability—it
-                transcends it.
+                Our team is passionate about empowering individuals to live
+                smarter, healthier lives. From analyzing sleep, fitness, and
+                nutrition patterns to forecasting wellness outcomes, TechnozLife
+                makes wellness proactive, adaptive, and continuously evolving.
+                Every feature, dashboard, and insight is designed with
+                precision, personalization, and measurable impact, ensuring
+                users can take control of their health and lifestyle with
+                confidence.
               </p>
               <p>
-                We believe the future belongs to those who embrace the
-                convergence. Every line of code we write, every neural pathway
-                we map, brings us closer to a world where human potential knows
-                no bounds.
+                TechnozLife isn't just a platform, it's a partner in your
+                journey toward better living, guiding each step with science,
+                innovation, and empathy.
               </p>
             </div>
 
@@ -83,13 +92,16 @@ export function AboutSection() {
               transition={{ duration: 0.6, delay: 0.3 }}
               className='mt-10 p-6 glass rounded-xl border-l-4 border-teal-500'
             >
+              <h3 className='text-sm font-medium text-teal-400 mb-2'>
+                Our Mission
+              </h3>
               <p className='text-lg text-slate-300 italic'>
-                "Our mission is not to replace humanity, but to amplify
-                it—creating technology that serves the human spirit while
-                expanding its reach into the infinite."
+                To empower individuals to live healthier, smarter lives through
+                AI-powered, predictive wellness insights and personalized
+                lifestyle intelligence.
               </p>
               <p className='mt-4 text-sm text-teal-400'>
-                — Dr. Elena Voss, Founder
+                — Kaelin Rosh, Founder & CEO
               </p>
             </motion.div>
           </motion.div>
@@ -125,7 +137,7 @@ export function AboutSection() {
             {/* Team preview */}
             <div className='glass rounded-xl p-6'>
               <h3 className='text-sm font-medium text-slate-400 mb-6'>
-                Leadership Team
+                Meet the Minds Behind TechnozLife
               </h3>
               <div className='space-y-4'>
                 {team.map((member, index) => (

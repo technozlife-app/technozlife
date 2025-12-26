@@ -16,39 +16,6 @@ export interface Plan {
   // Optional icon component (set by UI layer if needed)
   icon?: any;
 }
-/* Updated pricing plans
-
-1. Core– Free
-Explore the essentials of AI-powered wellness and daily habit tracking.
-Basic Habit Tracking
-Personalized Wellness Insights
-Daily Routine Suggestions
-Goal Setting & Monitoring
-Limited Dashboard Analytics
-Basic Wearable Sync
-
-
-2. Nexus– $19/month
-Accelerate your lifestyle optimization with advanced predictive insights and device integration.
-Everything in Pulse
-Predictive Trend Analysis
-AI-Powered Recommendations
-Full Wearable & IoT Integration
-Advanced Habit Optimization
-Progress Milestones & Reports
-Priority AI Support
-
-3. Quantum– $49/month
-Ultimate AI lifestyle intelligence for complete, adaptive, and personalized wellness mastery.
-Everything in Momentum
-Personalized Coaching Insights
-Multi-Device Synchronization
-Adaptive Predictive Analytics
-Behavioral Trend Forecasting
-Elite Dashboard Customization
-Early Access to New Features
-
-*/
 export const TIERS: Plan[] = [
   {
     id: "free",
