@@ -16,21 +16,54 @@ export interface Plan {
   // Optional icon component (set by UI layer if needed)
   icon?: any;
 }
+/* Updated pricing plans
 
+1. Core– Free
+Explore the essentials of AI-powered wellness and daily habit tracking.
+Basic Habit Tracking
+Personalized Wellness Insights
+Daily Routine Suggestions
+Goal Setting & Monitoring
+Limited Dashboard Analytics
+Basic Wearable Sync
+
+
+2. Nexus– $19/month
+Accelerate your lifestyle optimization with advanced predictive insights and device integration.
+Everything in Pulse
+Predictive Trend Analysis
+AI-Powered Recommendations
+Full Wearable & IoT Integration
+Advanced Habit Optimization
+Progress Milestones & Reports
+Priority AI Support
+
+3. Quantum– $49/month
+Ultimate AI lifestyle intelligence for complete, adaptive, and personalized wellness mastery.
+Everything in Momentum
+Personalized Coaching Insights
+Multi-Device Synchronization
+Adaptive Predictive Analytics
+Behavioral Trend Forecasting
+Elite Dashboard Customization
+Early Access to New Features
+
+*/
 export const TIERS: Plan[] = [
   {
     id: "free",
-    slug: "human",
-    name: "Human",
+    slug: "core",
+    name: "Core",
     price: "Free",
     period: "forever",
-    description: "Begin your journey into the bio-digital frontier",
+    description: "Explore the essentials of AI-powered wellness and daily habit tracking.",
     features: [
-      "Basic neural interface",
-      "5GB cloud sync storage",
-      "Standard cognitive enhancement",
-      "Community forum access",
-      "Email support",
+      "Basic Habit Tracking",
+      "Personalized Wellness Insights",
+      "Daily Routine Suggestions",
+      "Goal Setting & Monitoring",
+      "Limited Dashboard Analytics",
+      "Basic Wearable Sync",
     ],
     cta: "Start Free",
     popular: false,
@@ -40,19 +73,19 @@ export const TIERS: Plan[] = [
   },
   {
     id: "pro",
-    slug: "cyborg",
-    name: "Cyborg",
-    price: "$49",
+    slug: "nexus",
+    name: "Nexus",
+    price: "$19",
     period: "/month",
-    description: "Enhanced capabilities for the ambitious integrator",
+    description: "Accelerate your lifestyle optimization with advanced predictive insights and device integration.",
     features: [
-      "Advanced neural processing",
-      "100GB cloud sync storage",
-      "Priority cognitive enhancement",
-      "Real-time biometric tracking",
-      "API access & integrations",
-      "24/7 priority support",
-      "Custom neural patterns",
+      "Everything in Core",
+      "Predictive Trend Analysis",
+      "AI-Powered Recommendations",
+      "Full Wearable & IoT Integration",
+      "Advanced Habit Optimization",
+      "Progress Milestones & Reports",
+      "Priority AI Support",
     ],
     cta: "Upgrade Now",
     popular: true,
@@ -62,20 +95,19 @@ export const TIERS: Plan[] = [
   },
   {
     id: "enterprise",
-    slug: "transcendence",
-    name: "Transcendence",
-    price: "$199",
+    slug: "quantum",
+    name: "Quantum",
+    price: "$49",
     period: "/month",
-    description: "Unlimited potential for those who seek more",
+    description: "Ultimate AI lifestyle intelligence for complete, adaptive, and personalized wellness mastery.",
     features: [
-      "Quantum neural bridge access",
-      "Unlimited cloud storage",
-      "Maximum cognitive enhancement",
-      "Direct thought-to-action",
-      "Dedicated success manager",
-      "Custom hardware integration",
-      "Beta feature access",
-      "White-glove onboarding",
+      "Everything in Nexus",
+      "Personalized Coaching Insights",
+      "Multi-Device Synchronization",
+      "Adaptive Predictive Analytics",
+      "Behavioral Trend Forecasting",
+      "Elite Dashboard Customization",
+      "Early Access to New Features",
     ],
     cta: "Contact Sales",
     popular: false,
