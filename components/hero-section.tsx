@@ -140,11 +140,11 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.2 }}
           className='text-5xl md:text-7xl lg:text-8xl font-serif font-bold leading-tight mb-6'
         >
-          <span className='text-gradient'>Where Humanity</span>
+          <span className='text-gradient'>Live Smarter Feel Better</span>
           <br />
-          <span className='text-slate-100'>Converges with</span>
+          <span className='text-slate-100'>Let AI Design</span>
           <br />
-          <span className='text-gradient-violet'>Tomorrow</span>
+          <span className='text-gradient-violet'>Your Lifestyle</span>
         </motion.h1>
 
         {/* Subheadline */}
@@ -154,8 +154,9 @@ export function HeroSection() {
           transition={{ duration: 0.8, delay: 0.4 }}
           className='text-lg md:text-xl text-slate-400 max-w-2xl mx-auto mb-12 leading-relaxed'
         >
-          Transform your existence with cutting-edge technology that seamlessly
-          integrates with human potential. Experience the next evolution.
+          An AI-powered platform delivering personalized wellness insights,
+          habit optimization, and future-focused lifestyle predictions—powered
+          by real behavioral data.
         </motion.p>
 
         {/* Feature pills */}
