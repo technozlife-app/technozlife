@@ -4,42 +4,67 @@ import { motion, useInView } from "framer-motion";
 import { useRef } from "react";
 import { Download, Scan, Cpu, Rocket } from "lucide-react";
 
+/* Updated Data for the steps
+1. Define Your Lifestyle Goals
+Begin by setting your wellness priorities and lifestyle preferences. TechnozLife creates a personalized profile that becomes the foundation for intelligent, AI-driven analysis.
+Set Goals
+Choose Focus
+Prioritize Health
+
+2. Connect Data & Understand Behavior
+We securely analyze habits, routines, and wearable data to uncover behavioral patterns, lifestyle signals, and wellness opportunities unique to you.
+Sync Devices
+
+Track Habits
+
+Analyze Patterns
+
+3. Generate Intelligent Insights
+Our AI transforms behavioral data into personalized recommendations, predictive trends, and actionable wellness strategies aligned with your daily life.
+AI Recommendations
+
+Predict Trends
+
+Actionable Tips
+
+4. Optimize, Adapt, and Evolve
+Track progress through dynamic dashboards as TechnozLife continuously adapts recommendations, helping you refine habits and stay ahead of lifestyle challenges.
+Track Progress
+
+Adjust Routines
+
+Unlock Wellness
+
+
+*/
 const steps = [
   {
     icon: Download,
-    title: "Initialize",
+    title: "Define Your Lifestyle Goals",
     description:
-      "Download and install the Technozlife core package. Our intelligent installer configures your system automatically, detecting hardware capabilities and optimizing settings.",
-    details: [
-      "Auto-hardware detection",
-      "System optimization",
-      "Secure installation",
-    ],
+      "Begin by setting your wellness priorities and lifestyle preferences. TechnozLife creates a personalized profile that becomes the foundation for intelligent, AI-driven analysis.",
+    details: ["Set Goals", "Choose Focus", "Prioritize Health"],
   },
   {
     icon: Scan,
-    title: "Calibrate",
+    title: "Connect Data & Understand Behavior",
     description:
-      "Complete a brief neural mapping session. Our AI learns your unique cognitive patterns, creating a personalized interface blueprint for optimal integration.",
-    details: [
-      "Neural pattern analysis",
-      "Cognitive mapping",
-      "Personalization engine",
-    ],
+      "We securely analyze habits, routines, and wearable data to uncover behavioral patterns, lifestyle signals, and wellness opportunities unique to you.",
+    details: ["Sync Devices", "Track Habits", "Analyze Patterns"],
   },
   {
     icon: Cpu,
-    title: "Integrate",
+    title: "Generate Intelligent Insights",
     description:
-      "Your bio-digital bridge is established. The system begins synchronizing with your daily activities, learning and adapting to enhance your natural capabilities.",
-    details: ["Real-time sync", "Adaptive learning", "Seamless fusion"],
+      "Our AI transforms behavioral data into personalized recommendations, predictive trends, and actionable wellness strategies aligned with your daily life.",
+    details: ["AI Recommendations", "Predict Trends", "Actionable Tips"],
   },
   {
     icon: Rocket,
-    title: "Transcend",
+    title: "Optimize, Adapt, and Evolve",
     description:
-      "Experience the full potential of human-tech convergence. Access enhanced cognitive abilities, instant data recall, and intuitive control over your digital ecosystem.",
-    details: ["Enhanced cognition", "Instant recall", "Unified control"],
+      "Track progress through dynamic dashboards as TechnozLife continuously adapts recommendations, helping you refine habits and stay ahead of lifestyle challenges.",
+    details: ["Track Progress", "Adjust Routines", "Unlock Wellness"],
   },
 ];
 
@@ -166,11 +191,12 @@ export function HowItWorks() {
             The Journey
           </span>
           <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
-            Four Steps to <span className='text-gradient'>Transcendence</span>
+            Four Steps to a{" "}
+            <span className='text-gradient'>Self-Optimizing Lifestyle</span>
           </h2>
           <p className='text-lg text-slate-400 max-w-2xl mx-auto'>
-            Your transformation begins with a simple download and evolves into a
-            complete bio-digital integration.
+            A future-ready wellness framework powered by behavioral intelligence
+            and predictive AI.
           </p>
         </motion.div>
 

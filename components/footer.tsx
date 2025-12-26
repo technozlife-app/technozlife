@@ -72,9 +72,8 @@ export function Footer() {
             </Link>
 
             <p className='text-slate-400 mb-6 leading-relaxed'>
-              Pioneering the convergence of humanity and technology. Building
-              the future of bio-digital integration, one neural pathway at a
-              time.
+              Smart next-era algorithms empower predictive, personalized, and
+              adaptive lifestyle and wellness optimization.
             </p>
 
             {/* Social links */}
@@ -137,7 +136,10 @@ export function Footer() {
           <div className='flex flex-col md:flex-row items-center justify-between gap-4'>
             <p className='text-sm text-slate-600'>
               &copy; {new Date().getFullYear()}{" "}
-              <Link href='/' className='text-teal-400 hover:underline cursor-pointer'>
+              <Link
+                href='/'
+                className='text-teal-400 hover:underline cursor-pointer'
+              >
                 Technozlife.com
               </Link>{" "}
               All rights reserved.
