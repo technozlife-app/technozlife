@@ -26,6 +26,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
 import { API_BASE } from "@/lib/api";
 import { executeRecaptcha } from "@/lib/recaptcha";
+import Logo from "@/components/logo";
 
 // Form data interface for better type safety
 interface AuthFormData {
@@ -286,19 +287,7 @@ export default function AuthPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8 }}
           >
-            <Link href='/' className='inline-block mb-12'>
-              <div className='flex items-center gap-3'>
-                <div className='relative'>
-                  <div className='w-12 h-12 rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center'>
-                    <Fingerprint className='w-6 h-6 text-slate-950' />
-                  </div>
-                  <div className='absolute inset-0 rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 blur-lg opacity-50' />
-                </div>
-                <span className='text-2xl font-bold text-white'>
-                  Technozlife
-                </span>
-              </div>
-            </Link>
+            <Logo className='mb-12' />
 
             <h1 className='text-5xl xl:text-6xl font-serif font-light text-white leading-tight mb-6'>
               Step into the
@@ -344,18 +333,7 @@ export default function AuthPage() {
             className='w-full max-w-md'
           >
             {/* Mobile Logo */}
-            <Link href='/' className='lg:hidden inline-block mb-8'>
-              <div className='flex items-center gap-3'>
-                <div className='relative'>
-                  <div className='w-10 h-10 rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center'>
-                    <Fingerprint className='w-5 h-5 text-slate-950' />
-                  </div>
-                </div>
-                <span className='text-xl font-bold text-white'>
-                  Technozlife
-                </span>
-              </div>
-            </Link>
+            <Logo className='mb-10 lg:hidden mx-auto' />
 
             {/* Card */}
             <div className='relative'>

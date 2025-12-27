@@ -9,6 +9,7 @@ import {
 } from "react-icons/fa6";
 
 import Link from "next/link";
+import Logo from "./logo";
 
 const footerLinks = {
   Navigate: [
@@ -58,18 +59,7 @@ export function Footer() {
             className='lg:w-1/3'
           >
             {/* Logo */}
-            <Link href='/' className='flex items-center gap-3 mb-6 group'>
-              <div className='relative w-10 h-10'>
-                <div className='absolute inset-0 bg-linear-to-br from-teal-500 to-emerald-500 rounded-xl rotate-45 group-hover:rotate-55 transition-transform duration-300' />
-                <div className='absolute inset-1 bg-slate-950 rounded-lg rotate-45 group-hover:rotate-55 transition-transform duration-300' />
-                <span className='absolute inset-0 flex items-center justify-center text-teal-400 font-bold text-lg'>
-                  T
-                </span>
-              </div>
-              <span className='text-xl font-bold text-slate-100'>
-                Technozlife
-              </span>
-            </Link>
+            <Logo className='mb-6' />
 
             <p className='text-slate-400 mb-6 leading-relaxed'>
               Smart next-era algorithms empower predictive, personalized, and

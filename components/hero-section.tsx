@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Dna, Zap, Brain } from "lucide-react";
+import Logo from "./logo";
 
 function DNAHelix() {
   return (
@@ -84,6 +85,7 @@ export function HeroSection() {
       id='hero'
       className='relative min-h-screen flex items-center justify-center overflow-hidden'
     >
+      <Logo className='absolute top-6 left-6' />
       {/* Background layers */}
       <div className='absolute inset-0 bg-slate-950' />
       <div className='absolute inset-0 mesh-gradient' />
@@ -167,16 +169,20 @@ export function HeroSection() {
           className='flex flex-wrap justify-center gap-4'
         >
           {[
-            { icon: Dna, label: "Bio-Integration" },
-            { icon: Zap, label: "Neural Sync" },
-            { icon: Brain, label: "AI Fusion" },
+            { icon: "Bio-Integration(icon)", label: "Bio-Integration" },
+            { icon: "Neural Sync(icon)", label: "Neural Sync" },
+            { icon: "AI Fusion (icon)", label: "AI Fusion" },
           ].map((item, index) => (
             <motion.div
               key={item.label}
               whileHover={{ scale: 1.05, y: -2 }}
               className='flex items-center gap-2 px-5 py-3 glass rounded-full cursor-default'
             >
-              <item.icon className='w-4 h-4 text-teal-400' />
+              <img
+                src={`/images/${item.icon}.webp`}
+                alt={item.label}
+                className='w-4 h-4 '
+              />
               <span className='text-sm text-slate-300'>{item.label}</span>
             </motion.div>
           ))}

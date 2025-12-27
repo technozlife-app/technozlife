@@ -39,18 +39,9 @@ const sourceSerif = Source_Serif_4({
 });
 
 export const metadata: Metadata = {
-  title: "Technozlife | Bio-Digital Fusion Platform",
+  title: "Technozlife | AI-Powered Life Optimization",
   description:
-    "Where Humanity Converges with Tomorrow. Transform your life with cutting-edge technology that seamlessly integrates with human potential.",
-  generator: "v0.app",
-  icons: {
-    icon: [
-      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
-      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
-      { url: "/icon.svg", type: "image/svg+xml" },
-    ],
-    apple: "/apple-icon.png",
-  },
+    "Technozlife leverages AI to optimize your daily habits, enhance wellness, and boost productivity through personalized insights and recommendations.",
 };
 
 export const viewport: Viewport = {
