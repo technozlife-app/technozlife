@@ -25,6 +25,7 @@ import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth-context";
 import { useToast } from "@/components/ui/custom-toast";
 import { userApi } from "@/lib/api";
+import Logo from "../logo";
 
 // Nav items are computed inside the component so we can include dev-only links (admin simulator)
 
@@ -92,27 +93,10 @@ export function DashboardSidebar() {
   const SidebarContent = ({ isMobile = false }: { isMobile?: boolean }) => (
     <div className='flex flex-col h-full'>
       {/* Logo */}
-      <div className='p-4 border-b border-slate-800/50'>
-        <Link href='/' className='flex items-center gap-3'>
-          <div className='relative shrink-0'>
-            <div className='w-10 h-10 rounded-xl bg-linear-to-br from-teal-400 to-emerald-500 flex items-center justify-center'>
-              <Fingerprint className='w-5 h-5 text-slate-950' />
-            </div>
-          </div>
-          <AnimatePresence>
-            {(!isCollapsed || isMobile) && (
-              <motion.span
-                initial={{ opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: "auto" }}
-                exit={{ opacity: 0, width: 0 }}
-                className='text-lg font-bold text-white whitespace-nowrap overflow-hidden'
-              >
-                Technozlife
-              </motion.span>
-            )}
-          </AnimatePresence>
-        </Link>
-      </div>
+      <Logo
+        className={`${isCollapsed && !isMobile ? "mx-auto my-4 w-16" : "m-4 w-30"}`}
+        type={isCollapsed && !isMobile ? "compact" : "default"}
+      />
 
       {/* Navigation */}
       <nav className='flex-1 p-3 space-y-1'>

@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Dna, Zap, Brain } from "lucide-react";
+import Logo from "./logo";
 
 function DNAHelix() {
   return (
@@ -84,6 +85,7 @@ export function HeroSection() {
       id='hero'
       className='relative min-h-screen flex items-center justify-center overflow-hidden'
     >
+      <Logo className='absolute top-6 left-6' />
       {/* Background layers */}
       <div className='absolute inset-0 bg-slate-950' />
       <div className='absolute inset-0 mesh-gradient' />
