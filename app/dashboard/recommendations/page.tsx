@@ -2,11 +2,8 @@
 
 import React, { useEffect, useState } from "react";
 import RequireAuth from "@/components/auth/RequireAuth";
-import {
-  getSeed,
-  generateRecommendations,
-  type DailyEntry,
-} from "@/lib/mock-data";
+import { getSeed, type DailyEntry } from "@/lib/mock-data";
+import { recommendationsApi } from "@/lib/mockApi";
 import { Button } from "@/components/ui/button";
 import { Lightbulb, Check } from "lucide-react";
 
@@ -17,11 +14,14 @@ export default function RecommendationsPage() {
 
   useEffect(() => {
     let mounted = true;
-    function load() {
+    async function load() {
       const bundle = getSeed(14);
       if (!mounted) return;
       setDaily(bundle.daily);
-      setRecs(generateRecommendations(bundle.daily));
+
+      // Try AI-backed generation first; falls back to rule-based within mockApi
+      const r = await recommendationsApi.generateFromData(bundle.daily);
+      setRecs(r);
     }
 
     load();
@@ -69,7 +69,8 @@ export default function RecommendationsPage() {
                     </div>
                   </div>
                   <div className='text-sm text-slate-300 font-mono'>
-                    {Math.round(r.confidence * 100)}% confidence
+                    {Math.round((r.confidence || 0.6) * 100)}% confidence •{" "}
+                    {r.source || "rule-based"}
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>

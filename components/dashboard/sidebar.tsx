@@ -48,6 +48,7 @@ export function DashboardSidebar() {
         label: "Recommendations",
         href: "/dashboard/recommendations",
       },
+      { icon: Fingerprint, label: "Devices", href: "/dashboard/devices" },
       { icon: History, label: "History", href: "/dashboard/history" },
       { icon: TrendingUp, label: "Trends", href: "/dashboard/trends" },
       { icon: CheckSquare, label: "Habits", href: "/dashboard/habits" },
@@ -94,7 +95,9 @@ export function DashboardSidebar() {
     <div className='flex flex-col h-full'>
       {/* Logo */}
       <Logo
-        className={`${isCollapsed && !isMobile ? "mx-auto my-4 w-16" : "m-4 w-30"}`}
+        className={`${
+          isCollapsed && !isMobile ? "mx-auto my-4 w-16" : "m-4 w-30"
+        }`}
         type={isCollapsed && !isMobile ? "compact" : "default"}
       />
 

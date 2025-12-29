@@ -159,6 +159,76 @@ export default function AdminSimPage() {
                 Clear Saved Seed
               </Button>
             </div>
+
+            <div className='md:col-span-3 flex gap-2 items-center'>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    // seed devices
+                    try {
+                      // dynamic import to avoid SSR issues
+                      const { devicesApi } = require("@/lib/mockApi");
+                      devicesApi.add({ type: "fitbit", model: "FitSim 1" });
+                      devicesApi.add({ type: "phone", model: "HealthPhone" });
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to seed devices");
+                    }
+                  }}
+                >
+                  Seed Devices
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    try {
+                      const { habitsApi } = require("@/lib/mockApi");
+                      habitsApi.add({
+                        name: "Morning Walk",
+                        schedule: "daily",
+                      });
+                      habitsApi.add({
+                        name: "Bedtime Wind-down",
+                        schedule: "daily",
+                      });
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to seed habits");
+                    }
+                  }}
+                >
+                  Seed Habits
+                </Button>
+
+                <Button
+                  variant='destructive'
+                  onClick={() => {
+                    try {
+                      window.localStorage.removeItem("technozlife:devices");
+                      window.localStorage.removeItem("technozlife:habits");
+                      window.localStorage.removeItem(
+                        "technozlife:habitEntries"
+                      );
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to clear devices/habits");
+                    }
+                  }}
+                >
+                  Clear Devices & Habits
+                </Button>
+              </div>
+
+              <div className='ml-auto text-sm text-slate-400'>
+                Use these buttons to seed demo devices and habits for the
+                simulated dashboard.
+              </div>
+            </div>
           </div>
 
           <div className='glass rounded-2xl p-4'>
