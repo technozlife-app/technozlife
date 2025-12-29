@@ -92,7 +92,7 @@ export default function TrendsPage() {
           </h1>
           <p className='text-slate-400'>
             Moving averages, short-term forecasts, and signal detection from
-            simulated data.
+            demo data.
           </p>
         </div>
 

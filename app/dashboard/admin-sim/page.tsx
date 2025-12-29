@@ -81,9 +81,7 @@ export default function AdminSimPage() {
 
   // Guard: only available on localhost / non-production
   if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
-    return (
-      <div className='p-6'>Admin simulator is disabled in production.</div>
-    );
+    return <div className='p-6'>Data Manager is disabled in production.</div>;
   }
 
   return (
@@ -91,10 +89,10 @@ export default function AdminSimPage() {
       <div className='max-w-4xl mx-auto'>
         <div className='mb-6'>
           <h1 className='text-2xl md:text-3xl font-bold text-white mb-2'>
-            Admin Data Simulator
+            Data Manager
           </h1>
           <p className='text-slate-400'>
-            Create and persist simulated datasets for local testing and demos.
+            Create and persist demo datasets for local testing and demos.
           </p>
         </div>
 
@@ -158,6 +156,76 @@ export default function AdminSimPage() {
               <Button variant='destructive' onClick={clearSeed}>
                 Clear Saved Seed
               </Button>
+            </div>
+
+            <div className='md:col-span-3 flex gap-2 items-center'>
+              <div className='flex gap-2'>
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    // seed devices
+                    try {
+                      // dynamic import to avoid SSR issues
+                      const { devicesApi } = require("@/lib/mockApi");
+                      devicesApi.add({ type: "fitbit", model: "FitSim 1" });
+                      devicesApi.add({ type: "phone", model: "HealthPhone" });
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to seed devices");
+                    }
+                  }}
+                >
+                  Seed Devices
+                </Button>
+
+                <Button
+                  variant='outline'
+                  onClick={() => {
+                    try {
+                      const { habitsApi } = require("@/lib/mockApi");
+                      habitsApi.add({
+                        name: "Morning Walk",
+                        schedule: "daily",
+                      });
+                      habitsApi.add({
+                        name: "Bedtime Wind-down",
+                        schedule: "daily",
+                      });
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to seed habits");
+                    }
+                  }}
+                >
+                  Seed Habits
+                </Button>
+
+                <Button
+                  variant='destructive'
+                  onClick={() => {
+                    try {
+                      window.localStorage.removeItem("technozlife:devices");
+                      window.localStorage.removeItem("technozlife:habits");
+                      window.localStorage.removeItem(
+                        "technozlife:habitEntries"
+                      );
+                      window.location.reload();
+                    } catch (e) {
+                      console.error(e);
+                      alert("Failed to clear devices/habits");
+                    }
+                  }}
+                >
+                  Clear Devices & Habits
+                </Button>
+              </div>
+
+              <div className='ml-auto text-sm text-slate-400'>
+                Use these buttons to seed demo devices and habits for the
+                dashboard.
+              </div>
             </div>
           </div>
 

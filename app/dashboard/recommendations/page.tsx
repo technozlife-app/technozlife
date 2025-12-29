@@ -2,26 +2,32 @@
 
 import React, { useEffect, useState } from "react";
 import RequireAuth from "@/components/auth/RequireAuth";
-import {
-  getSeed,
-  generateRecommendations,
-  type DailyEntry,
-} from "@/lib/mock-data";
+import { getSeed, type DailyEntry } from "@/lib/mock-data";
+import { recommendationsApi } from "@/lib/mockApi";
 import { Button } from "@/components/ui/button";
 import { Lightbulb, Check } from "lucide-react";
+import { habitsApi } from "@/lib/mockApi";
+import { aiApi } from "@/lib/api";
+import { useToast } from "@/components/ui/custom-toast";
 
 export default function RecommendationsPage() {
   const [daily, setDaily] = useState<DailyEntry[]>([]);
   const [recs, setRecs] = useState<any[]>([]);
   const [applied, setApplied] = useState<Record<string, boolean>>({});
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState<string>("");
+  const [editSchedule, setEditSchedule] = useState<string>("daily");
 
   useEffect(() => {
     let mounted = true;
-    function load() {
+    async function load() {
       const bundle = getSeed(14);
       if (!mounted) return;
       setDaily(bundle.daily);
-      setRecs(generateRecommendations(bundle.daily));
+
+      // Try AI-backed generation first; falls back to rule-based within mockApi
+      const r = await recommendationsApi.generateFromData(bundle.daily);
+      setRecs(r);
     }
 
     load();
@@ -33,8 +39,45 @@ export default function RecommendationsPage() {
     };
   }, []);
 
-  const handleApply = (id: string) => {
-    setApplied((p) => ({ ...p, [id]: true }));
+  const { addToast } = useToast();
+
+  const handleApply = (id: string, r?: any) => {
+    // create a habit from recommendation
+    try {
+      habitsApi.add({
+        name: r?.title || `Recommendation: ${id}`,
+        schedule: "daily",
+      });
+      addToast("success", "Habit created", "Recommendation applied as a habit");
+      setApplied((p) => ({ ...p, [id]: true }));
+    } catch (e) {
+      console.error(e);
+      addToast("error", "Create failed", "Could not create habit");
+    }
+  };
+
+  const handleExplain = async (r: any) => {
+    try {
+      addToast("info", "Explanation", "Requesting explanation...");
+      const prompt = `Explain the recommendation titled: "${r.title}". Provide a 1-2 sentence rationale and one short actionable step.`;
+      const res = await aiApi.generate({ prompt, async: false });
+      const content =
+        res?.status === "success" && res.data
+          ? res.data.content || res.data.result
+          : null;
+      if (content) {
+        addToast("success", "Explanation", String(content).slice(0, 240));
+      } else {
+        addToast(
+          "warning",
+          "No explanation",
+          "AI did not return an explanation."
+        );
+      }
+    } catch (e) {
+      console.error(e);
+      addToast("error", "Explain failed", "Could not fetch explanation");
+    }
   };
 
   return (
@@ -45,7 +88,7 @@ export default function RecommendationsPage() {
             Recommendations
           </h1>
           <p className='text-slate-400'>
-            Actionable suggestions tailored to recent signals (simulated).
+            Actionable suggestions tailored to recent signals.
           </p>
         </div>
 
@@ -69,26 +112,82 @@ export default function RecommendationsPage() {
                     </div>
                   </div>
                   <div className='text-sm text-slate-300 font-mono'>
-                    {Math.round(r.confidence * 100)}% confidence
+                    {Math.round((r.confidence || 0.6) * 100)}% confidence •{" "}
+                    {r.source || "rule-based"}
                   </div>
                 </div>
                 <div className='flex items-center gap-2'>
-                  <Button
-                    variant={applied[r.id] ? "ghost" : "default"}
-                    onClick={() => handleApply(r.id)}
-                    className='h-9'
-                  >
-                    {applied[r.id] ? (
-                      <>
-                        <Check className='w-4 h-4 mr-2' /> Applied
-                      </>
-                    ) : (
-                      <>Apply</>
-                    )}
-                  </Button>
-                  <Button variant='outline' className='h-9'>
-                    Customize
-                  </Button>
+                  {editingId === r.id ? (
+                    <div className='flex items-center gap-2'>
+                      <input
+                        className='px-2 py-1 rounded bg-slate-800 text-sm text-white'
+                        value={editName}
+                        onChange={(e) => setEditName(e.target.value)}
+                        placeholder='Habit name'
+                      />
+                      <input
+                        className='px-2 py-1 rounded bg-slate-800 text-sm text-white'
+                        value={editSchedule}
+                        onChange={(e) => setEditSchedule(e.target.value)}
+                        placeholder='daily'
+                      />
+                      <Button
+                        size='sm'
+                        onClick={() => {
+                          handleApply(r.id, {
+                            title: editName || r.title,
+                            schedule: editSchedule,
+                          });
+                          setEditingId(null);
+                        }}
+                      >
+                        Apply
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => setEditingId(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <Button
+                        variant={applied[r.id] ? "ghost" : "default"}
+                        onClick={() => handleApply(r.id, r)}
+                        className='h-9'
+                      >
+                        {applied[r.id] ? (
+                          <>
+                            <Check className='w-4 h-4 mr-2' /> Applied
+                          </>
+                        ) : (
+                          <>Apply</>
+                        )}
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9'
+                        onClick={() => {
+                          setEditingId(r.id);
+                          setEditName(r.title);
+                          setEditSchedule("daily");
+                        }}
+                      >
+                        Customize
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        className='h-9'
+                        onClick={() => handleExplain(r)}
+                      >
+                        Explain
+                      </Button>
+                    </>
+                  )}
                 </div>
               </div>
             </div>

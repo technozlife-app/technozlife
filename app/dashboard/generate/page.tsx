@@ -53,8 +53,8 @@ export default function GeneratePage() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const { addToast } = useToast();
 
-  // Simulated content generators for different templates
-  const generateSimulatedContent = (template: string, prompt: string) => {
+  // Demo content generators for different templates
+  const generateDemoContent = (template: string, prompt: string) => {
     const templates = {
       email: `# Professional Email Template
 
@@ -140,7 +140,7 @@ const GeneratedComponent: React.FC<GeneratedComponentProps> = ({
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Simulate data loading
+    // Demo data loading
     const timer = setTimeout(() => {
       setIsLoading(false);
     }, 1000);
@@ -206,7 +206,7 @@ export default GeneratedComponent;
     setResult("");
 
     try {
-      // Simulate generation progress
+      // Demo generation progress
       const progressInterval = setInterval(() => {
         setGenerationProgress((prev) => {
           if (prev >= 90) {
@@ -217,21 +217,18 @@ export default GeneratedComponent;
         });
       }, 200);
 
-      // Simulate API delay (2-4 seconds)
+      // Demo API delay (2-4 seconds)
       const delay = 2000 + Math.random() * 2000;
       await new Promise((resolve) => setTimeout(resolve, delay));
 
       clearInterval(progressInterval);
       setGenerationProgress(100);
 
-      // Generate simulated content
-      const generatedContent = generateSimulatedContent(
-        selectedTemplate,
-        prompt
-      );
+      // Generate demo content
+      const generatedContent = generateDemoContent(selectedTemplate, prompt);
       setResult(generatedContent);
 
-      // Simulate token usage
+      // Demo token usage
       const tokensUsed = Math.floor(Math.random() * 500) + 100;
 
       addToast(

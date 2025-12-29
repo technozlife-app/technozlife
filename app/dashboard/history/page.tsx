@@ -39,8 +39,8 @@ interface JobItem {
   type?: string;
 }
 
-// Simulated job generation
-const generateSimulatedJobs = (): JobItem[] => {
+// Demo job generation
+const generateDemoJobs = (): JobItem[] => {
   const prompts = [
     "Write a professional email introducing our new product launch",
     "Create a blog post about AI technology trends",
@@ -67,7 +67,7 @@ const generateSimulatedJobs = (): JobItem[] => {
 
     let result = "";
     if (status === "completed") {
-      result = `Generated ${type} content based on: "${prompt}". This is simulated content that would normally be the full AI-generated result.`;
+      result = `Generated ${type} content based on: "${prompt}". This is demo content representing a possible AI-generated result.`;
     }
 
     return {
@@ -101,14 +101,14 @@ export default function HistoryPage() {
     async function loadJobs() {
       setIsLoading(true);
 
-      // Simulate API delay
+      // Demo API delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (!mounted) return;
 
-      // Generate simulated jobs
-      const simulatedJobs = generateSimulatedJobs();
-      setHistory(simulatedJobs);
+      // Generate demo jobs
+      const demoJobs = generateDemoJobs();
+      setHistory(demoJobs);
       setIsLoading(false);
 
       // Set up dynamic updates - occasionally change job status
@@ -122,7 +122,7 @@ export default function HistoryPage() {
               return {
                 ...job,
                 status: "completed" as const,
-                result: `Generated ${job.type} content based on: "${job.prompt}". This is simulated content that would normally be the full AI-generated result.`,
+                result: `Generated ${job.type} content based on: "${job.prompt}". This is demo content representing a possible AI-generated result.`,
                 tokensUsed: Math.floor(Math.random() * 500) + 50,
               };
             }

@@ -27,7 +27,7 @@ import { useToast } from "@/components/ui/custom-toast";
 import { userApi } from "@/lib/api";
 import Logo from "../logo";
 
-// Nav items are computed inside the component so we can include dev-only links (admin simulator)
+// Nav items are computed inside the component so we can include dev-only links (Data Manager)
 
 export function DashboardSidebar() {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -48,6 +48,7 @@ export function DashboardSidebar() {
         label: "Recommendations",
         href: "/dashboard/recommendations",
       },
+      { icon: Fingerprint, label: "Devices", href: "/dashboard/devices" },
       { icon: History, label: "History", href: "/dashboard/history" },
       { icon: TrendingUp, label: "Trends", href: "/dashboard/trends" },
       { icon: CheckSquare, label: "Habits", href: "/dashboard/habits" },
@@ -55,7 +56,7 @@ export function DashboardSidebar() {
       { icon: Settings, label: "Settings", href: "/dashboard/settings" },
     ] as { icon: any; label: string; href: string }[];
 
-    // Dev-only Admin Simulator (only on localhost / non-production)
+    // Dev-only Data Manager (only on localhost / non-production)
     try {
       if (
         process.env.NODE_ENV !== "production" &&
@@ -69,7 +70,7 @@ export function DashboardSidebar() {
         if (isLocalhost) {
           base.push({
             icon: Sparkles,
-            label: "Admin Simulator",
+            label: "Data Manager",
             href: "/dashboard/admin-sim",
           });
         }
@@ -94,7 +95,9 @@ export function DashboardSidebar() {
     <div className='flex flex-col h-full'>
       {/* Logo */}
       <Logo
-        className={`${isCollapsed && !isMobile ? "mx-auto my-4 w-16" : "m-4 w-30"}`}
+        className={`${
+          isCollapsed && !isMobile ? "mx-auto my-4 w-16" : "m-4 w-30"
+        }`}
         type={isCollapsed && !isMobile ? "compact" : "default"}
       />
 

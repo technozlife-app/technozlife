@@ -36,7 +36,7 @@ const initialUsageData = [
 import RequireAuth from "@/components/auth/RequireAuth";
 import ProfileCard from "@/components/dashboard/profile-card";
 
-// Simulated activity types
+// Demo activity types
 const activityTypes = [
   { type: "generation", icon: "📝", color: "text-blue-400" },
   { type: "login", icon: "🔐", color: "text-green-400" },
@@ -63,43 +63,43 @@ export default function DashboardPage() {
   const [usageData, setUsageData] = useState(initialUsageData);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Generate simulated data
+  // Generate demo data
   useEffect(() => {
     let mounted = true;
 
-    async function loadSimulatedData() {
+    async function loadDemoData() {
       setIsLoading(true);
 
-      // Simulate API delay
+      // Demo API delay
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       if (!mounted) return;
 
       // Generate random stats
-      const simulatedStats: StatsShape = {
+      const demoStats: StatsShape = {
         totalGenerations: Math.floor(Math.random() * 50) + 10,
         tokensUsed: Math.floor(Math.random() * 50000) + 10000,
         savedTemplates: Math.floor(Math.random() * 20) + 5,
         activeProjects: Math.floor(Math.random() * 10) + 1,
       };
 
-      setStats(simulatedStats);
+      setStats(demoStats);
 
-      // Update usage data from simulated stats
+      // Update usage data from demo stats
       setUsageData((prev) =>
         prev.map((u) => {
           if (u.label === "API Calls")
-            return { ...u, value: simulatedStats.totalGenerations };
+            return { ...u, value: demoStats.totalGenerations };
           if (u.label === "Tokens Used")
-            return { ...u, value: simulatedStats.tokensUsed };
+            return { ...u, value: demoStats.tokensUsed };
           if (u.label === "Storage")
-            return { ...u, value: simulatedStats.savedTemplates * 0.1 };
+            return { ...u, value: demoStats.savedTemplates * 0.1 };
           return u;
         })
       );
 
-      // Generate simulated activities
-      const simulatedActivities = Array.from({ length: 8 }, (_, i) => {
+      // Generate demo activities
+      const demoActivities = Array.from({ length: 8 }, (_, i) => {
         const activityType =
           activityTypes[Math.floor(Math.random() * activityTypes.length)];
         const message =
@@ -122,11 +122,11 @@ export default function DashboardPage() {
           new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime()
       );
 
-      setActivities(simulatedActivities);
+      setActivities(demoActivities);
       setIsLoading(false);
     }
 
-    loadSimulatedData();
+    loadDemoData();
 
     // Set up dynamic updates every 30 seconds
     const interval = setInterval(() => {

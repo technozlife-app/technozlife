@@ -48,7 +48,7 @@ export default function WellnessHistoryPage() {
             Wellness History
           </h1>
           <p className='text-slate-400'>
-            Simulated daily wellness entries (sleep, activity, mood).
+            Demo daily wellness entries (sleep, activity, mood).
           </p>
         </div>
 
