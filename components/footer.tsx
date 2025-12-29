@@ -6,6 +6,7 @@ import {
   FaFacebook as Facebook,
   FaLinkedin as Linkedin,
   FaYoutube as Youtube,
+  FaPinterest as Pinterest,
 } from "react-icons/fa6";
 
 import Link from "next/link";
@@ -34,10 +35,23 @@ const footerLinks = {
 };
 
 const socialLinks = [
-  { icon: Twitter, href: "#", label: "Twitter" },
+  { icon: Twitter, href: "https://x.com/Technoz_Life", label: "Twitter" },
   { icon: Linkedin, href: "#", label: "LinkedIn" },
-  { icon: Youtube, href: "#", label: "YouTube" },
-  { icon: Facebook, href: "#", label: "Facebook" },
+  {
+    icon: Youtube,
+    href: "https://www.youtube.com/@Technoz_Life",
+    label: "YouTube",
+  },
+  {
+    icon: Facebook,
+    href: "https://www.facebook.com/technozlife/",
+    label: "Facebook",
+  },
+  {
+    icon: Pinterest,
+    href: "https://www.pinterest.com/technozlife/",
+    label: "Pinterest",
+  },
 ];
 
 export function Footer() {
