@@ -8,7 +8,7 @@ function DNAHelix() {
   return (
     <div className='absolute inset-0 overflow-hidden pointer-events-none'>
       <svg
-        className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] opacity-20'
+        className='absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-200 h-200 opacity-20'
         viewBox='0 0 400 400'
       >
         <defs>

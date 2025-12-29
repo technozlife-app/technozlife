@@ -129,7 +129,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
               href='/blog'
               className='inline-flex items-center gap-3 bg-slate-900/50 border border-slate-800 rounded-full px-4 py-2 text-slate-200 hover:bg-slate-900/70 hover:border-teal-500 transition-all shadow-sm'
             >
-              <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 text-slate-950 shadow-sm'>
+              <span className='inline-flex items-center justify-center w-8 h-8 rounded-full bg-linear-to-br from-teal-500 to-emerald-500 text-slate-950 shadow-sm'>
                 <ArrowLeft className='w-4 h-4' />
               </span>
               <span className='font-medium'>Back to Blog</span>
@@ -237,7 +237,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
           className='px-6 pb-16'
         >
           <div className='max-w-5xl mx-auto'>
-            <div className='relative rounded-3xl overflow-hidden p-1 bg-gradient-to-r from-teal-500/6 via-violet-500/6 to-emerald-500/6'>
+            <div className='relative rounded-3xl overflow-hidden p-1 bg-linear-to-r from-teal-500/6 via-violet-500/6 to-emerald-500/6'>
               <div className='absolute -inset-2 bg-linear-to-r from-teal-500/20 via-violet-500/20 to-emerald-500/20 rounded-3xl blur-xl' />
               <img
                 src={post.coverImage || "/placeholder.svg"}
@@ -258,7 +258,7 @@ export function BlogPostContent({ post, recentPosts }: BlogPostContentProps) {
           <div className='max-w-5xl mx-auto'>
             <div className='relative rounded-3xl overflow-hidden p-6'>
               <div className='absolute -inset-2 bg-linear-to-r from-teal-500/8 via-violet-500/8 to-emerald-500/8 rounded-3xl blur-xl' />
-              <div className='relative border border-teal-500/20 rounded-2xl bg-gradient-to-b from-slate-900/60 to-slate-800/40 p-8'>
+              <div className='relative border border-teal-500/20 rounded-2xl bg-linear-to-b from-slate-900/60 to-slate-800/40 p-8'>
                 <div
                   className='prose prose-lg prose-invert prose-slate max-w-none space-y-6
                   prose-headings:font-serif prose-headings:font-bold prose-headings:text-slate-100
