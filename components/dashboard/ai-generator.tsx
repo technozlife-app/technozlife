@@ -34,7 +34,7 @@ export function AIGenerator() {
   const [generationProgress, setGenerationProgress] = useState(0);
   const { addToast } = useToast();
 
-  // Simulate dynamic stats
+  // Demo dynamic stats
   useEffect(() => {
     const interval = setInterval(() => {
       setGenerationCount((prev) => prev + Math.floor(Math.random() * 3));

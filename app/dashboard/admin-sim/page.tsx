@@ -81,9 +81,7 @@ export default function AdminSimPage() {
 
   // Guard: only available on localhost / non-production
   if (typeof window !== "undefined" && process.env.NODE_ENV === "production") {
-    return (
-      <div className='p-6'>Admin simulator is disabled in production.</div>
-    );
+    return <div className='p-6'>Data Manager is disabled in production.</div>;
   }
 
   return (
@@ -91,10 +89,10 @@ export default function AdminSimPage() {
       <div className='max-w-4xl mx-auto'>
         <div className='mb-6'>
           <h1 className='text-2xl md:text-3xl font-bold text-white mb-2'>
-            Admin Data Simulator
+            Data Manager
           </h1>
           <p className='text-slate-400'>
-            Create and persist simulated datasets for local testing and demos.
+            Create and persist demo datasets for local testing and demos.
           </p>
         </div>
 
@@ -226,7 +224,7 @@ export default function AdminSimPage() {
 
               <div className='ml-auto text-sm text-slate-400'>
                 Use these buttons to seed demo devices and habits for the
-                simulated dashboard.
+                dashboard.
               </div>
             </div>
           </div>

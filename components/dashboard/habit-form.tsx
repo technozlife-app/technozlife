@@ -16,7 +16,7 @@ export default function HabitForm({ onAdded }: { onAdded?: () => void }) {
     try {
       habitsApi.add({ name: name.trim(), schedule: "daily" });
       setName("");
-      addToast("success", "Habit added", "New habit created in simulation");
+      addToast("success", "Habit added", "New habit added");
       onAdded && onAdded();
     } catch (e) {
       console.error(e);

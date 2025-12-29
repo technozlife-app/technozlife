@@ -5,13 +5,43 @@ import RequireAuth from "@/components/auth/RequireAuth";
 import { devicesApi } from "@/lib/mockApi";
 import { WearableDevice } from "@/lib/models";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/components/ui/custom-toast";
 
 export default function DeviceList() {
   const [devices, setDevices] = useState<WearableDevice[]>([]);
   const { addToast } = useToast();
+  const [newType, setNewType] = useState<string>("");
+  const [newModel, setNewModel] = useState<string>("");
 
+  const handleAdd = () => {
+    if (!newModel.trim() || !newType.trim())
+      return addToast("warning", "Missing", "Please enter type and model");
+    try {
+      devicesApi.add({ type: newType.trim(), model: newModel.trim() });
+      addToast("success", "Device added", "New demo device added");
+      setNewType("");
+      setNewModel("");
+      load();
+    } catch (e) {
+      console.error(e);
+      addToast("error", "Add failed", "Could not add device");
+    }
+  };
+
+  const handleEdit = (d: WearableDevice) => {
+    const model = prompt("Model", d.model || "") ?? d.model;
+    const type = prompt("Type", d.type || "") ?? d.type;
+    try {
+      devicesApi.update(d.id, { model, type });
+      addToast("success", "Device updated", "Device updated");
+      load();
+    } catch (e) {
+      console.error(e);
+      addToast("error", "Update failed", "Could not update device");
+    }
+  };
   const load = () => {
     const list = devicesApi.list();
     setDevices(list);
@@ -40,13 +70,9 @@ export default function DeviceList() {
   };
 
   const handleRemove = (id: string) => {
-    if (!confirm("Remove device from simulation?")) return;
+    if (!confirm("Remove this device?")) return;
     devicesApi.remove(id);
-    addToast(
-      "success",
-      "Device removed",
-      "Device removed from local simulation"
-    );
+    addToast("success", "Device removed", "Device removed from demo data");
     load();
   };
 
@@ -58,8 +84,24 @@ export default function DeviceList() {
             Connected Devices
           </h1>
           <p className='text-slate-400'>
-            Manage simulated wearable and IoT devices.
+            Manage demo wearable and IoT devices.
           </p>
+        </div>
+
+        <div className='mb-6 flex items-center gap-2'>
+          <Input
+            placeholder='Type (e.g., fitbit)'
+            value={newType}
+            onChange={(e) => setNewType(e.target.value)}
+            className='w-40'
+          />
+          <Input
+            placeholder='Model (e.g., FitSim 1)'
+            value={newModel}
+            onChange={(e) => setNewModel(e.target.value)}
+            className='w-60'
+          />
+          <Button onClick={handleAdd}>Add device</Button>
         </div>
 
         <div className='grid gap-4'>
@@ -70,7 +112,7 @@ export default function DeviceList() {
               </CardHeader>
               <CardContent>
                 <div className='text-sm text-slate-400'>
-                  No devices seeded. Use the Admin Simulator to add devices.
+                  No devices seeded. Use the Data Manager to add demo devices.
                 </div>
               </CardContent>
             </Card>
@@ -90,6 +132,7 @@ export default function DeviceList() {
                 </div>
                 <div className='flex gap-2'>
                   <Button onClick={() => handleSync(d.id)}>Sync now</Button>
+                  <Button onClick={() => handleEdit(d)}>Edit</Button>
                   <Button
                     variant='destructive'
                     onClick={() => handleRemove(d.id)}

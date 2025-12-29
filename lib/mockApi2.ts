@@ -58,7 +58,7 @@ export const devicesApi = {
     const d: WearableDevice = {
       id: makeId(),
       type: data.type || "generic",
-      model: data.model || "simulated",
+      model: data.model || "demo",
       status: "connected",
       lastSync: new Date().toISOString(),
       metadata: data.metadata || {},

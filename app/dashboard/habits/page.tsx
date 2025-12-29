@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { Check, Sun, Moon, Heart } from "lucide-react";
 import HabitForm from "@/components/dashboard/habit-form";
+import HabitHistory from "@/components/dashboard/habit-history";
 import { habitsApi } from "@/lib/mockApi";
 import { useToast } from "@/components/ui/custom-toast";
 
@@ -76,7 +77,7 @@ export default function HabitsPage() {
   const habitsStats = useMemo(() => {
     const days = daily.length || 1;
 
-    // Very simple simulated distribution: allocate `habitsCompleted` across HABITS
+    // Very simple demo distribution: allocate `habitsCompleted` across HABITS
     const accum: Record<string, number> = {};
     habitsToShow.forEach((h) => (accum[h.id] = 0));
 
@@ -103,6 +104,8 @@ export default function HabitsPage() {
     }));
   }, [daily, habitsToShow]);
 
+  const [selectedHabit, setSelectedHabit] = useState<string | null>(null);
+
   return (
     <RequireAuth>
       <div className='max-w-4xl mx-auto'>
@@ -112,7 +115,7 @@ export default function HabitsPage() {
               Habits
             </h1>
             <p className='text-slate-400'>
-              Track routines and view completion rates from simulated data.
+              Track routines and view completion rates from demo data.
             </p>
           </div>
           <div className='w-80'>
@@ -150,13 +153,22 @@ export default function HabitsPage() {
                     <div className='text-sm text-slate-300 font-mono'>
                       {h.completionRate}%
                     </div>
-                    <Button
-                      size='sm'
-                      onClick={() => toggleToday(h.id)}
-                      title='Toggle today'
-                    >
-                      Toggle Today
-                    </Button>
+                    <div className='flex gap-2'>
+                      <Button
+                        size='sm'
+                        onClick={() => toggleToday(h.id)}
+                        title='Toggle today'
+                      >
+                        Toggle Today
+                      </Button>
+                      <Button
+                        size='sm'
+                        variant='outline'
+                        onClick={() => setSelectedHabit(h.id)}
+                      >
+                        View History
+                      </Button>
+                    </div>
                   </div>
                 </div>
 
@@ -182,6 +194,24 @@ export default function HabitsPage() {
             </ul>
           </div>
         </div>
+
+        {selectedHabit && (
+          <div className='fixed inset-0 z-50 flex items-end md:items-center justify-center p-4'>
+            <div
+              className='absolute inset-0 bg-black/50'
+              onClick={() => setSelectedHabit(null)}
+            />
+            <div className='relative bg-slate-900 rounded-2xl p-6 max-w-2xl w-full'>
+              <div className='flex items-center justify-between mb-4'>
+                <h3 className='text-lg font-semibold'>Habit History</h3>
+                <Button variant='ghost' onClick={() => setSelectedHabit(null)}>
+                  Close
+                </Button>
+              </div>
+              <HabitHistory habitId={selectedHabit} />
+            </div>
+          </div>
+        )}
       </div>
     </RequireAuth>
   );
