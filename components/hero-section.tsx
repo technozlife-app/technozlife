@@ -170,8 +170,8 @@ export function HeroSection() {
         >
           {[
             { icon: "Bio-Integration(icon)", label: "Bio-Integration" },
-            { icon: "Neural Sync(icon)", label: "Neural Sync" },
-            { icon: "AI Fusion (icon)", label: "AI Fusion" },
+            { icon: "Neural-Sync(icon)", label: "Neural Sync" },
+            { icon: "AI-Fusion(icon)", label: "AI Fusion" },
           ].map((item, index) => (
             <motion.div
               key={item.label}
