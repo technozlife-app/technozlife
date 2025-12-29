@@ -34,10 +34,13 @@ export function AboutSection() {
   const isInView = useInView(ref, { once: true, margin: "-100px" });
 
   return (
-    <section id='about' className='relative py-32 overflow-hidden'>
-      <div className='absolute inset-0 mesh-gradient opacity-20' />
+    <section
+      id='about'
+      className='relative py-32 overflow-hidden bg-[url(/images/Background-section.webp)] bg-cover bg-center bg-fixed'
+    >
+      <div className='absolute inset-0 bg-black opacity-60 ' />
 
-      <div className='relative max-w-7xl mx-auto px-6'>
+      <div className='relative backdrop-blur-sm p-12 rounded-4xl max-w-7xl mx-auto'>
         {/* Main content - two column layout */}
         <div
           ref={ref}
