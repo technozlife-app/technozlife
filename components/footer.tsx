@@ -9,10 +9,25 @@ import {
   FaPinterest as Pinterest,
 } from "react-icons/fa6";
 
+import type { ComponentType } from "react";
 import Link from "next/link";
 import Logo from "./logo";
 
-const footerLinks = {
+type FooterLink = {
+  label: string;
+  href: string;
+  target?: "_self" | "_blank";
+  rel?: string;
+};
+type FooterLinks = Record<"Navigate" | "Resources" | "Legal", FooterLink[]>;
+
+type SocialLink = {
+  icon: ComponentType<any>;
+  href: string;
+  label: string;
+};
+
+const footerLinks: FooterLinks = {
   Navigate: [
     { label: "Home", href: "/" },
     { label: "Features", href: "/#features" },
@@ -21,11 +36,18 @@ const footerLinks = {
     { label: "Contact", href: "/#contact" },
   ],
   Resources: [
-    { label: "Blog", href: "/blog" },
-    { label: "F6S", href: "https://www.f6s.com/technozlife" },
+    { label: "Blog", href: "/blog", target: "_self" },
+    {
+      label: "F6S",
+      href: "https://www.f6s.com/technoz-life",
+      target: "_blank",
+      rel: "noopener noreferrer",
+    },
     {
       label: "Crunchbase",
       href: "https://www.crunchbase.com/organization/technozlife",
+      target: "_blank",
+      rel: "noopener noreferrer",
     },
   ],
   Legal: [
@@ -34,7 +56,7 @@ const footerLinks = {
   ],
 };
 
-const socialLinks = [
+const socialLinks: SocialLink[] = [
   { icon: Twitter, href: "https://x.com/Technoz_Life", label: "Twitter" },
   { icon: Linkedin, href: "#", label: "LinkedIn" },
   {
@@ -82,17 +104,20 @@ export function Footer() {
 
             {/* Social links */}
             <div className='flex items-center gap-3'>
-              {socialLinks.map((social) => (
-                <motion.a
-                  key={social.label}
-                  href={social.href}
-                  whileHover={{ y: -2 }}
-                  className='p-2.5 glass rounded-lg text-slate-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors'
-                  aria-label={social.label}
-                >
-                  <social.icon className='w-5 h-5' />
-                </motion.a>
-              ))}
+              {socialLinks.map((social) => {
+                const Icon = social.icon;
+                return (
+                  <motion.a
+                    key={social.label}
+                    href={social.href}
+                    whileHover={{ y: -2 }}
+                    className='p-2.5 glass rounded-lg text-slate-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors'
+                    aria-label={social.label}
+                  >
+                    <Icon className='w-5 h-5' />
+                  </motion.a>
+                );
+              })}
             </div>
           </motion.div>
 
@@ -117,6 +142,8 @@ export function Footer() {
                           href={link.href}
                           aria-label={link.label}
                           className='text-sm text-slate-500 hover:text-teal-400 transition-colors inline-block'
+                          target={link.target}
+                          rel={link.rel ? link.rel : undefined}
                         >
                           {link.label}
                         </Link>
