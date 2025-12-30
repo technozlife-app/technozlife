@@ -261,7 +261,7 @@ export default function BlogPage() {
                     <div className='relative flex flex-col md:flex-row gap-6'>
                       {/* Thumbnail */}
                       <div className='md:w-64 shrink-0'>
-                        <div className='relative overflow-hidden rounded-xl'>
+                        <div className='relative overflow-hidden w-full h-full rounded-xl'>
                           <img
                             src={post.coverImage || "/placeholder.svg"}
                             alt={post.title}

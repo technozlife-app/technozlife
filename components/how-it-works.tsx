@@ -39,28 +39,28 @@ Unlock Wellness
 */
 const steps = [
   {
-    icon: Download,
+    icon: "Define Your Lifestyle Goals",
     title: "Define Your Lifestyle Goals",
     description:
       "Begin by setting your wellness priorities and lifestyle preferences. TechnozLife creates a personalized profile that becomes the foundation for intelligent, AI-driven analysis.",
     details: ["Set Goals", "Choose Focus", "Prioritize Health"],
   },
   {
-    icon: Scan,
+    icon: "Connect Data & Understand Behavior",
     title: "Connect Data & Understand Behavior",
     description:
       "We securely analyze habits, routines, and wearable data to uncover behavioral patterns, lifestyle signals, and wellness opportunities unique to you.",
     details: ["Sync Devices", "Track Habits", "Analyze Patterns"],
   },
   {
-    icon: Cpu,
+    icon: "Generate Intelligent Insights",
     title: "Generate Intelligent Insights",
     description:
       "Our AI transforms behavioral data into personalized recommendations, predictive trends, and actionable wellness strategies aligned with your daily life.",
     details: ["AI Recommendations", "Predict Trends", "Actionable Tips"],
   },
   {
-    icon: Rocket,
+    icon: "Optimize, Adapt, and Evolve",
     title: "Optimize, Adapt, and Evolve",
     description:
       "Track progress through dynamic dashboards as TechnozLife continuously adapts recommendations, helping you refine habits and stay ahead of lifestyle challenges.",
@@ -134,15 +134,14 @@ function StepCard({
             <div className='absolute inset-0 bg-teal-500/20 rounded-full blur-3xl' />
 
             {/* Circle background */}
-            <div className='absolute inset-0 glass rounded-full' />
-
-            {/* Icon */}
-            <div className='absolute inset-0 flex items-center justify-center'>
-              <div className='p-6 rounded-2xl bg-linear-to-br from-teal-500/20 to-violet-500/20'>
-                <step.icon className='w-12 h-12 md:w-16 md:h-16 text-teal-400' />
-              </div>
+            <div className='absolute inset-0 glass rounded-full overflow-clip'>
+              {/* Icon */}
+              <img
+                src={"/images/" + step.icon + ".webp"}
+                alt={step.title}
+                className='w-full h-full  text-teal-400'
+              />
             </div>
-
             {/* Orbital ring */}
             <motion.div
               animate={{ rotate: 360 }}
