@@ -403,7 +403,7 @@ Our early trials report measurable functional gains (standardized motor scales, 
 If you or a loved one could benefit from our clinical research, please visit our trials page to learn about eligibility, study sites, and enrollment procedures. Participation helps advance safer, more effective therapies for others.
     `,
     author: {
-      name: "Amara Okonkwo.webp",
+      name: "Amara Okonkwo",
       role: "Bioethics Advisor",
       avatar: "/images/Amara Okonkwo.webp",
     },
