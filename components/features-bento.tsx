@@ -6,7 +6,7 @@ import { motion } from "framer-motion";
 import { Brain, Fingerprint, Network, Sparkles, Zap } from "lucide-react";
 
 interface FeatureCardProps {
-  icon: React.ElementType;
+  icon: string;
   title: string;
   description: string;
   gradient: string;
@@ -16,7 +16,7 @@ interface FeatureCardProps {
 }
 
 function FeatureCard({
-  icon: Icon,
+  icon,
   title,
   description,
   gradient,
@@ -47,7 +47,11 @@ function FeatureCard({
         <div
           className={`inline-flex p-3 rounded-xl bg-linear-to-br ${gradient} bg-opacity-10 mb-5 group-hover:scale-110 transition-transform duration-300`}
         >
-          <Icon className='w-6 h-6 text-white' />
+          <img
+            src={`/images/${icon}.webp`}
+            alt={title}
+            className='w-10 h-10 object-contain'
+          />
         </div>
 
         <h3 className='text-xl font-semibold text-slate-100 mb-3'>{title}</h3>
@@ -59,7 +63,7 @@ function FeatureCard({
 
 const features = [
   {
-    icon: Brain,
+    icon: "AI-Personalized Wellness Intelligence",
     title: "AI-Personalized Wellness Intelligence",
     description:
       "Tailored recommendations for sleep, fitness, nutrition, and mental wellness—continuously refined by your behavior and data patterns.",
@@ -67,7 +71,7 @@ const features = [
     glowColor: "bg-teal-500",
   },
   {
-    icon: Fingerprint,
+    icon: "Habit Optimization Engine",
     title: "Habit Optimization Engine",
     description:
       "AI identifies friction points and growth triggers, helping you build sustainable routines that evolve with your lifestyle.",
@@ -75,7 +79,7 @@ const features = [
     glowColor: "bg-violet-500",
   },
   {
-    icon: Network,
+    icon: "Predictive Lifestyle Analytics",
     title: "Predictive Lifestyle Analytics",
     description:
       "Forecast wellness trends before they surface, enabling proactive decisions rather than reactive health management.",
@@ -83,7 +87,7 @@ const features = [
     glowColor: "bg-cyan-500",
   },
   {
-    icon: Zap,
+    icon: "Wearable & IoT Ecosystem Integration",
     title: "Wearable & IoT Ecosystem Integration",
     description:
       "Seamlessly unify data from wearables and smart devices to create a single, intelligent view of your lifestyle.",
@@ -141,7 +145,11 @@ export function FeaturesBento() {
             <div className='flex-1'>
               <div className='flex items-center gap-3 mb-4'>
                 <div className='p-2 rounded-xl bg-teal-500/10'>
-                  <Sparkles className='w-5 h-5 text-teal-400' />
+                  <img
+                    src='/images/Adaptive AI Coaching.webp'
+                    alt='Adaptive AI Coaching'
+                    className='w-10 h-10 object-contain'
+                  />
                 </div>
                 <span className='text-sm font-medium text-teal-400'>
                   Coming Soon

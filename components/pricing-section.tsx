@@ -57,7 +57,10 @@ function PricingCard({
           <div className='flex items-center gap-3 mb-6'>
             <div className={`p-2.5 rounded-xl ${tier.iconBg}`}>
               {tier.icon ? (
-                <tier.icon className={`w-5 h-5 ${tier.iconColor}`} />
+                <img
+                  src={`/images/${tier.icon}.webp`}
+                  className={`w-10 h-10 ${tier.iconColor}`}
+                />
               ) : (
                 <Sparkles
                   className={`w-5 h-5 ${tier.iconColor || "text-slate-400"}`}
@@ -210,9 +213,9 @@ export function PricingSection() {
         <div className='grid lg:grid-cols-3 gap-6 lg:gap-8 items-start'>
           {(() => {
             const iconMap: Record<string, any> = {
-              free: Sparkles,
-              pro: Zap,
-              enterprise: Crown,
+              free: "free",
+              pro: "pro",
+              enterprise: "enterprise",
             };
             return TIERS.map((tier, index) => (
               <PricingCard

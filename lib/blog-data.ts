@@ -78,14 +78,14 @@ At Technozlife we pursue a pragmatic, multidisciplinary approach: rapid prototyp
 For readers who want to dig deeper, see the references in our research notes and follow our lab updates.
     `,
     author: {
-      name: "Dr. Sarah Chen",
+      name: "Emma Martin",
       role: "Chief Research Officer",
-      avatar: "/professional-woman-scientist.png",
+      avatar: "/images/Emma Martin.webp",
     },
     category: "Research",
     publishedAt: "2024-12-15",
     readTime: "8 min read",
-    coverImage: "/futuristic-neural-interface-brain-technology.jpg",
+    coverImage: "/images/Interfaces Beyond Brain Computer Integration.webp",
     featured: true,
   },
   {
@@ -143,14 +143,15 @@ We recognize the uncertain boundary between sophisticated behavior and subjectiv
 The AI consciousness debate is both intellectually rich and practically consequential. Progress will be iterative — combining philosophical clarity, rigorous experimentation, and sound governance.
     `,
     author: {
-      name: "Marcus Webb",
+      name: "Frank Li",
       role: "AI Ethics Lead",
-      avatar: "/professional-man-philosopher.jpg",
+      avatar: "/images/Frank Li.webp",
     },
     category: "Philosophy",
     publishedAt: "2024-12-10",
     readTime: "6 min read",
-    coverImage: "/artificial-intelligence-consciousness-abstract.jpg",
+    coverImage:
+      "/images/The AI Consciousness Debate Where We Stand in 2024.webp",
   },
   {
     slug: "quantum-biology-computing",
@@ -199,14 +200,14 @@ Technozlife's research program combines experimental labs, theoretical physics, 
 Quantum biology does not promise instant, universal quantum computers — instead, it provides a rich source of inspiration for a new class of bio-digital technologies that are energy-efficient, robust, and tightly integrated with living systems.
     `,
     author: {
-      name: "Dr. Yuki Tanaka",
+      name: "Maya Anderson",
       role: "Quantum Biology Lead",
-      avatar: "/professional-woman-scientist-asian.jpg",
+      avatar: "/images/Maya Anderson.webp",
     },
     category: "Science",
     publishedAt: "2024-12-05",
     readTime: "7 min read",
-    coverImage: "/quantum-biology-molecular-visualization.jpg",
+    coverImage: "/images/Quantum Biology Nature Computing Revolution.webp",
   },
   {
     slug: "ethics-of-enhancement",
@@ -260,14 +261,15 @@ We champion the following within Technozlife:
 Ethical enhancement is not about stopping progress but guiding it: building technologies and policies that expand human opportunity while safeguarding dignity, fairness, and autonomy.
     `,
     author: {
-      name: "Dr. Amara Okonkwo",
+      name: "Amara Okonkwo",
       role: "Bioethics Advisor",
-      avatar: "/professional-woman-african.jpg",
+      avatar: "/images/Amara Okonkwo.webp",
     },
     category: "Ethics",
     publishedAt: "2024-11-28",
     readTime: "9 min read",
-    coverImage: "/human-enhancement-ethics-technology.jpg",
+    coverImage:
+      "/images/The Ethics of Human Enhancement Navigating Uncharted Territory.webp",
   },
   {
     slug: "building-neural-mesh",
@@ -336,14 +338,14 @@ Current neural meshes are remarkable, but they're just the beginning. Future gen
 - Integration with next-gen AI for true cognitive partnership
     `,
     author: {
-      name: "James Rodriguez",
+      name: "Mike Rodriguez",
       role: "Principal Engineer",
-      avatar: "/professional-man-engineer-hispanic.jpg",
+      avatar: "/images/Mike Rodriguez.webp",
     },
     category: "Engineering",
     publishedAt: "2024-11-20",
     readTime: "10 min read",
-    coverImage: "/neural-mesh-technology-engineering.jpg",
+    coverImage: "/images/Building the Neural Mesh Technical Deep Dive.webp",
   },
   {
     slug: "patient-stories-restored-movement",
@@ -401,14 +403,14 @@ Our early trials report measurable functional gains (standardized motor scales, 
 If you or a loved one could benefit from our clinical research, please visit our trials page to learn about eligibility, study sites, and enrollment procedures. Participation helps advance safer, more effective therapies for others.
     `,
     author: {
-      name: "Dr. Sarah Chen",
-      role: "Chief Research Officer",
-      avatar: "/professional-woman-scientist.png",
+      name: "Amara Okonkwo.webp",
+      role: "Bioethics Advisor",
+      avatar: "/images/Amara Okonkwo.webp",
     },
     category: "Stories",
     publishedAt: "2024-11-15",
     readTime: "5 min read",
-    coverImage: "/patient-recovery-hope-medical.jpg",
+    coverImage: "/images/Patient Stories The Gift of Movement Restored.webp",
   },
 ];
 

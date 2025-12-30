@@ -181,7 +181,7 @@ export function HeroSection() {
               <img
                 src={`/images/${item.icon}.webp`}
                 alt={item.label}
-                className='w-4 h-4 '
+                className='w-8 h-8 object-contain'
               />
               <span className='text-sm text-slate-300'>{item.label}</span>
             </motion.div>

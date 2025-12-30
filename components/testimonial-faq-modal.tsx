@@ -296,9 +296,11 @@ export function TestimonialFaqModal({
 
                                   {/* Author info */}
                                   <div className='flex items-center gap-5 pt-6 border-t border-slate-700/50'>
-                                    <div className='w-16 h-16 hidden rounded-full bg-gradient-to-br from-teal-500 to-emerald-500 sm:flex items-center justify-center text-slate-950 font-bold text-2xl shadow-lg'>
-                                      {testimonial.name.charAt(0)}
-                                    </div>
+                                    <img
+                                      src={testimonial.image}
+                                      alt={testimonial.name}
+                                      className='w-16 h-16 rounded-full object-cover border-2 border-teal-500'
+                                    />
                                     <div>
                                       <div className='font-semibold text-slate-100 text-sm sm:text-lg'>
                                         {testimonial.name}

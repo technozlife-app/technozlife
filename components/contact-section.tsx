@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { mailApi } from "@/lib/api";
 import { useToast } from "@/components/ui/custom-toast";
 import { TestimonialFaqModal } from "@/components/testimonial-faq-modal";
+import { Testimonial, testimonials } from "@/lib/testimonials-data";
 
 const contactInfo = [
   { icon: Mail, label: "Email", value: "support@technozlife.com" },
@@ -176,15 +177,17 @@ export function ContactSection() {
             <div className='glass rounded-xl p-6'>
               <div className='flex items-center gap-4 mb-4'>
                 <div className='flex -space-x-2'>
-                  {[...Array(4)].map((_, i) => (
-                    <div
+                  {testimonials.map((testimony: Testimonial, i: number) => (
+                    <img
                       key={i}
-                      className='w-8 h-8 rounded-full bg-linear-to-br from-slate-600 to-slate-700 border-2 border-slate-900'
+                      src={testimony.image}
+                      alt={testimony.name}
+                      className='w-8 h-8 rounded-full border-2 border-slate-900 bg-slate-800 object-cover'
                     />
                   ))}
                 </div>
                 <div className='text-sm text-slate-400'>
-                  Join <span className='text-teal-400 font-medium'>2,00+</span>{" "}
+                  Join <span className='text-teal-400 font-medium'>200+</span>{" "}
                   others who connected this month
                 </div>
               </div>

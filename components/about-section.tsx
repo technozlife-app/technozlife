@@ -16,16 +16,19 @@ const team = [
     name: "Kaelin Rosh",
     role: "Founder & CEO",
     specialty: "Leadership & Vision",
+    image: "Kaelin Rosh",
   },
   {
     name: "Lyra Voss",
     role: "Chief Operations Officer",
     specialty: "Operations & Strategy",
+    image: "Lyra Voss",
   },
   {
     name: "Jarek Solis",
     role: "Head of Product & Strategy",
     specialty: "Biotech & Product Development",
+    image: "Jarek Solis",
   },
 ];
 
@@ -152,12 +155,7 @@ export function AboutSection() {
                     className='flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/30 transition-colors'
                   >
                     <div className='w-12 h-12 rounded-full bg-linear-to-br from-teal-500/20 to-violet-500/20 flex items-center justify-center'>
-                      <span className='text-sm font-medium text-slate-300'>
-                        {(member.name || "")
-                          .split(" ")
-                          .map((n) => n[0] || "")
-                          .join("")}
-                      </span>
+                      <img src={`/images/${member.image}.webp`} alt={member.name} className="w-full h-full rounded-full" />
                     </div>
                     <div className='flex-1'>
                       <div className='font-medium text-slate-200'>
