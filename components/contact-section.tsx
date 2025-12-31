@@ -8,7 +8,7 @@ import {
   Send,
   Mail,
   MapPin,
-  Clock,
+  Phone,
   CheckCircle2,
   MessageSquare,
 } from "lucide-react";
@@ -27,7 +27,7 @@ const contactInfo = [
     label: "Location",
     value: "380 Spring Street, Los Angeles, CA",
   },
-  { icon: Clock, label: "Response Time", value: "Within 24 hours" },
+  { icon: Phone, label: "Call", value: "+1 213-684-9156" },
 ];
 
 export function ContactSection() {
