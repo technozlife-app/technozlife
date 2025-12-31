@@ -58,7 +58,11 @@ const footerLinks: FooterLinks = {
 
 const socialLinks: SocialLink[] = [
   { icon: Twitter, href: "https://x.com/Technoz_Life", label: "Twitter" },
-  { icon: Linkedin, href: "#", label: "LinkedIn" },
+  {
+    icon: Linkedin,
+    href: "https://www.linkedin.com/company/technoz-life/",
+    label: "LinkedIn",
+  },
   {
     icon: Youtube,
     href: "https://www.youtube.com/@Technoz_Life",
