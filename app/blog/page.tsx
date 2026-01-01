@@ -26,6 +26,11 @@ export default function BlogPage() {
   const featuredPost = getFeaturedPost();
   const otherPosts = blogPosts.filter((post) => !post.featured);
 
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const filteredPosts = otherPosts.filter(
+    (post) => selectedCategory === "All" || post.category === selectedCategory
+  );
+
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
@@ -118,8 +123,10 @@ export default function BlogPage() {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.3 + index * 0.05 }}
+                onClick={() => setSelectedCategory(category)}
+                aria-pressed={selectedCategory === category}
                 className={`px-5 py-2 rounded-full text-sm font-medium transition-all duration-300 ${
-                  index === 0
+                  selectedCategory === category
                     ? "bg-teal-500 text-slate-950"
                     : "glass text-slate-400 hover:text-teal-400 hover:border-teal-500/30"
                 }`}
@@ -245,7 +252,7 @@ export default function BlogPage() {
           </motion.h3>
 
           <div className='space-y-8'>
-            {otherPosts.map((post, index) => (
+            {filteredPosts.map((post, index) => (
               <motion.div
                 key={post.slug}
                 initial={{ opacity: 0, y: 30 }}

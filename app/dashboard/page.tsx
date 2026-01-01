@@ -35,6 +35,8 @@ const initialUsageData = [
 
 import RequireAuth from "@/components/auth/RequireAuth";
 import ProfileCard from "@/components/dashboard/profile-card";
+import Link from "next/link";
+import { getDashboardNavItems } from "@/components/dashboard/nav-data";
 
 // Demo activity types
 const activityTypes = [
@@ -263,16 +265,18 @@ export default function DashboardPage() {
         {/* Main content grid - Responsive */}
         <div className='grid lg:grid-cols-2 gap-4 md:gap-6'>
           {/* Left column */}
-          <div className='space-y-4 md:space-y-6'>
+          {/* <div className='space-y-4 md:space-y-6'>
             <AIGenerator />
             <UsageChart data={usageData} />
-          </div>
+          </div> */}
 
           {/* Right column */}
           <div className='space-y-4 md:space-y-6'>
             <ActivityFeed activities={activities} />
 
             {/* Profile card */}
+          </div>
+          <div className='space-y-4 md:space-y-6'>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -293,28 +297,30 @@ export default function DashboardPage() {
                 Quick Actions
               </h3>
               <div className='grid grid-cols-2 gap-3'>
-                {[
-                  {
-                    icon: Cpu,
-                    label: "New Project",
-                    color: "from-teal-500/20 to-emerald-500/20",
-                  },
-                  {
-                    icon: FileText,
-                    label: "Templates",
-                    color: "from-violet-500/20 to-purple-500/20",
-                  },
-                ].map((action) => (
-                  <button
-                    key={action.label}
-                    className={`p-4 rounded-xl bg-linear-to-br ${action.color} border border-white/5 hover:border-white/10 transition-colors text-left group`}
-                  >
-                    <action.icon className='w-5 h-5 text-slate-300 mb-2 group-hover:text-white transition-colors' />
-                    <span className='text-sm text-slate-300 group-hover:text-white transition-colors'>
-                      {action.label}
-                    </span>
-                  </button>
-                ))}
+                {getDashboardNavItems()
+                  .filter((i) => i.label !== "Dashboard")
+                  .slice(0, 4)
+                  .map((action, idx) => {
+                    const colors = [
+                      "from-teal-500/20 to-emerald-500/20",
+                      "from-violet-500/20 to-purple-500/20",
+                      "from-yellow-400/10 to-orange-400/10",
+                      "from-sky-400/10 to-blue-500/10",
+                    ];
+                    const color = colors[idx % colors.length];
+                    return (
+                      <Link
+                        key={action.href}
+                        href={action.href}
+                        className={`p-4 rounded-xl bg-linear-to-br ${color} border border-white/5 hover:border-white/10 transition-colors text-left group`}
+                      >
+                        <action.icon className='w-5 h-5 text-slate-300 mb-2 group-hover:text-white transition-colors' />
+                        <span className='text-sm text-slate-300 group-hover:text-white transition-colors'>
+                          {action.label}
+                        </span>
+                      </Link>
+                    );
+                  })}
               </div>
             </motion.div>
           </div>

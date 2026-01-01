@@ -109,7 +109,7 @@ export default function HabitsPage() {
   return (
     <RequireAuth>
       <div className='max-w-4xl mx-auto'>
-        <div className='mb-6 flex items-center justify-between gap-4'>
+        <div className='mb-6 flex flex-col md:flex-row items-center justify-between gap-4'>
           <div>
             <h1 className='text-2xl md:text-3xl font-bold text-white mb-2'>
               Habits
@@ -139,7 +139,7 @@ export default function HabitsPage() {
               </div>
 
               <div className='flex-1 min-w-0'>
-                <div className='flex items-center justify-between gap-3 mb-2'>
+                <div className='flex flex-col  md:flex-row items-center justify-between gap-3 mb-2'>
                   <div>
                     <div className='text-sm text-slate-300 font-medium'>
                       {h.label}
@@ -149,11 +149,11 @@ export default function HabitsPage() {
                     </div>
                   </div>
 
-                  <div className='flex items-center gap-2'>
+                  <div className='flex flex-col md:flex-row items-center gap-2'>
                     <div className='text-sm text-slate-300 font-mono'>
                       {h.completionRate}%
                     </div>
-                    <div className='flex gap-2'>
+                    <div className='flex flex-col md:flex-row items-start gap-2'>
                       <Button
                         size='sm'
                         onClick={() => toggleToday(h.id)}

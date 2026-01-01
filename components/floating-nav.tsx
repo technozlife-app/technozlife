@@ -32,9 +32,73 @@ export function FloatingNav(props: {
   const { progress, showProgress } = props;
   const [isExpanded, setIsExpanded] = useState(false);
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const { user, isLoading } = useAuth();
 
   const sheetRef = useRef<HTMLDivElement | null>(null);
+
+  // Scroll-spy: observe section elements on the page and update activeId
+  useEffect(() => {
+    const ids = navItems
+      .map((i) => i.href.split("#")[1])
+      .filter(Boolean) as string[];
+    if (!ids.length) return;
+
+    const elements = ids
+      .map((id) => document.getElementById(id))
+      .filter((el): el is HTMLElement => el !== null);
+
+    if (!elements.length) return;
+
+    let ticking = false;
+
+    const onScroll = () => {
+      if (ticking) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        // prefer intersection observer results when possible, fallback to measuring
+        let best: HTMLElement | null = null;
+        let bestDist = Number.POSITIVE_INFINITY;
+        elements.forEach((el) => {
+          const rect = el.getBoundingClientRect();
+          const dist = Math.abs(rect.top - window.innerHeight * 0.2);
+          if (
+            rect.top <= window.innerHeight &&
+            rect.bottom >= 0 &&
+            dist < bestDist
+          ) {
+            best = el;
+            bestDist = dist;
+          }
+        });
+        if (best) setActiveId(best.id);
+        ticking = false;
+      });
+    };
+
+    // set initial active
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+
+    // IntersectionObserver to catch mid-viewport entries as user scrolls fast
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setActiveId((entry.target as HTMLElement).id);
+          }
+        });
+      },
+      { threshold: 0.45 }
+    );
+
+    elements.forEach((el) => observer.observe(el));
+
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      observer.disconnect();
+    };
+  }, []);
 
   // Close when pressing Escape or clicking/tapping outside the sheet
   useEffect(() => {
@@ -181,39 +245,62 @@ export function FloatingNav(props: {
 
             {/* Desktop navigation */}
             <div className='hidden md:flex items-center gap-1'>
-              {navItems.map((item, index) => (
-                <motion.a
-                  key={item.label}
-                  href={item.href}
-                  onHoverStart={() => setHoveredIndex(index)}
-                  onHoverEnd={() => setHoveredIndex(null)}
-                  className='relative p-3 rounded-full text-slate-400 hover:text-teal-400 transition-colors'
-                >
-                  <item.icon className='w-5 h-5 relative z-10' />
+              {navItems.map((item, index) => {
+                const id = item.href.split("#")[1] ?? null;
+                const isActive = id ? activeId === id : false;
+                return (
+                  <motion.a
+                    key={item.label}
+                    href={item.href}
+                    onClick={(e) => {
+                      // If this is an in-page anchor, smooth scroll instead of navigating
+                      if (id) {
+                        e.preventDefault();
+                        const el = document.getElementById(id);
+                        if (el) {
+                          el.scrollIntoView({
+                            behavior: "smooth",
+                            block: "start",
+                          });
+                          setActiveId(id);
+                        }
+                      }
+                    }}
+                    onHoverStart={() => setHoveredIndex(index)}
+                    onHoverEnd={() => setHoveredIndex(null)}
+                    className={`relative p-3 rounded-full transition-colors ${
+                      isActive
+                        ? "text-teal-400 bg-teal-500/10"
+                        : "text-slate-400 hover:text-teal-400"
+                    }`}
+                    aria-current={isActive ? "true" : undefined}
+                  >
+                    <item.icon className='w-5 h-5 relative z-10' />
 
-                  <AnimatePresence>
-                    {hoveredIndex === index && (
-                      <>
-                        <motion.div
-                          layoutId='nav-hover'
-                          initial={{ opacity: 0 }}
-                          animate={{ opacity: 1 }}
-                          exit={{ opacity: 0 }}
-                          className='absolute inset-0 bg-teal-500/10 rounded-full'
-                        />
-                        <motion.span
-                          initial={{ opacity: 0, y: 10, scale: 0.8 }}
-                          animate={{ opacity: 1, y: -40, scale: 1 }}
-                          exit={{ opacity: 0, y: 10, scale: 0.8 }}
-                          className='absolute left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-medium bg-slate-800 text-teal-400 rounded-full whitespace-nowrap border border-slate-700/50'
-                        >
-                          {item.label}
-                        </motion.span>
-                      </>
-                    )}
-                  </AnimatePresence>
-                </motion.a>
-              ))}
+                    <AnimatePresence>
+                      {hoveredIndex === index && (
+                        <>
+                          <motion.div
+                            layoutId='nav-hover'
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            exit={{ opacity: 0 }}
+                            className='absolute inset-0 bg-teal-500/10 rounded-full'
+                          />
+                          <motion.span
+                            initial={{ opacity: 0, y: 10, scale: 0.8 }}
+                            animate={{ opacity: 1, y: -40, scale: 1 }}
+                            exit={{ opacity: 0, y: 10, scale: 0.8 }}
+                            className='absolute left-1/2 -translate-x-1/2 px-3 py-1 text-xs font-medium bg-slate-800 text-teal-400 rounded-full whitespace-nowrap border border-slate-700/50'
+                          >
+                            {item.label}
+                          </motion.span>
+                        </>
+                      )}
+                    </AnimatePresence>
+                  </motion.a>
+                );
+              })}
             </div>
           </div>
         </div>
@@ -259,22 +346,37 @@ export function FloatingNav(props: {
                   </div>
 
                   <div className='flex flex-col gap-2'>
-                    {navItems.map((item, index) => (
-                      <motion.a
-                        key={item.label}
-                        href={item.href}
-                        initial={{ x: -8, opacity: 0 }}
-                        animate={{ x: 0, opacity: 1 }}
-                        transition={{ delay: index * 0.03 }}
-                        onClick={() => setIsExpanded(false)}
-                        className='flex items-center gap-3 px-4 py-4 rounded-xl text-slate-200 hover:text-teal-400 hover:bg-teal-500/8 transition-colors text-lg font-medium'
-                      >
-                        <div className='w-9 h-9 rounded-lg bg-slate-800/40 flex items-center justify-center text-teal-400'>
-                          <item.icon className='w-5 h-5' />
-                        </div>
-                        <span className=''>{item.label}</span>
-                      </motion.a>
-                    ))}
+                    {navItems.map((item, index) => {
+                      const id = item.href.split("#")[1] ?? null;
+                      const isActive = id ? activeId === id : false;
+                      return (
+                        <motion.a
+                          key={item.label}
+                          href={item.href}
+                          initial={{ x: -8, opacity: 0 }}
+                          animate={{ x: 0, opacity: 1 }}
+                          transition={{ delay: index * 0.03 }}
+                          onClick={() => setIsExpanded(false)}
+                          className={`flex items-center gap-3 px-4 py-4 rounded-xl transition-colors text-lg font-medium ${
+                            isActive
+                              ? "text-teal-400 bg-teal-500/10 border border-teal-500/10"
+                              : "text-slate-200 hover:text-teal-400 hover:bg-teal-500/8"
+                          }`}
+                          aria-current={isActive ? "true" : undefined}
+                        >
+                          <div
+                            className={`w-9 h-9 rounded-lg flex items-center justify-center ${
+                              isActive
+                                ? "bg-teal-600/10 text-teal-400"
+                                : "bg-slate-800/40 text-teal-400"
+                            }`}
+                          >
+                            <item.icon className='w-5 h-5' />
+                          </div>
+                          <span className=''>{item.label}</span>
+                        </motion.a>
+                      );
+                    })}
                   </div>
                 </div>
               </motion.div>

@@ -43,7 +43,7 @@ export function AboutSection() {
     >
       <div className='absolute inset-0 bg-black opacity-60 ' />
 
-      <div className='relative backdrop-blur-sm p-12 rounded-4xl max-w-7xl mx-auto'>
+      <div className='relative backdrop-blur-sm p-4 md:p-12 rounded-4xl max-w-7xl mx-auto'>
         {/* Main content - two column layout */}
         <div
           ref={ref}
@@ -152,7 +152,7 @@ export function AboutSection() {
                     initial={{ opacity: 0, x: 20 }}
                     animate={isInView ? { opacity: 1, x: 0 } : {}}
                     transition={{ duration: 0.5, delay: 0.5 + index * 0.1 }}
-                    className='flex items-center gap-4 p-3 rounded-lg hover:bg-slate-800/30 transition-colors'
+                    className='flex items-center flex-wrap gap-4 p-3 rounded-lg hover:bg-slate-800/30 transition-colors'
                   >
                     <div className='w-12 h-12 rounded-full bg-linear-to-br from-teal-500/20 to-violet-500/20 flex items-center justify-center'>
                       <img src={`/images/${member.image}.webp`} alt={member.name} className="w-full h-full rounded-full" />

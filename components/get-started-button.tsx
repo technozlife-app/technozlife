@@ -44,7 +44,7 @@ export function GetStartedButton() {
         }}
         className='fixed top-6 right-6 z-50 group'
       >
-        <Link href='/dashboard'>
+        <Link href='/dashboard' target='_blank' rel='noopener noreferrer'>
           <div className='relative flex items-center gap-2 px-5 py-3 rounded-full bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950 font-semibold text-sm'>
             {/* Show user profile avatar or if not available user name initial in a circle */}
             <div className='w-6 h-6 rounded-full bg-white/30 flex items-center justify-center text-xs font-medium text-white'>
@@ -87,7 +87,7 @@ export function GetStartedButton() {
       transition={{ delay: 1.2, duration: 0.5, type: "spring", stiffness: 200 }}
       className='fixed top-6 right-6 z-50 group'
     >
-      <Link href='/auth'>
+      <Link href='/auth' target='_blank' rel='noopener noreferrer'>
         <motion.div
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}

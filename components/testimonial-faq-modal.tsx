@@ -163,7 +163,7 @@ export function TestimonialFaqModal({
             </motion.button>
 
             {/* Content area */}
-            <div className='relative flex-1 flex flex-col py-20 px-6 overflow-hidden'>
+            <div className='relative flex-1 flex flex-col py-20 px-2 md:px-6 overflow-y-scroll md:overflow-hidden'>
               <div className='max-w-7xl mx-auto w-full flex flex-col h-full'>
                 {/* Header with toggle */}
                 <motion.div
@@ -172,12 +172,12 @@ export function TestimonialFaqModal({
                   transition={{ delay: 0.1 }}
                   className='text-center mb-4 sm:mb-12'
                 >
-                  <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
+                  <h2 className='text-2xl md:text-5xl font-serif font-bold text-slate-100 mb-6'>
                     {activeView === "testimonials"
                       ? "What Our Clients Say"
                       : "Frequently Asked Questions"}
                   </h2>
-                  <p className='text-lg text-slate-400 mb-8 max-w-2xl mx-auto'>
+                  <p className='text-md md:text-lg text-slate-400 mb-8 max-w-2xl mx-auto'>
                     {activeView === "testimonials"
                       ? "Real experiences from people who've transformed their lives through neural technology"
                       : "Get answers to common questions about neural interfaces and our process"}
@@ -187,9 +187,9 @@ export function TestimonialFaqModal({
                   <div className='inline-flex gap-3 glass-strong rounded-full p-2'>
                     <Button
                       onClick={() => setActiveView("testimonials")}
-                      className={`rounded-full px-6 py-2 transition-all duration-300 ${
+                      className={`rounded-full px-2 md:px-6 py-2 transition-all duration-300 ${
                         activeView === "testimonials"
-                          ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950"
+                          ? "bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950"
                           : "bg-transparent text-slate-400 hover:text-slate-100"
                       }`}
                     >
@@ -198,9 +198,9 @@ export function TestimonialFaqModal({
                     </Button>
                     <Button
                       onClick={() => setActiveView("faq")}
-                      className={`rounded-full px-6 py-2 transition-all duration-300 ${
+                      className={`rounded-full px-2 md:px-6 py-2 transition-all duration-300 ${
                         activeView === "faq"
-                          ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-slate-950"
+                          ? "bg-linear-to-r from-teal-500 to-emerald-500 text-slate-950"
                           : "bg-transparent text-slate-400 hover:text-slate-100"
                       }`}
                     >
