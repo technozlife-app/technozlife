@@ -25,6 +25,8 @@ type SocialLink = {
   icon: ComponentType<any>;
   href: string;
   label: string;
+  target?: "_self" | "_blank";
+  rel?: string;
 };
 
 const footerLinks: FooterLinks = {
@@ -57,26 +59,40 @@ const footerLinks: FooterLinks = {
 };
 
 const socialLinks: SocialLink[] = [
-  { icon: Twitter, href: "https://x.com/Technoz_Life", label: "Twitter" },
+  {
+    icon: Twitter,
+    href: "https://x.com/Technoz_Life",
+    label: "Twitter",
+    target: "_blank",
+    rel: "noopener noreferrer",
+  },
   {
     icon: Linkedin,
     href: "https://www.linkedin.com/company/technoz-life/",
     label: "LinkedIn",
+    target: "_blank",
+    rel: "noopener noreferrer",
   },
   {
     icon: Youtube,
     href: "https://www.youtube.com/@Technoz_Life",
     label: "YouTube",
+    target: "_blank",
+    rel: "noopener noreferrer",
   },
   {
     icon: Facebook,
     href: "https://www.facebook.com/technozlife/",
     label: "Facebook",
+    target: "_blank",
+    rel: "noopener noreferrer",
   },
   {
     icon: Pinterest,
     href: "https://www.pinterest.com/technozlife/",
     label: "Pinterest",
+    target: "_blank",
+    rel: "noopener noreferrer",
   },
 ];
 
@@ -115,6 +131,8 @@ export function Footer() {
                     key={social.label}
                     href={social.href}
                     whileHover={{ y: -2 }}
+                    target={social.target}
+                    rel={social.rel ? social.rel : undefined}
                     className='p-2.5 glass rounded-lg text-slate-400 hover:text-teal-400 hover:bg-teal-500/10 transition-colors'
                     aria-label={social.label}
                   >

@@ -15,7 +15,7 @@ export default function CookieConsent() {
   if (consent) return null;
 
   return (
-    <div className='fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-slate-800 rounded-xl px-5 py-3 flex items-center gap-4'>
+    <div className='fixed bottom-4 left-1/2 -translate-x-1/2 z-50 bg-slate-900/90 border border-slate-800 rounded-xl px-5 py-3 flex flex-col md:flex-row items-center gap-4'>
       <div className='text-sm text-slate-300'>
         We use cookies to improve your experience. Accept cookies for full
         functionality?

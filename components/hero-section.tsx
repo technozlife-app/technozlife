@@ -85,7 +85,7 @@ export function HeroSection() {
       id='hero'
       className='relative min-h-screen flex items-center justify-center overflow-hidden'
     >
-      <Logo className='absolute top-6 left-6' />
+      <Logo className='absolute top-2 md:top-6 left-6' />
       {/* Background layers */}
       <div className='absolute inset-0 bg-slate-950' />
       <div className='absolute inset-0 mesh-gradient' />
@@ -118,7 +118,7 @@ export function HeroSection() {
       <DNAHelix />
 
       {/* Content */}
-      <div className='relative z-10 max-w-5xl mx-auto px-6 text-center pt-20 md:pt-0'>
+      <div className='relative z-10 max-w-5xl mx-auto px-6 text-center pt-28 md:pt-0'>
         {/* Badge */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
