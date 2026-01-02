@@ -11,6 +11,7 @@ import {
 
 import type { ComponentType } from "react";
 import Link from "next/link";
+import { useRouter, usePathname } from "next/navigation";
 import Logo from "./logo";
 
 type FooterLink = {
@@ -97,6 +98,35 @@ const socialLinks: SocialLink[] = [
 ];
 
 export function Footer() {
+  const router = useRouter();
+  const pathname = usePathname();
+
+  const handleHashNavigation = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    // Check if link has a hash (e.g., "/#features")
+    if (href.startsWith("/#")) {
+      e.preventDefault();
+      const hash = href.substring(2); // Remove "/#" prefix
+      
+      // If not on home page, navigate to home first
+      if (pathname !== "/") {
+        router.push("/");
+        // Small delay to ensure navigation completes before scrolling
+        setTimeout(() => {
+          const element = document.getElementById(hash);
+          if (element) {
+            element.scrollIntoView({ behavior: "smooth" });
+          }
+        }, 100);
+      } else {
+        // Already on home, just scroll
+        const element = document.getElementById(hash);
+        if (element) {
+          element.scrollIntoView({ behavior: "smooth" });
+        }
+      }
+    }
+  };
+
   return (
     <footer className='relative pt-24 pb-12 overflow-hidden'>
       {/* Background fade */}
@@ -164,6 +194,7 @@ export function Footer() {
                           href={link.href}
                           aria-label={link.label}
                           className='text-sm text-slate-500 hover:text-teal-400 transition-colors inline-block'
+                          onClick={(e) => handleHashNavigation(e, link.href)}
                           target={link.target}
                           rel={link.rel ? link.rel : undefined}
                         >
